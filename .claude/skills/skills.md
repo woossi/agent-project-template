@@ -11,6 +11,7 @@
 
 | 스킬 | 폴더 | 한 줄 설명 |
 | --- | --- | --- |
+| register-term | `register-term/` | 용어의 정의를 사용자에게 명확히 받아, 필수 4개 필드(`term`/`ko`/`definition`/`use_when`)를 갖춘 항목으로 `word.json`에 안전하게(중복·필드 누락·JSON 깨짐 없이) 기록한다. 즉흥적이거나 불완전한 용어 등록을 방지한다. |
 | update-skill-index | `update-skill-index/` | `skills/`를 스캔해 각 스킬의 `SKILL.md`에서 이름과 목적을 읽어 `skills.md`의 색인 표를 자동으로 재생성한다. 수동 색인 관리 누락을 방지한다. |
 
 ---
