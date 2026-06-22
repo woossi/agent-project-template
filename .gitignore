@@ -1,2 +1,5 @@
 .DS_Store
 **/.DS_Store
+
+# Claude Code local (personal) settings — not shared; use settings.json for shared defaults
+.claude/settings.local.json
