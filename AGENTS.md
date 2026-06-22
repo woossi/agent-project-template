@@ -34,7 +34,7 @@ Use these paths exactly. If a file is missing, do not invent its contents; conti
 | Claude adapter | `CLAUDE.md` | Claude-specific execution and response rules |
 | Project memory | `.claude/memory/memory.md` | Durable context and accepted decisions |
 | User preferences | `.claude/memory/user_preferences.md` | Stable project-scoped preferences |
-| Terminology | `.claude/memory/word.json` | Machine-readable term dictionary |
+| Terminology | `.claude/memory/word.json` | Machine-readable term dictionary, managed by the `register-term` skill |
 | Skill registry | `.claude/skills/skills.md` | Reusable procedures |
 | Task registry | `.claude/tasks/tasks.md` | Current task packet |
 
@@ -46,7 +46,7 @@ Use these paths exactly. If a file is missing, do not invent its contents; conti
 | `CLAUDE.md` | `AGENTS.md`, user request, files in read order | Claude execution loop, response format, file-update discipline | Keep synchronized with `AGENTS.md`. No domain-specific assumptions. |
 | `.claude/memory/memory.md` | Confirmed durable facts, accepted decisions, stable constraints | Short dated entries reusable later | Store only confirmed, likely-to-matter facts. No temporary progress or guesses. |
 | `.claude/memory/user_preferences.md` | Explicit preferences, repeated stable choices | Project-scoped preferences for style, output, review level | No personal profiles or sensitive data. Task-local preferences go in `.claude/tasks/tasks.md`. |
-| `.claude/memory/word.json` | Terms, abbreviations, translations, definitions | Valid JSON dictionary entries | Keep valid JSON, no comments. Prefer `term`, `ko`, `definition`, `use_when`. |
+| `.claude/memory/word.json` | Terms, abbreviations, translations, definitions | Valid JSON dictionary entries | Keep valid JSON, no comments. Each entry uses `term`, `ko`, `definition`, `use_when`. Add or update through the `register-term` skill (it validates fields and blocks duplicates); do not hand-edit ad hoc. This dictionary is meant to be grown actively: when a project-specific term recurs and is not yet recorded, proactively propose adding it, confirm the four fields with the user, then register — never invent a definition. |
 | `.claude/skills/` | A repeated workflow with trigger, inputs, procedure, output, failure cases | Reusable skill folders, each with a `SKILL.md`; `.claude/skills/skills.md` is the index | Reusable methods only, not task logs. One skill per folder; copy `.claude/skills/_template/` to start; add an index row in `.claude/skills/skills.md`. |
 | `.claude/tasks/tasks.md` | User request, objective, inputs, expected output, completion criteria | Current task packet with status and verification | Current work only, not durable memory. Mark uncertainty instead of assuming. |
 

@@ -46,7 +46,7 @@ Apply the write rules in the `AGENTS.md` I/O table. Before writing, check the ga
 - **`CLAUDE.md`** — Claude-specific execution only. Cross-agent rules belong in `AGENTS.md`, mirrored here only as Claude-specific application.
 - **`.claude/memory/memory.md`** — write only if the fact is confirmed, future-relevant, project-scoped, and free of sensitive content. Otherwise skip.
 - **`.claude/memory/user_preferences.md`** — stable project-scoped preferences only (output format, review standard, confirmed terminology). Not one-time requests, sensitive facts, or personality claims.
-- **`.claude/memory/word.json`** — must stay valid JSON. Use the `term`/`ko`/`definition`/`use_when` shape.
+- **`.claude/memory/word.json`** — must stay valid JSON with the `term`/`ko`/`definition`/`use_when` shape. Manage it through the `register-term` skill rather than editing by hand, so fields are validated and duplicates are blocked. Treat it as an actively maintained resource: when a project-specific term recurs and is missing, proactively offer to register it and confirm the four fields with the user first — do not guess a definition.
 - **`.claude/skills/`** — reusable methods only, never one-time tasks. One skill per folder (`.claude/skills/<name>/SKILL.md`); copy `.claude/skills/_template/` and add an index row in `.claude/skills/skills.md`.
 - **`.claude/tasks/tasks.md`** — current work only, never durable memory.
 
@@ -65,7 +65,7 @@ Ask only when the answer is required and cannot be safely inferred. If partial p
 Before claiming completion:
 
 - Canonical paths match between `AGENTS.md` and `CLAUDE.md`.
-- `.claude/memory/word.json` parses as JSON.
+- `.claude/memory/word.json` passes `register-term --check` (valid JSON, required fields present, no duplicate terms) after any terminology change.
 - No stale references to renamed files.
 - Final diff contains no unintended project-specific content.
 

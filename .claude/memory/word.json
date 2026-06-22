@@ -1,5 +1,5 @@
 {
   "schema_version": "1.0",
-  "description": "Project-local terminology dictionary.",
+  "description": "Project-local terminology dictionary. Managed via the register-term skill (.claude/skills/register-term). Each entry has term, ko, definition, use_when. Do not hand-edit ad hoc; add or update through the skill so fields are validated and duplicates are blocked.",
   "terms": []
 }
