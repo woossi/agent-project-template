@@ -4,7 +4,7 @@
 
 This folder is a reusable agent-project template. It fixes the roles and I/O rules for the components that future projects share:
 
-- `AGENTS.md`, `CLAUDE.md`, `memory/`, `skills/`, `tasks/`
+- `AGENTS.md`, `CLAUDE.md`, `.claude/memory/`, `.claude/skills/`, `.claude/tasks/`
 
 Keep it project-neutral. Do not customize it to one topic, dataset, method, client, or publication target unless the user explicitly asks for a project-specific fork.
 
@@ -18,9 +18,9 @@ When instructions conflict, follow this order:
 2. Higher-level workspace or tool instructions
 3. `AGENTS.md`
 4. `CLAUDE.md`
-5. `memory/`
-6. `tasks/`
-7. `skills/`
+5. `.claude/memory/`
+6. `.claude/tasks/`
+7. `.claude/skills/`
 
 `AGENTS.md` is the shared contract. `CLAUDE.md` is a runtime adapter and must not override it.
 
@@ -32,11 +32,11 @@ Use these paths exactly. If a file is missing, do not invent its contents; conti
 | --- | --- | --- |
 | Shared contract | `AGENTS.md` | Cross-agent rules, component roles, I/O protocol |
 | Claude adapter | `CLAUDE.md` | Claude-specific execution and response rules |
-| Project memory | `memory/memory.md` | Durable context and accepted decisions |
-| User preferences | `memory/user_preferences.md` | Stable project-scoped preferences |
-| Terminology | `memory/word.json` | Machine-readable term dictionary |
-| Skill registry | `skills/skills.md` | Reusable procedures |
-| Task registry | `tasks/tasks.md` | Current task packet |
+| Project memory | `.claude/memory/memory.md` | Durable context and accepted decisions |
+| User preferences | `.claude/memory/user_preferences.md` | Stable project-scoped preferences |
+| Terminology | `.claude/memory/word.json` | Machine-readable term dictionary |
+| Skill registry | `.claude/skills/skills.md` | Reusable procedures |
+| Task registry | `.claude/tasks/tasks.md` | Current task packet |
 
 ## Component I/O Contracts
 
@@ -44,11 +44,11 @@ Use these paths exactly. If a file is missing, do not invent its contents; conti
 | --- | --- | --- | --- |
 | `AGENTS.md` | User request, workspace rules, file tree when structure matters | Stable rules, canonical paths, read/write/handoff rules | Update only when a component contract changes. Keep project-neutral. No preferences, task progress, or domain content. |
 | `CLAUDE.md` | `AGENTS.md`, user request, files in read order | Claude execution loop, response format, file-update discipline | Keep synchronized with `AGENTS.md`. No domain-specific assumptions. |
-| `memory/memory.md` | Confirmed durable facts, accepted decisions, stable constraints | Short dated entries reusable later | Store only confirmed, likely-to-matter facts. No temporary progress or guesses. |
-| `memory/user_preferences.md` | Explicit preferences, repeated stable choices | Project-scoped preferences for style, output, review level | No personal profiles or sensitive data. Task-local preferences go in `tasks/tasks.md`. |
-| `memory/word.json` | Terms, abbreviations, translations, definitions | Valid JSON dictionary entries | Keep valid JSON, no comments. Prefer `term`, `ko`, `definition`, `use_when`. |
-| `skills/` | A repeated workflow with trigger, inputs, procedure, output, failure cases | Reusable skill folders, each with a `SKILL.md`; `skills/skills.md` is the index | Reusable methods only, not task logs. One skill per folder; copy `skills/_template/` to start; add an index row in `skills/skills.md`. |
-| `tasks/tasks.md` | User request, objective, inputs, expected output, completion criteria | Current task packet with status and verification | Current work only, not durable memory. Mark uncertainty instead of assuming. |
+| `.claude/memory/memory.md` | Confirmed durable facts, accepted decisions, stable constraints | Short dated entries reusable later | Store only confirmed, likely-to-matter facts. No temporary progress or guesses. |
+| `.claude/memory/user_preferences.md` | Explicit preferences, repeated stable choices | Project-scoped preferences for style, output, review level | No personal profiles or sensitive data. Task-local preferences go in `.claude/tasks/tasks.md`. |
+| `.claude/memory/word.json` | Terms, abbreviations, translations, definitions | Valid JSON dictionary entries | Keep valid JSON, no comments. Prefer `term`, `ko`, `definition`, `use_when`. |
+| `.claude/skills/` | A repeated workflow with trigger, inputs, procedure, output, failure cases | Reusable skill folders, each with a `SKILL.md`; `.claude/skills/skills.md` is the index | Reusable methods only, not task logs. One skill per folder; copy `.claude/skills/_template/` to start; add an index row in `.claude/skills/skills.md`. |
+| `.claude/tasks/tasks.md` | User request, objective, inputs, expected output, completion criteria | Current task packet with status and verification | Current work only, not durable memory. Mark uncertainty instead of assuming. |
 
 ## Default Work Cycle
 
@@ -56,18 +56,18 @@ For non-trivial work:
 
 1. Interpret the request.
 2. Read `AGENTS.md`, and `CLAUDE.md` when relevant.
-3. Read only the smallest useful context from `memory/`, `tasks/`, `skills/`.
+3. Read only the smallest useful context from `.claude/memory/`, `.claude/tasks/`, `.claude/skills/`.
 4. Normalize ambiguous or multi-step work into a task packet.
 5. Use an existing skill only when its trigger fits.
 6. Execute with scoped changes, then verify.
-7. Update `tasks/`, `memory/`, or `skills/` only when the write rules above are met.
+7. Update `.claude/tasks/`, `.claude/memory/`, or `.claude/skills/` only when the write rules above are met.
 8. Report result, key notes, and a next step when useful.
 
 ## Standard Formats
 
 These templates are the single source of truth. Other files reference them rather than redefining them.
 
-### Task Packet — `tasks/tasks.md`
+### Task Packet — `.claude/tasks/tasks.md`
 
 ```md
 # Task
@@ -103,11 +103,11 @@ Why this task is needed.
 - Condition that makes the task complete
 ```
 
-### Skill Folder — `skills/<name>/`
+### Skill Folder — `.claude/skills/<name>/`
 
-One skill per folder. `SKILL.md` is the only required file and must list every other file and subfolder under "Internal Resources". Copy `skills/_template/` to start; the index in `skills/skills.md` is regenerated by the `update-skill-index` skill. The full folder structure and `SKILL.md` template (Korean, single source of truth) live in `skills/skills.md` under "스킬 작성 규칙" — read it only when creating or restructuring a skill.
+One skill per folder. `SKILL.md` is the only required file and must list every other file and subfolder under "Internal Resources". Copy `.claude/skills/_template/` to start; the index in `.claude/skills/skills.md` is regenerated by the `update-skill-index` skill. The full folder structure and `SKILL.md` template (Korean, single source of truth) live in `.claude/skills/skills.md` under "스킬 작성 규칙" — read it only when creating or restructuring a skill.
 
-### Memory Entry — `memory/memory.md`
+### Memory Entry — `.claude/memory/memory.md`
 
 ```md
 ## YYYY-MM-DD - Short Title

@@ -16,11 +16,11 @@ At the start of a non-trivial task, read in this order — only the smallest use
 
 1. `AGENTS.md`
 2. `CLAUDE.md`
-3. `memory/memory.md`
-4. `memory/user_preferences.md`
-5. `memory/word.json`
-6. `tasks/tasks.md`
-7. `skills/skills.md` — **read only the "스킬 색인" table** to see what skills exist. Do not load any skill's body upfront.
+3. `.claude/memory/memory.md`
+4. `.claude/memory/user_preferences.md`
+5. `.claude/memory/word.json`
+6. `.claude/tasks/tasks.md`
+7. `.claude/skills/skills.md` — **read only the "스킬 색인" table** to see what skills exist. Do not load any skill's body upfront.
 
 Skill loading is lazy: from the index, open a skill's `SKILL.md` only when its trigger matches the task, and read its internal files (code, references) only when that step runs. Read the format/registry sections of `skills.md` only when creating a new skill.
 
@@ -30,7 +30,7 @@ Before acting, frame the request internally as: User Request, Needed Output, Ava
 
 ## Execution Loop
 
-1. Identify the component being changed (`AGENTS.md`, `CLAUDE.md`, `memory/`, `skills/`, `tasks/`).
+1. Identify the component being changed (`AGENTS.md`, `CLAUDE.md`, `.claude/memory/`, `.claude/skills/`, `.claude/tasks/`).
 2. Confirm its expected input and output (see `AGENTS.md` I/O contracts).
 3. Read the file before editing.
 4. Make the smallest complete change.
@@ -44,11 +44,11 @@ Apply the write rules in the `AGENTS.md` I/O table. Before writing, check the ga
 
 - **`AGENTS.md`** — shared rules only. Keep out personal profiles, task progress, domain facts, and one-off notes.
 - **`CLAUDE.md`** — Claude-specific execution only. Cross-agent rules belong in `AGENTS.md`, mirrored here only as Claude-specific application.
-- **`memory/memory.md`** — write only if the fact is confirmed, future-relevant, project-scoped, and free of sensitive content. Otherwise skip.
-- **`memory/user_preferences.md`** — stable project-scoped preferences only (output format, review standard, confirmed terminology). Not one-time requests, sensitive facts, or personality claims.
-- **`memory/word.json`** — must stay valid JSON. Use the `term`/`ko`/`definition`/`use_when` shape.
-- **`skills/`** — reusable methods only, never one-time tasks. One skill per folder (`skills/<name>/SKILL.md`); copy `skills/_template/` and add an index row in `skills/skills.md`.
-- **`tasks/tasks.md`** — current work only, never durable memory.
+- **`.claude/memory/memory.md`** — write only if the fact is confirmed, future-relevant, project-scoped, and free of sensitive content. Otherwise skip.
+- **`.claude/memory/user_preferences.md`** — stable project-scoped preferences only (output format, review standard, confirmed terminology). Not one-time requests, sensitive facts, or personality claims.
+- **`.claude/memory/word.json`** — must stay valid JSON. Use the `term`/`ko`/`definition`/`use_when` shape.
+- **`.claude/skills/`** — reusable methods only, never one-time tasks. One skill per folder (`.claude/skills/<name>/SKILL.md`); copy `.claude/skills/_template/` and add an index row in `.claude/skills/skills.md`.
+- **`.claude/tasks/tasks.md`** — current work only, never durable memory.
 
 For the standard formats (task packet, skill record, memory entry, final response), use the templates in `AGENTS.md`.
 
@@ -65,7 +65,7 @@ Ask only when the answer is required and cannot be safely inferred. If partial p
 Before claiming completion:
 
 - Canonical paths match between `AGENTS.md` and `CLAUDE.md`.
-- `memory/word.json` parses as JSON.
+- `.claude/memory/word.json` parses as JSON.
 - No stale references to renamed files.
 - Final diff contains no unintended project-specific content.
 
