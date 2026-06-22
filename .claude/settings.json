@@ -2,6 +2,19 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "autoMemoryEnabled": true,
   "enableAllProjectMcpServers": false,
+  "extraKnownMarketplaces": {
+    "claude-code-plugins": {
+      "source": { "source": "github", "repo": "anthropics/claude-code" }
+    }
+  },
+  "enabledPlugins": {
+    "code-review@claude-code-plugins": true,
+    "commit-commands@claude-code-plugins": true,
+    "explanatory-output-style@claude-code-plugins": true,
+    "feature-dev@claude-code-plugins": true,
+    "frontend-design@claude-code-plugins": true,
+    "hookify@claude-code-plugins": true
+  },
   "permissions": {
     "allow": [],
     "deny": []
