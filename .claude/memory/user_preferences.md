@@ -1,6 +1,6 @@
 # User Preferences
 
-Stable project-scoped preferences for the ppt-builder project. Not for personal profiling, sensitive data, or one-time instructions.
+Stable project-scoped preferences. Not for personal profiling, sensitive data, or one-time instructions.
 
 ## Input Contract
 
