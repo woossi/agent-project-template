@@ -1,7 +1,24 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "autoMemoryEnabled": true,
+  "enableAllProjectMcpServers": false,
   "permissions": {
     "allow": [],
     "deny": []
+  },
+  "hooks": {
+    "FileChanged": [
+      {
+        "matcher": "**/.claude/skills/**/SKILL.md",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/skills/update-skill-index/scripts/update_index.py\"",
+            "statusMessage": "스킬 색인 갱신 중",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
   }
 }
