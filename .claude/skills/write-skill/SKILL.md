@@ -7,7 +7,7 @@ description: Use when creating or updating a reusable project skill under .claud
 
 ## 사용 시점
 
-반복되는 작업 묶음이 하나의 포괄 이름으로 묶일 수 있을 때, 그 묶음을 `.claude/skills/<name>/` 스킬로 승격하거나 기존 스킬을 갱신해야 할 때 사용한다.
+반복되는 작업 묶음이 하나의 포괄 이름으로 묶일 수 있을 때, 그 묶음을 `.claude/skills/<name>/` 스킬로 승격하거나 기존 스킬을 갱신해야 할 때 사용한다. `detect_promotions.py`가 스킬 승격 후보를 띄웠을 때도 이 스킬로 저작한다.
 
 ## 목적
 
@@ -32,12 +32,14 @@ description: Use when creating or updating a reusable project skill under .claud
 ## 절차
 
 1. 반복되는 작업 묶음을 하나의 포괄 이름으로 묶을 수 있는지 확인한다. 일회성 작업이면 `write-task`를 쓴다.
-2. `templates/SKILL.md`를 `.claude/skills/<name>/SKILL.md`로 복사해 채운다.
-3. 필요한 보조 파일은 새 스킬 폴더 안에만 둔다.
-4. 작업 패킷이나 서브에이전트 정의를 스킬 안에 저장하지 않는다.
-5. 계약 연계 섹션은 `.claude/hooks/sync_component_contracts.py`가 관리하게 둔다.
-6. `.claude/skills/update-skill-index/scripts/update_index.py`를 실행해 색인을 갱신한다.
-7. 점검 모드로 색인이 최신인지 확인한다.
+2. `detect_promotions.py`가 띄운 후보에서 시작하면 `.context/promotions/candidates.json`의 시그니처·반복 횟수·목표를 근거로 삼는다.
+3. `templates/SKILL.md`를 `.claude/skills/<name>/SKILL.md`로 복사해 채운다.
+4. 필요한 보조 파일은 새 스킬 폴더 안에만 둔다.
+5. 작업 패킷이나 서브에이전트 정의를 스킬 안에 저장하지 않는다.
+6. 계약 연계 섹션은 `.claude/hooks/sync_component_contracts.py`가 관리하게 둔다.
+7. 색인은 ConfigChange/PostToolUse 훅이 `.claude/hooks/update_skill_index.py`로 자동 갱신한다. 직접 확인하려면 같은 스크립트를 실행한다.
+8. `python .claude/hooks/update_skill_index.py --check`로 색인이 최신인지 확인한다.
+9. 후보에서 승격했다면 `python3 .claude/hooks/detect_promotions.py resolve --kind skill --key <시그니처> --decision promote`로 후보를 닫는다.
 
 ## 출력 형식
 

@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "log": {
+    "events": ".context/task-log/events.jsonl",
+    "tasks": ".context/task-log/tasks.jsonl",
+    "candidates": ".context/promotions/candidates.json",
+    "decisions": ".context/promotions/decisions.json"
+  },
+  "skill_promotion": {
+    "min_recurrence": 3,
+    "min_distinct_sessions": 2,
+    "skip_if_skill_exists": true,
+    "max_candidates": 20
+  },
+  "agent_promotion": {
+    "min_package_size": 2,
+    "min_cousage": 3,
+    "min_distinct_sessions": 2,
+    "skip_if_agent_exists": true,
+    "max_candidates": 20
+  }
+}

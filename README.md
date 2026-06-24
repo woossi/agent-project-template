@@ -17,6 +17,8 @@
 - **Skills (`.claude/skills/`)** — 반복되는 작업 묶음이 하나의 포괄 이름으로 묶일 수 있을 때 그 묶음을 승격해 만든 재사용 절차.
 - **Agents (`.claude/agents/`)** — 특정 스킬 패키지를 독립 컨텍스트에서 관리해야 할 때 만드는 서브에이전트.
 
+이 사슬의 트리거는 훅으로 강제됩니다. `.claude/hooks/task_ledger.py`가 실행 작업과 스킬 사용을 `.context/task-log/`에 자동 기록하고, `.claude/hooks/detect_promotions.py`가 `.claude/policies/promotion.json`의 조건으로 평가해 승격 후보를 매 턴 다시 띄웁니다. 후보 저작은 `write-skill`/`write-subagent`로 하고, `detect_promotions.py resolve`로 닫습니다. 조건은 `promotion.json`에서 조정합니다.
+
 ## Initial skill setup
 
 `agent-clone-setup --project-setup`은 아래 필드를 입력으로 받아, 정규화한 정본을 `agent-setup.json`으로 작성하고 곧바로 진입 파일까지 전환합니다. 입력 작성과 초기 전환이 한 번에 끝납니다. 루트의 `agent-setup.json`에는 동작하는 예시 값(`knowledge-base-manager`)이 들어 있습니다.

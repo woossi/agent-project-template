@@ -93,6 +93,41 @@
             "timeout": 30
           }
         ]
+      },
+      {
+        "matcher": "Read|Edit|Write|MultiEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/task_ledger.py\"",
+            "statusMessage": "Recording executed work in the task ledger",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/detect_promotions.py\"",
+            "statusMessage": "Evaluating skill/agent promotion conditions",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/detect_promotions.py\"",
+            "statusMessage": "Surfacing pending skill/agent promotion candidates",
+            "timeout": 30
+          }
+        ]
       }
     ],
     "ConfigChange": [
@@ -103,17 +138,6 @@
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/update_skill_index.py\"",
             "statusMessage": "Updating skill index",
-            "timeout": 30
-          }
-        ]
-      },
-      {
-        "matcher": "agents",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/update_agent_index.py\"",
-            "statusMessage": "Updating agent index",
             "timeout": 30
           }
         ]

@@ -36,8 +36,10 @@ description: Use when creating or updating the current task packet under .claude
 3. 상태는 `대기`, `진행 중`, `막힘`, `완료` 중 하나로 적는다.
 4. 모르는 내용은 추측하지 말고 `필요한 결정`이나 `위험`에 둔다.
 5. 사용할 스킬과 서브에이전트가 있으면 이름과 입력 경계를 적는다.
-6. 계약 연계 섹션은 `.claude/hooks/sync_component_contracts.py`가 관리하게 둔다.
-7. 완료 기준이 검증 가능한지 확인한다.
+6. 작업 단위를 끝내면 `python3 .claude/hooks/task_ledger.py record-task --signature <작업 종류 슬러그> --objective <한 줄 목표> --skills <쓴 스킬> --paths <주요 경로>`로 시그니처를 원장에 남긴다. 원시 실행은 훅이 자동 기록하지만, 반복 작업 묶음을 스킬로 승격하려면 시그니처가 필요하다.
+7. `detect_promotions.py`가 승격 후보를 띄우면 `write-skill`/`write-subagent`로 저작하고 `detect_promotions.py resolve`로 닫는다.
+8. 계약 연계 섹션은 `.claude/hooks/sync_component_contracts.py`가 관리하게 둔다.
+9. 완료 기준이 검증 가능한지 확인한다.
 
 ## 출력 형식
 

@@ -111,6 +111,13 @@ class InitAgentCloneTest(unittest.TestCase):
             self.assertIn("운영 원칙", claude_text)
             self.assertIn("컴포넌트 관리", claude_text)
 
+            # Generated files declare the enforced promotion loop.
+            self.assertIn("promotion.json", agents_text)
+            self.assertIn("detect_promotions", agents_text)
+            self.assertIn("task_ledger", agents_text)
+            self.assertIn("promotion.json", claude_text)
+            self.assertIn("detect_promotions", claude_text)
+
             policy = json.loads((root / ".claude/policies/agent-workspace.json").read_text(encoding="utf-8"))
             self.assertEqual(policy["defaults"]["allow"], ["."])
             self.assertEqual(policy["defaults"]["bash"]["allow"], ["rg *", "sed *"])

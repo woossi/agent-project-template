@@ -7,7 +7,7 @@ description: Use when creating or updating a reusable Claude subagent definition
 
 ## 사용 시점
 
-특정 스킬 패키지를 독립 컨텍스트에서 관리해야 하는 역할을 `.claude/agents/<name>.md` 서브에이전트 정의로 만들어야 할 때 사용한다.
+특정 스킬 패키지를 독립 컨텍스트에서 관리해야 하는 역할을 `.claude/agents/<name>.md` 서브에이전트 정의로 만들어야 할 때 사용한다. `detect_promotions.py`가 에이전트 승격 후보(자주 함께 쓰이는 스킬 패키지)를 띄웠을 때도 이 스킬로 저작한다.
 
 ## 목적
 
@@ -34,14 +34,16 @@ description: Use when creating or updating a reusable Claude subagent definition
 ## 절차
 
 1. 특정 스킬 패키지를 독립 컨텍스트에서 관리할 역할인지 확인한다. 일회성이면 `agent-clone-setup`을 쓴다.
-2. `templates/AGENT.md`를 `.claude/agents/<name>.md`로 복사해 채운다.
-3. YAML `name`은 파일명과 같은 안정 이름으로 둔다.
-4. `description`은 `Use when...` 형태의 사용 조건만 적는다.
-5. 역할에는 현재 작업 진행상황을 넣지 않는다.
-6. 서브에이전트가 사용할 작업 입력은 `.claude/tasks/tasks.md`에서 받고, 필요한 능력은 `.claude/skills/`의 스킬로 참조한다.
-7. 경계가 필요하면 `.claude/policies/agent-workspace.json`에 같은 이름으로 등록한다.
-8. `.claude/agents/agents.md`에 파일과 역할을 반영한다.
-9. 계약 연계 섹션은 `.claude/hooks/sync_component_contracts.py`가 관리하게 둔다.
+2. `detect_promotions.py`가 띄운 후보에서 시작하면 `.context/promotions/candidates.json`의 스킬 패키지(동시 사용 횟수)를 역할 범위의 근거로 삼는다.
+3. `templates/AGENT.md`를 `.claude/agents/<name>.md`로 복사해 채운다.
+4. YAML `name`은 파일명과 같은 안정 이름으로 둔다.
+5. `description`은 `Use when...` 형태의 사용 조건만 적는다.
+6. 역할에는 현재 작업 진행상황을 넣지 않는다.
+7. 서브에이전트가 사용할 작업 입력은 `.claude/tasks/tasks.md`에서 받고, 필요한 능력은 `.claude/skills/`의 스킬로 참조한다.
+8. 경계가 필요하면 `.claude/policies/agent-workspace.json`에 같은 이름으로 등록한다.
+9. `.claude/agents/agents.md`에 파일과 역할을 반영한다.
+10. 계약 연계 섹션은 `.claude/hooks/sync_component_contracts.py`가 관리하게 둔다.
+11. 후보에서 승격했다면 `python3 .claude/hooks/detect_promotions.py resolve --kind agent --key <스킬+스킬> --decision promote`로 후보를 닫는다.
 
 ## 출력 형식
 
