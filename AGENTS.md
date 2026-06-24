@@ -5,6 +5,7 @@
 This folder is a reusable agent-project template. It fixes the roles and I/O rules for the components that future projects share:
 
 - `AGENTS.md`, `.claude/CLAUDE.md`, `.claude/memory/`, `.claude/skills/`, `.claude/tasks/`
+- `.claude/settings.json`, `.claude/hooks/`
 
 Keep it project-neutral. Do not customize it to one topic, dataset, method, client, or publication target unless the user explicitly asks for a project-specific fork.
 
@@ -32,6 +33,8 @@ Use these paths exactly. If a file is missing, do not invent its contents; conti
 | --- | --- | --- |
 | Shared contract | `AGENTS.md` | Cross-agent rules, component roles, I/O protocol |
 | Claude adapter | `.claude/CLAUDE.md` | Claude-specific execution and response rules |
+| Claude settings | `.claude/settings.json` | Shared Claude Code settings, hooks, plugin defaults, and memory mode |
+| Claude hooks | `.claude/hooks/` | Deterministic guard and validation scripts called by `.claude/settings.json` |
 | Project memory | `.claude/memory/memory.md` | Durable context and accepted decisions |
 | User preferences | `.claude/memory/user_preferences.md` | Stable project-scoped preferences |
 | Terminology | `.claude/memory/word.json` | Machine-readable term dictionary, managed by the `register-term` skill |
@@ -44,10 +47,12 @@ Use these paths exactly. If a file is missing, do not invent its contents; conti
 | --- | --- | --- | --- |
 | `AGENTS.md` | User request, workspace rules, file tree when structure matters | Stable rules, canonical paths, read/write/handoff rules | Update only when a component contract changes. Keep project-neutral. No preferences, task progress, or domain content. |
 | `.claude/CLAUDE.md` | `AGENTS.md`, user request, files in read order | Claude execution loop, response format, file-update discipline | Keep synchronized with `AGENTS.md`. No domain-specific assumptions. |
-| `.claude/memory/memory.md` | Confirmed durable facts, accepted decisions, stable constraints | Short dated entries reusable later | Store only confirmed, likely-to-matter facts. No temporary progress or guesses. |
+| `.claude/settings.json` | Claude Code runtime settings and hook registrations | Shared project defaults for plugins, hooks, memory mode, and permissions | Keep project-neutral. Shared settings keep `autoMemoryEnabled` disabled so checked-in `.claude/memory/` remains the canonical project memory. Re-enable auto memory only in a project-specific fork or local settings with explicit storage scope. |
+| `.claude/hooks/` | Claude Code hook JSON on stdin, project files, validation scripts | Non-interactive guard and validation behavior | Keep scripts deterministic, project-neutral, and safe to run repeatedly. Do not put domain content or task progress here. |
+| `.claude/memory/memory.md` | Confirmed durable facts, accepted decisions, stable constraints | Short dated entries reusable later | Store only confirmed, likely-to-matter facts. No temporary progress or guesses. This checked-in file is the canonical shared project memory; Claude auto memory is disabled in shared settings by default. |
 | `.claude/memory/user_preferences.md` | Explicit preferences, repeated stable choices | Project-scoped preferences for style, output, review level | No personal profiles or sensitive data. Task-local preferences go in `.claude/tasks/tasks.md`. |
-| `.claude/memory/word.json` | Terms, abbreviations, translations, definitions | Valid JSON dictionary entries | Keep valid JSON, no comments. Each entry uses `term`, `ko`, `definition`, `use_when`. Add or update through the `register-term` skill (it validates fields and blocks duplicates); do not hand-edit ad hoc. This dictionary is meant to be grown actively: when a project-specific term recurs and is not yet recorded, proactively propose adding it, confirm the four fields with the user, then register — never invent a definition. |
-| `.claude/skills/` | A repeated workflow with trigger, inputs, procedure, output, failure cases | Reusable skill folders, each with a `SKILL.md`; `.claude/skills/skills.md` is the generated English index | Reusable methods only, not task logs. One skill per folder; copy `.claude/skills/_template/` to start; let the project hook regenerate the index. |
+| `.claude/memory/word.json` | Terms, abbreviations, translations, definitions | Valid JSON dictionary entries | Keep valid JSON, no comments. Each entry uses `term`, `ko`, `definition`, `use_when`. Add or update through the `register-term` skill (it validates fields and blocks duplicates); do not hand-edit ad hoc. Direct Claude file edits are blocked by the project hook, and Bash changes are revalidated after tool use. This dictionary is meant to be grown actively: when a project-specific term recurs and is not yet recorded, proactively propose adding it, confirm the four fields with the user, then register — never invent a definition. |
+| `.claude/skills/` | A repeated workflow with trigger, inputs, procedure, output, failure cases | Reusable skill folders, each with a `SKILL.md`; `.claude/skills/skills.md` is the generated English index | Reusable methods only, not task logs. One skill per folder; copy `.claude/skills/_template/` to start; let the `ConfigChange` project hook regenerate the index. |
 | `.claude/tasks/tasks.md` | User request, objective, inputs, expected output, completion criteria | Current task packet with status and verification | Current work only, not durable memory. Mark uncertainty instead of assuming. |
 
 ## Default Work Cycle
@@ -105,7 +110,7 @@ Why this task is needed.
 
 ### Skill Folder — `.claude/skills/<name>/`
 
-One skill per folder. `SKILL.md` is the only required file and must list every other file and subfolder under "Internal Resources". Copy `.claude/skills/_template/` to start; the index in `.claude/skills/skills.md` is regenerated by the project hook. The `SKILL.md` template is Korean and lives in `.claude/skills/_template/SKILL.md`; read it only when creating or restructuring a skill.
+One skill per folder. `SKILL.md` is the only required file and must list every other file and subfolder under "Internal Resources". Copy `.claude/skills/_template/` to start; the index in `.claude/skills/skills.md` is regenerated by the `ConfigChange` project hook. The `SKILL.md` template is Korean and lives in `.claude/skills/_template/SKILL.md`; read it only when creating or restructuring a skill.
 
 ### Memory Entry — `.claude/memory/memory.md`
 

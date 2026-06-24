@@ -8,8 +8,8 @@ when the request clearly matches that workflow. The detailed skill documents
 are written in Korean for human editing; this index stays English because it is
 automatically managed.
 
-> The `update-skill-index` hook manages this file automatically when a skill
-> `SKILL.md` changes.
+> The `update-skill-index` ConfigChange hook manages this file automatically
+> when Claude Code detects skill configuration changes.
 
 ## Skill Index
 

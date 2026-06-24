@@ -15,8 +15,8 @@
 
 ## 절차
 
-1. `.claude/settings.json`의 `FileChanged` 훅이 켜져 있는지 확인한다.
-2. 스킬 폴더의 `SKILL.md`가 추가·수정되면 훅이 내부 스크립트를 실행해 영어 색인을 자동 갱신한다.
+1. `.claude/settings.json`의 `ConfigChange` 훅이 `skills` 변경을 감지하도록 켜져 있는지 확인한다.
+2. 스킬 폴더의 `SKILL.md`가 추가·수정되어 Claude Code가 skills 구성 변경을 감지하면, 훅이 내부 스크립트를 실행해 영어 색인을 자동 갱신한다.
 3. CI나 커밋 전 점검에서는 점검 모드로 색인이 최신인지만 검사한다(변경 필요 시 종료코드 1).
 4. `skills.md`의 **Skill Index** 표가 현재 스킬 폴더 목록과 일치하는지 확인한다.
 
@@ -47,4 +47,4 @@
 
 - `SKILL.md`에 `# 스킬: <이름>` 제목이 없으면 → 폴더 이름을 스킬 이름으로 대체한다. 제목 줄을 채워 해결.
 - 스킬 폴더명이 한국어이거나 공백을 포함하면 → 영어 색인의 라우팅 신호가 약해진다. 영어 kebab-case 폴더명으로 바꾼다.
-- 훅 환경에서 `skills.md`를 못 찾는다 → `CLAUDE_PROJECT_DIR`와 `.claude/settings.json`의 훅 경로를 확인한다.
+- 훅 환경에서 `skills.md`를 못 찾는다 → `CLAUDE_PROJECT_DIR`와 `.claude/settings.json`의 `ConfigChange` 훅 경로를 확인한다.

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "autoMemoryEnabled": true,
+  "autoMemoryEnabled": false,
   "enableAllProjectMcpServers": false,
   "extraKnownMarketplaces": {
     "claude-code-plugins": {
@@ -19,9 +19,35 @@
     "deny": []
   },
   "hooks": {
-    "FileChanged": [
+    "PreToolUse": [
       {
-        "matcher": "**/.claude/skills/**/SKILL.md",
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_word_json.py\"",
+            "statusMessage": "Checking terminology dictionary edits",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_word_json.py\"",
+            "statusMessage": "Validating terminology dictionary",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "ConfigChange": [
+      {
+        "matcher": "skills",
         "hooks": [
           {
             "type": "command",
