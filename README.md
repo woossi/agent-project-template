@@ -1,63 +1,105 @@
 # agent-project-template
 
-재사용 가능한 **에이전트 프로젝트 템플릿**입니다. 새 프로젝트를 시작할 때 복사해서 쓰는 컴포넌트 계약 레이어로, 에이전트가 따르는 규칙(역할·입출력·작업 흐름)과 메모리·스킬·작업·MCP의 폴더 구조를 미리 고정해 둡니다. 특정 도메인·데이터셋·방법론에 묶이지 않은 중립 템플릿이며, 프로젝트별 내용은 이 템플릿을 가져다 쓰는 쪽에서 추가합니다.
+에이전트 프로젝트를 시작할 때 복사하는 중립 템플릿입니다.
 
-## 폴더 구조
+공유 계약은 `AGENTS.md`에 둡니다.
+Claude 실행 규칙은 `.claude/CLAUDE.md`에 둡니다.
+프로젝트별 맥락은 `.claude/` 아래에만 추가합니다.
 
-```text
-agent-project-template/
-├── AGENTS.md                  # 공유 계약: 에이전트 공통 규칙, 컴포넌트 역할, 입출력(I/O) 프로토콜
-├── README.md                  # 이 문서
-├── .mcp.json                  # 팀 공유 MCP 서버 정의 (Claude Code가 실제로 읽음, 기본 빈 목록)
-├── .gitignore
-└── .claude/
-    ├── CLAUDE.md              # Claude 런타임 어댑터: AGENTS.md를 import하고 Claude 전용 실행 규칙 추가
-    ├── settings.json          # 공유 설정 (플러그인, 권한, 훅 등)
-    ├── settings.local.json    # 개인 설정 (git 미추적)
-    ├── agents/
-    │   ├── agents.md          # 프로젝트 범위 Claude subagent 색인
-    │   └── _template/         # 새 subagent 파일 템플릿
-    ├── hooks/
-    │   ├── guard_agent_workspace.py # agent workspace policy 강제
-    │   └── guard_word_json.py       # word.json 직접 편집 차단 및 무결성 검증
-    ├── policies/
-    │   ├── README.md          # agent workspace policy 설명
-    │   └── agent-workspace.json # agent별 경로·Bash 경계
-    ├── memory/
-    │   ├── memory.md          # 지속 컨텍스트·확정된 결정 (작업 로그 아님)
-    │   ├── user_preferences.md# 프로젝트 범위의 안정적 선호
-    │   └── word.json          # 용어 사전 (register-term 스킬로 관리)
-    ├── skills/
-    │   ├── skills.md          # 영어 스킬 색인 (프로젝트 훅이 자동 갱신)
-    │   ├── _template/         # 새 스킬을 만들 때 복사하는 본보기
-    │   ├── update-skill-index/# 스킬 색인 자동 재생성
-    │   └── register-term/     # word.json 용어 등록·검증
-    ├── tasks/
-    │   └── tasks.md           # 현재 작업 패킷 (지속 메모리 아님)
-    └── mcp/                   # MCP 서버 등록 관리 (정의 조각·운영 메모)
+## How to start
+
+1. 이 템플릿을 새 프로젝트 루트에 복사합니다.
+2. `AGENTS.md`, `.claude/CLAUDE.md`, `.claude/settings.json`을 확인합니다.
+3. 사용자 초기설정에 따라 템플릿 내용을 유지, 전체 재설정, 부분 갱신 중 하나로 정합니다.
+4. 프로젝트 맥락은 `.claude/memory/`에 둡니다.
+5. 현재 작업은 `.claude/tasks/`에 둡니다.
+6. 반복 역할은 `.claude/agents/`에 둡니다.
+7. 반복 절차는 `.claude/skills/`에 둡니다.
+8. 클론 에이전트가 필요하면 `agent-clone-setup`을 실행합니다.
+
+## Initial skill setup
+
+먼저 `clone-input.json`을 만듭니다.
+
+```json
+{
+  "agent_name": "reviewer-a",
+  "source_agent": "reviewer-template",
+  "clone_purpose": "Review scoped documentation changes.",
+  "role": "Read assigned files and report risks.",
+  "task_objective": "Find contract drift in template docs.",
+  "inputs": ["README.md", "AGENTS.md"],
+  "allowed_paths": ["README.md", ".claude/**"],
+  "denied_paths": [".env", "data/raw/**"],
+  "tools": ["Read", "Bash"],
+  "outputs": ["findings with file anchors"],
+  "handoff_path": ".context/agents/reviewer-a",
+  "verification": ["all findings have file anchors"],
+  "constraints": ["do not edit files"],
+  "initial_notes": ["keep the review scoped"],
+  "bash": {
+    "allow": ["rg *", "sed *"],
+    "deny": ["rm *"]
+  }
+}
 ```
 
-## 핵심 진입점
+그다음 초기 셋업을 생성합니다.
 
-- **`AGENTS.md`** — 모든 에이전트가 먼저 읽는 공유 계약. 권한 순서, 정식 파일 경로, 컴포넌트별 입출력 규칙이 들어 있습니다.
-- **`.claude/CLAUDE.md`** — Claude용 런타임 어댑터. `@../AGENTS.md`로 공유 계약을 시작 컨텍스트에 import하고, 읽기 순서와 실행 루프를 정의합니다.
-- **`.claude/agents/agents.md`** — 프로젝트 범위 Claude subagent 색인. agent 본문은 배정·제한 작업이 있을 때만 엽니다.
-- **`.claude/policies/agent-workspace.json`** — agent별 경로·Bash 경계를 hook이 읽는 JSON 정책입니다.
-- **`.claude/skills/skills.md`** — 사용 가능한 영어 스킬 색인. 스킬 본문은 트리거가 맞을 때만 엽니다.
+```bash
+python .claude/skills/agent-clone-setup/scripts/init_agent_clone.py \
+  --input clone-input.json \
+  --project-root . \
+  --update-policy
+```
 
-## 포함된 스킬
+`--update-policy`를 빼면 workspace policy는 바꾸지 않습니다.
+
+## User input
+
+| 파일 | 역할 |
+| --- | --- |
+| `clone-input.json` | 클론 에이전트 초기설정 입력 |
+| `.claude/memory/memory.md` | 확정된 장기 맥락 |
+| `.claude/memory/user_preferences.md` | 프로젝트 범위 선호 |
+| `.claude/tasks/tasks.md` | 현재 작업 단위 |
+
+## Auto-updated files
+
+| 파일 | 갱신 조건 |
+| --- | --- |
+| `.context/agents/<agent_name>/bootstrap.md` | `agent-clone-setup` 실행 |
+| `.context/agents/<agent_name>/clone-input.json` | `agent-clone-setup` 실행 |
+| `.claude/policies/agent-workspace.json` | `--update-policy` 사용 |
+| `.claude/skills/skills.md` | skill index 훅 실행 |
+| `.claude/agents/agents.md` | agent index 훅 실행 |
+| `write-*/templates/*` | 계약 구조 동기화 훅 실행 |
+| `.claude/memory/word.json` | `register-term` 사용 |
+
+## Memory rule
+
+`.claude/memory/`는 짧게 유지합니다.
+확정된 사실만 남깁니다.
+임시 로그, 진행상황, handoff, 대량 산출물은 `.claude/tasks/`나 `.context/`에 둡니다.
+
+## Core files
+
+| 파일 | 역할 |
+| --- | --- |
+| `AGENTS.md` | 모든 에이전트의 공유 계약 |
+| `.claude/CLAUDE.md` | Claude 런타임 어댑터 |
+| `.claude/settings.json` | Claude Code 프로젝트 설정 |
+| `.claude/agents/agents.md` | 반복 역할 색인 |
+| `.claude/skills/skills.md` | 반복 절차 색인 |
+| `.claude/policies/agent-workspace.json` | 에이전트 작업 경계 |
+
+## Built-in skills
 
 | 스킬 | 역할 |
 | --- | --- |
-| `update-skill-index` | `skills/`를 스캔해 `skills.md`의 색인 표를 자동 재생성합니다. |
-| `register-term` | 용어를 필수 4개 필드(`term`/`ko`/`definition`/`use_when`)로 검증해 `word.json`에 안전하게 등록합니다. |
-
-## 자동화
-
-`.claude/settings.json`에는 다음 공유 자동화가 설정되어 있습니다.
-
-- Claude auto memory는 기본 비활성화되어 있습니다. 이 템플릿의 체크인된 `.claude/memory/`가 프로젝트 메모리의 기준입니다.
-- `language`와 agent workspace policy 경로는 settings에서 관리합니다.
-- `guard_agent_workspace.py`는 `Read`/`Edit`/`Write`/`MultiEdit`/`Bash` 실행 전에 `.claude/policies/agent-workspace.json`을 검사합니다.
-- `skills` 구성 변경 시 `ConfigChange` 훅이 영어 스킬 색인을 재생성합니다.
-- `word.json`은 `Edit`/`Write`/`MultiEdit` 직접 편집을 막고, Bash 실행 후 `register-term --check`로 무결성을 재검증합니다.
+| `agent-clone-setup` | 클론 에이전트 bootstrap 생성 |
+| `write-skill` | 새 스킬 작성 |
+| `write-task` | 현재 작업 패킷 작성 |
+| `write-subagent` | 서브에이전트 정의 작성 |
+| `update-skill-index` | 스킬 색인 갱신 |
+| `register-term` | 용어 사전 갱신 |

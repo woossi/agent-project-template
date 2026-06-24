@@ -60,6 +60,39 @@
             "timeout": 30
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/sync_component_contracts.py\"",
+            "statusMessage": "Syncing component contract structure",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/skills/update-skill-index/scripts/update_index.py\"",
+            "statusMessage": "Updating skill index",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/update_agent_index.py\"",
+            "statusMessage": "Updating agent index",
+            "timeout": 30
+          }
+        ]
       }
     ],
     "ConfigChange": [
@@ -70,6 +103,28 @@
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/skills/update-skill-index/scripts/update_index.py\"",
             "statusMessage": "Updating skill index",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "agents",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/update_agent_index.py\"",
+            "statusMessage": "Updating agent index",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "skills",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/sync_component_contracts.py\" --force",
+            "statusMessage": "Syncing skill/task/subagent contracts",
             "timeout": 30
           }
         ]

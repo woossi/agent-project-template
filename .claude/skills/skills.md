@@ -15,8 +15,12 @@ automatically managed.
 
 | Skill | Folder | Load rule |
 | --- | --- | --- |
+| agent-clone-setup | `agent-clone-setup/` | Open `agent-clone-setup/SKILL.md` only when the request clearly matches the `agent-clone-setup` workflow. |
 | register-term | `register-term/` | Open `register-term/SKILL.md` only when the request clearly matches the `register-term` workflow. |
 | update-skill-index | `update-skill-index/` | Open `update-skill-index/SKILL.md` only when the request clearly matches the `update-skill-index` workflow. |
+| write-skill | `write-skill/` | Open `write-skill/SKILL.md` only when the request clearly matches the `write-skill` workflow. |
+| write-subagent | `write-subagent/` | Open `write-subagent/SKILL.md` only when the request clearly matches the `write-subagent` workflow. |
+| write-task | `write-task/` | Open `write-task/SKILL.md` only when the request clearly matches the `write-task` workflow. |
 
 ---
 
@@ -37,7 +41,6 @@ One-off tasks, progress logs, and durable facts are not skills.
 ```text
 skills/
   skills.md            # generated index file
-  _template/           # template copied when creating a new skill
   <skill-name>/        # one skill = one folder, English kebab-case
     SKILL.md           # required: Korean human-authored skill body
     <free files/folders>
@@ -47,11 +50,12 @@ skills/
 - Use English kebab-case for the folder name because the generated index uses
   folder names as English routing signals.
 - `SKILL.md` must list every file and subfolder under "내부 자원".
-- Start new skills by copying `_template/`.
+- Start new skills with `write-skill` and `.claude/skills/write-skill/templates/SKILL.md`.
 - Do not edit the Skill Index table by hand; the project hook regenerates it.
 - If a folder is deleted or renamed, update references in the same change.
 
 ### SKILL.md Template
 
-The canonical human-authored skill template is in `_template/SKILL.md`. Keep
-that template Korean so people can write and review skill procedures directly.
+The canonical human-authored skill template is in
+`write-skill/templates/SKILL.md`. Keep that template Korean so people can write
+and review skill procedures directly.
