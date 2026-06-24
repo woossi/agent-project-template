@@ -86,6 +86,10 @@ python .claude/skills/agent-clone-setup/scripts/init_agent_clone.py \
 | `.claude/skills/skills.md` | skill index hook 실행 |
 | `.claude/agents/agents.md` | agent index hook 실행 |
 | `.claude/memory/word.json` | `register-term` 사용 |
+| `.context/task-log/*.jsonl` | 모든 도구 실행 시 `task_ledger.py`가 자동 기록 (git-ignore) |
+| `.context/promotions/candidates.json` | `detect_promotions.py`가 승격 조건 평가 시 갱신 (git-ignore) |
+
+`.context/`는 git-ignore 대상이라 커밋되지 않습니다. 승격 조건(스킬·에이전트 임계값)은 `.claude/policies/promotion.json`에서 조정합니다.
 
 ## Memory rule
 
