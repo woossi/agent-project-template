@@ -10,13 +10,6 @@
   - `enableAllProjectMcpServers`: `true`면 `.mcp.json`의 모든 서버를 자동 승인. 기본은 `false`(서버별 승인).
   - `enabledMcpjsonServers` / `disabledMcpjsonServers`: 개별 서버 허용/거부 목록.
 
-## 서버 추가 절차
-
-1. `servers/<이름>.json`에 서버 정의 조각을 작성한다(아래 형식 참고).
-2. 검토 후 그 내용을 루트 `.mcp.json`의 `mcpServers` 객체에 병합한다.
-3. 자동 승인이 필요하면 `.claude/settings.json`의 `enabledMcpjsonServers`에 서버 이름을 추가한다.
-4. Claude Code를 재시작하거나 세션에서 MCP 서버를 다시 로드해 연결을 확인한다.
-
 ## 정의 형식
 
 ### stdio 서버 (로컬 명령 실행)

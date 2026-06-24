@@ -1,5 +1,10 @@
 .DS_Store
 **/.DS_Store
+__pycache__/
+*.pyc
 
 # Claude Code local (personal) settings — not shared; use settings.json for shared defaults
 .claude/settings.local.json
+
+# Conductor workspace-local context
+.context/

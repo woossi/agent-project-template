@@ -1,7 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "autoMemoryEnabled": false,
+  "language": "korean",
+  "env": {
+    "CLAUDE_AGENT_WORKSPACE_POLICY": ".claude/policies/agent-workspace.json"
+  },
   "enableAllProjectMcpServers": false,
+  "enabledMcpjsonServers": [],
+  "disabledMcpjsonServers": [],
   "extraKnownMarketplaces": {
     "claude-code-plugins": {
       "source": { "source": "github", "repo": "anthropics/claude-code" }
@@ -20,6 +26,17 @@
   },
   "hooks": {
     "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write|MultiEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_agent_workspace.py\" --policy \"$CLAUDE_AGENT_WORKSPACE_POLICY\"",
+            "statusMessage": "Checking agent workspace policy",
+            "timeout": 30
+          }
+        ]
+      },
       {
         "matcher": "Edit|Write|MultiEdit",
         "hooks": [

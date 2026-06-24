@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "defaults": {
+    "allow": ["."],
+    "deny": [],
+    "bash": {
+      "allow": [],
+      "deny": []
+    }
+  },
+  "agents": {}
+}
