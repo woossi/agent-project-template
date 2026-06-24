@@ -102,6 +102,15 @@ class InitAgentCloneTest(unittest.TestCase):
             self.assertIn("가장 작은 작업 단위", agents_text)
             self.assertIn("포괄 이름으로", agents_text)
 
+            # Generated AGENTS.md keeps the full component contract.
+            self.assertIn("`.claude/policies/`", agents_text)
+            self.assertIn("`.claude/agents/`", agents_text)
+            self.assertIn("`.claude/hooks/`", agents_text)
+
+            # Generated CLAUDE.md carries operating principle and component-handling gates.
+            self.assertIn("운영 원칙", claude_text)
+            self.assertIn("컴포넌트 관리", claude_text)
+
             policy = json.loads((root / ".claude/policies/agent-workspace.json").read_text(encoding="utf-8"))
             self.assertEqual(policy["defaults"]["allow"], ["."])
             self.assertEqual(policy["defaults"]["bash"]["allow"], ["rg *", "sed *"])

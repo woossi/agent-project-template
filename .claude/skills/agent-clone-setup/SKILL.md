@@ -137,6 +137,8 @@ python .claude/skills/agent-clone-setup/scripts/init_agent_clone.py \
 ## 품질 점검
 
 - 프로젝트 자체 초기 전환 후 `AGENTS.md`와 `.claude/CLAUDE.md`에 에이전트 이름, 역할, 목표, 작업 경계가 들어간다.
+- 생성된 `AGENTS.md`는 `컴포넌트 계층 관계 (Tasks → Skills → Agents)` 섹션과 9단계 권한 순서(`.claude/policies/`·`.claude/agents/` 포함), `.claude/hooks/`·`.claude/policies/`를 포함한 파일 계약을 담는다.
+- 생성된 `.claude/CLAUDE.md`는 `운영 원칙`과 `컴포넌트 관리` 섹션을 담는다.
 - 프로젝트 자체 초기 전환은 `.context/agents/`를 만들지 않는다.
 - 클론 bootstrap은 역할, 목표, 입력, 경계, 산출물, 검증 기준을 `bootstrap.md`에 모두 포함한다.
 - `--update-policy` 사용 시 기본 경계 또는 agent 경계가 정책 파일에 반영된다.
