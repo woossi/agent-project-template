@@ -2,11 +2,11 @@
 
 ## 사용 시점
 
-새 스킬 폴더를 추가·삭제·이름변경했거나, 어떤 스킬의 이름·목적이 바뀌어 `skills/skills.md`의 **스킬 색인** 표를 최신 상태로 맞춰야 할 때.
+새 스킬 폴더를 추가·삭제·이름변경했거나, `skills/skills.md`의 영어 **Skill Index** 표를 최신 상태로 맞춰야 할 때.
 
 ## 목적
 
-`skills/`를 스캔해 각 스킬의 `SKILL.md`에서 이름과 목적을 읽어 `skills.md`의 색인 표를 자동으로 재생성한다. 수동 색인 관리 누락을 방지한다.
+`skills/`를 스캔해 영어 **Skill Index** 표를 자동으로 재생성한다. 한국어 `SKILL.md` 본문을 색인에 복사하지 않고, 영어 kebab-case 폴더명을 라우팅 신호로 사용해 색인을 영어로 유지한다.
 
 ## 입력
 
@@ -15,35 +15,36 @@
 
 ## 절차
 
-1. 저장소 루트에서 색인을 갱신한다: `python skills/update-skill-index/scripts/update_index.py`
-2. 출력으로 갱신된 스킬 개수를 확인한다.
-3. CI나 커밋 전 점검에서는 `--check`를 붙여 색인이 최신인지만 검사한다(변경 필요 시 종료코드 1).
-4. `skills.md`의 **스킬 색인** 표가 현재 스킬 폴더 목록과 일치하는지 확인한다.
+1. `.claude/settings.json`의 `FileChanged` 훅이 켜져 있는지 확인한다.
+2. 스킬 폴더의 `SKILL.md`가 추가·수정되면 훅이 내부 스크립트를 실행해 영어 색인을 자동 갱신한다.
+3. CI나 커밋 전 점검에서는 점검 모드로 색인이 최신인지만 검사한다(변경 필요 시 종료코드 1).
+4. `skills.md`의 **Skill Index** 표가 현재 스킬 폴더 목록과 일치하는지 확인한다.
 
 ## 출력 형식
 
-`skills/skills.md`의 `## 스킬 색인` 섹션(헤더~다음 `---` 또는 `## ` 직전)만 다음 표로 재생성된다. 색인 아래의 다른 본문(스킬 작성 규칙 등)은 보존된다.
+`skills/skills.md`의 `## Skill Index` 섹션(헤더~다음 `---` 또는 `## ` 직전)만 다음 영어 표로 재생성된다. 색인 아래의 다른 본문은 보존된다.
 
 ```md
-## 스킬 색인
+## Skill Index
 
-| 스킬 | 폴더 | 한 줄 설명 |
+| Skill | Folder | Load rule |
 | --- | --- | --- |
-| update-skill-index | `update-skill-index/` | skills/를 스캔해 ... 자동으로 재생성한다. ... |
+| update-skill-index | `update-skill-index/` | Open `update-skill-index/SKILL.md` only when the request clearly matches the `update-skill-index` workflow. |
 ```
 
 ## 내부 자원
 
-- `scripts/update_index.py` — `skills/`를 스캔해 `skills.md` 색인 표를 재생성하는 실행 코드. `--check`(점검 전용), `--skills-dir`(대상 경로) 옵션 지원.
+- `scripts/update_index.py` — `skills/`를 스캔해 `skills.md`의 영어 Skill Index 표를 재생성하는 실행 코드. `--check`(점검 전용), `--skills-dir`(대상 경로) 옵션 지원. 훅에서 호출되며 일반 사용자가 직접 실행하지 않는다.
 
 ## 품질 점검
 
-- 실행 후 `python skills/update-skill-index/scripts/update_index.py --check`가 종료코드 0이어야 한다(= 색인이 최신).
+- 점검 모드가 종료코드 0이어야 한다(= 색인이 최신).
 - `_`로 시작하는 폴더(예: `_template/`)는 색인에 포함되지 않아야 한다.
 - 각 행의 폴더 경로가 실제 존재하는 스킬 폴더와 일치해야 한다.
+- 생성된 표의 헤더와 설명 문구는 영어여야 한다.
 
 ## 자주 발생하는 실패 사례
 
 - `SKILL.md`에 `# 스킬: <이름>` 제목이 없으면 → 폴더 이름을 스킬 이름으로 대체한다. 제목 줄을 채워 해결.
-- `## 목적` 절이 비어 있으면 → 설명 칸에 안내 문구가 들어간다. `## 목적`에 한 줄 설명을 작성해 해결.
-- 잘못된 경로에서 실행하면 `skills.md`를 못 찾는다 → 저장소 루트에서 실행하거나 `--skills-dir`로 경로를 지정.
+- 스킬 폴더명이 한국어이거나 공백을 포함하면 → 영어 색인의 라우팅 신호가 약해진다. 영어 kebab-case 폴더명으로 바꾼다.
+- 훅 환경에서 `skills.md`를 못 찾는다 → `CLAUDE_PROJECT_DIR`와 `.claude/settings.json`의 훅 경로를 확인한다.

@@ -11,7 +11,7 @@ agent-project-template/
 ├── .mcp.json                  # 팀 공유 MCP 서버 정의 (Claude Code가 실제로 읽음, 기본 빈 목록)
 ├── .gitignore
 └── .claude/
-    ├── CLAUDE.md              # Claude 런타임 어댑터: AGENTS.md의 Claude 전용 실행 규칙
+    ├── CLAUDE.md              # Claude 런타임 어댑터: AGENTS.md를 import하고 Claude 전용 실행 규칙 추가
     ├── settings.json          # 공유 설정 (플러그인, 권한, 훅 등)
     ├── settings.local.json    # 개인 설정 (git 미추적)
     ├── memory/
@@ -19,7 +19,7 @@ agent-project-template/
     │   ├── user_preferences.md# 프로젝트 범위의 안정적 선호
     │   └── word.json          # 용어 사전 (register-term 스킬로 관리)
     ├── skills/
-    │   ├── skills.md          # 스킬 색인 (update-skill-index 스킬이 자동 갱신)
+    │   ├── skills.md          # 영어 스킬 색인 (프로젝트 훅이 자동 갱신)
     │   ├── _template/         # 새 스킬을 만들 때 복사하는 본보기
     │   ├── update-skill-index/# 스킬 색인 자동 재생성
     │   └── register-term/     # word.json 용어 등록·검증
@@ -32,8 +32,8 @@ agent-project-template/
 ## 핵심 진입점
 
 - **`AGENTS.md`** — 모든 에이전트가 먼저 읽는 공유 계약. 권한 순서, 정식 파일 경로, 컴포넌트별 입출력 규칙이 들어 있습니다.
-- **`.claude/CLAUDE.md`** — Claude용 런타임 어댑터. 시작 시 읽기 순서와 실행 루프를 정의하며 `AGENTS.md`를 덮어쓰지 않습니다.
-- **`.claude/skills/skills.md`** — 사용 가능한 스킬 색인. 스킬 본문은 트리거가 맞을 때만 엽니다.
+- **`.claude/CLAUDE.md`** — Claude용 런타임 어댑터. `@../AGENTS.md`로 공유 계약을 시작 컨텍스트에 import하고, 읽기 순서와 실행 루프를 정의합니다.
+- **`.claude/skills/skills.md`** — 사용 가능한 영어 스킬 색인. 스킬 본문은 트리거가 맞을 때만 엽니다.
 
 ## 포함된 스킬
 
@@ -49,11 +49,11 @@ agent-project-template/
 - `update-skill-index` — 스킬의 `SKILL.md`를 추가/수정하면 색인 갱신을 안내합니다.
 - `register-term` — 용어 등록 의도가 보이면 `register-term` 스킬 사용을 안내합니다.
 
-> 참고: `.claude/settings.json`에는 `SKILL.md` 변경 시 색인을 자동 실행하는 `FileChanged` 훅도 설정되어 있습니다. hookify 규칙은 그에 대한 보조 안전망입니다.
+> 참고: `.claude/settings.json`에는 `SKILL.md` 변경 시 영어 색인을 자동 실행하는 `FileChanged` 훅도 설정되어 있습니다. hookify 규칙은 그에 대한 보조 안전망입니다.
 
 ## 사용 방법
 
 1. 이 저장소를 새 프로젝트의 출발점으로 복사합니다.
 2. `AGENTS.md`와 `.claude/CLAUDE.md`로 컴포넌트 계약을 확인합니다.
 3. 프로젝트 고유 맥락은 `.claude/memory/`에, 작업은 `.claude/tasks/`에 기록합니다.
-4. 반복되는 절차가 생기면 `.claude/skills/_template/`을 복사해 새 스킬을 만들고, 색인은 `update-skill-index`로 갱신합니다.
+4. 반복되는 절차가 생기면 `.claude/skills/_template/`을 복사해 새 스킬을 만들고, 영어 색인은 프로젝트 훅이 자동 갱신합니다.
