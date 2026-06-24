@@ -1,6 +1,6 @@
 ---
 name: agent-clone-setup
-description: Use when initializing a local agent project from setup input, converting AGENTS.md and .claude/CLAUDE.md for that agent, or explicitly creating a cloned subagent bootstrap packet.
+description: Use when initializing a local agent project — writing the agent-setup.json input and converting AGENTS.md and .claude/CLAUDE.md for that agent — or explicitly creating a cloned subagent bootstrap packet.
 ---
 
 # 스킬: agent-clone-setup
@@ -22,7 +22,7 @@ description: Use when initializing a local agent project from setup input, conve
 
 ## 프로젝트 자체 초기 전환 입력
 
-`--project-setup` 모드는 JSON 객체에 아래 필드를 요구한다.
+`--project-setup` 모드는 입력 JSON을 stdin이나 `--input` 파일로 받아, 정규화한 정본을 `agent-setup.json`으로 **작성**하고 곧바로 진입 파일까지 전환한다. 입력 작성과 초기 전환이 한 번에 끝난다. 입력 JSON 객체는 아래 필드를 요구한다.
 
 - `agent_name`: 에이전트 이름
 - `agent_purpose`: 에이전트 목표
@@ -44,6 +44,28 @@ description: Use when initializing a local agent project from setup input, conve
 
 ## 프로젝트 자체 초기 전환 실행
 
+값을 stdin으로 넘기면 스킬이 `agent-setup.json`을 작성하고 전환까지 한 번에 끝낸다.
+
+```bash
+python .claude/skills/agent-clone-setup/scripts/init_agent_clone.py \
+  --project-setup \
+  --project-root . \
+  --update-policy <<'JSON'
+{
+  "agent_name": "...",
+  "agent_purpose": "...",
+  "role": "...",
+  "workspace_paths": ["..."],
+  "inputs": ["..."],
+  "outputs": ["..."],
+  "verification": ["..."],
+  "constraints": ["..."]
+}
+JSON
+```
+
+이미 `agent-setup.json`이 있으면 파일로 줄 수도 있다.
+
 ```bash
 python .claude/skills/agent-clone-setup/scripts/init_agent_clone.py \
   --project-setup \
@@ -54,6 +76,7 @@ python .claude/skills/agent-clone-setup/scripts/init_agent_clone.py \
 
 출력:
 
+- `agent-setup.json` (정규화된 입력 정본. `--no-save-input`이면 건너뛴다)
 - `AGENTS.md`
 - `.claude/CLAUDE.md`
 - 선택: `.claude/policies/agent-workspace.json`의 기본 작업 경계
@@ -101,7 +124,7 @@ python .claude/skills/agent-clone-setup/scripts/init_agent_clone.py \
 ## 강제 규약
 
 - 필수 입력이 빠지면 exit code `2`로 멈춘다.
-- 프로젝트 자체 초기 전환에서는 `AGENTS.md`와 `.claude/CLAUDE.md`를 함께 갱신한다.
+- 프로젝트 자체 초기 전환은 입력을 `agent-setup.json`으로 작성한 뒤 `AGENTS.md`와 `.claude/CLAUDE.md`를 함께 갱신한다. `--no-save-input`일 때만 입력 작성을 건너뛴다.
 - 클론 bootstrap에서 `handoff_path`는 프로젝트 내부 경로여야 한다.
 - `--update-policy`를 쓸 때 정책 파일은 유효한 JSON이어야 한다.
 - 원본 클론 입력은 `clone-input.json`으로 정규화해 보존한다.

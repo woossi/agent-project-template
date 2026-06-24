@@ -102,6 +102,34 @@ class InitAgentCloneTest(unittest.TestCase):
             self.assertEqual(policy["defaults"]["allow"], [".", "/Users/ujunbin/knowledge"])
             self.assertEqual(policy["defaults"]["bash"]["allow"], ["rg *", "sed *"])
 
+    def test_project_setup_writes_normalized_input_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / ".claude").mkdir()
+
+            result = self.run_script(root, project_setup_payload(), "--project-setup")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            input_path = root / "agent-setup.json"
+            self.assertTrue(input_path.exists())
+            self.assertIn("agent-setup.json", result.stdout)
+            saved = json.loads(input_path.read_text(encoding="utf-8"))
+            self.assertEqual(saved["agent_name"], "knowledge-base-manager")
+            self.assertEqual(saved["workspace_paths"], [".", "/Users/ujunbin/knowledge"])
+            self.assertEqual(saved["bash"]["allow"], ["rg *", "sed *"])
+            self.assertNotIn("denied_paths", saved)
+
+    def test_project_setup_no_save_input_skips_input_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / ".claude").mkdir()
+
+            result = self.run_script(root, project_setup_payload(), "--project-setup", "--no-save-input")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertFalse((root / "agent-setup.json").exists())
+            self.assertTrue((root / "AGENTS.md").exists())
+
     def test_creates_bootstrap_and_canonical_input(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

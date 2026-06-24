@@ -333,6 +333,31 @@ def write_bootstrap(root: Path, contract: dict[str, Any]) -> list[Path]:
     return [bootstrap, canonical]
 
 
+def serialize_project_input(contract: dict[str, Any]) -> dict[str, Any]:
+    payload: dict[str, Any] = {}
+    for key in PROJECT_REQUIRED_STRINGS:
+        payload[key] = contract[key]
+    for key in PROJECT_REQUIRED_LISTS:
+        payload[key] = contract[key]
+    for key in PROJECT_OPTIONAL_LISTS:
+        if contract.get(key):
+            payload[key] = contract[key]
+    bash = contract.get("bash", {})
+    if bash.get("allow") or bash.get("deny"):
+        payload["bash"] = bash
+    return payload
+
+
+def write_project_input(root: Path, contract: dict[str, Any], name: str) -> Path:
+    input_path = project_relative_path(root, name)
+    input_path.parent.mkdir(parents=True, exist_ok=True)
+    input_path.write_text(
+        json.dumps(serialize_project_input(contract), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return input_path
+
+
 def write_project_setup(root: Path, contract: dict[str, Any]) -> list[Path]:
     agents_path = root / "AGENTS.md"
     claude_path = root / ".claude/CLAUDE.md"
@@ -413,6 +438,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--project-root", default=".", help="Project root")
     parser.add_argument("--project-setup", action="store_true", help="Rewrite AGENTS.md and .claude/CLAUDE.md")
     parser.add_argument("--update-policy", action="store_true", help="Update .claude/policies/agent-workspace.json")
+    parser.add_argument(
+        "--save-input",
+        default="agent-setup.json",
+        help="Path to persist the normalized project-setup input JSON (project-setup only)",
+    )
+    parser.add_argument(
+        "--no-save-input",
+        action="store_true",
+        help="Skip writing the normalized project-setup input JSON",
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -420,7 +455,10 @@ def main(argv: list[str] | None = None) -> int:
         data = load_json(args.input)
         if args.project_setup:
             contract = normalize_project_setup(data)
-            written = write_project_setup(root, contract)
+            written = []
+            if not args.no_save_input and args.save_input:
+                written.append(write_project_input(root, contract, args.save_input))
+            written += write_project_setup(root, contract)
             if args.update_policy:
                 written.append(update_project_policy(root, contract))
         else:
