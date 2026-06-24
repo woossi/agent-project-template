@@ -39,8 +39,8 @@ python .claude/skills/agent-clone-setup/scripts/init_agent_clone.py \
   "agent_name": "knowledge-base-manager",
   "agent_purpose": "지식 DB 관리와 지식 그래프 유지 및 업데이트",
   "role": "로컬 지식 관리 에이전트",
-  "workspace_paths": ["/Users/ujunbin/knowledge"],
-  "inputs": ["사용자 요청", "/Users/ujunbin/knowledge"],
+  "workspace_paths": ["/Users/~/knowledge"],
+  "inputs": ["사용자 요청", "/Users/~/knowledge"],
   "outputs": ["갱신된 지식 DB", "검증된 지식 그래프"],
   "verification": ["변경 파일과 그래프 연결을 확인한다"],
   "constraints": ["근거 없이 지식을 만들지 않는다"]
@@ -65,9 +65,6 @@ python .claude/skills/agent-clone-setup/scripts/init_agent_clone.py \
 | 파일 | 역할 |
 | --- | --- |
 | `agent-setup.json` | 프로젝트 전환 입력. 비워 두면 스킬이 stdin 값으로 작성합니다 |
-| `.claude/memory/memory.md` | 확정된 장기 맥락 |
-| `.claude/memory/user_preferences.md` | 프로젝트 범위 선호 |
-| `.claude/tasks/tasks.md` | 현재 작업 단위 |
 
 ## Auto-updated files
 
@@ -85,8 +82,3 @@ python .claude/skills/agent-clone-setup/scripts/init_agent_clone.py \
 `.claude/memory/`는 압축적으로 관리합니다.
 확정된 장기 맥락만 남깁니다.
 임시 로그, 진행상황, handoff, 대량 산출물은 `.claude/tasks/`나 `.context/`에 둡니다.
-
-## Clone packet
-
-subagent 또는 클론 작업자가 필요할 때만 `agent-clone-setup`을 `--project-setup` 없이 실행합니다.
-그때만 `.context/agents/<agent_name>/bootstrap.md`가 생성됩니다.
