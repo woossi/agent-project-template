@@ -32,7 +32,7 @@ Before acting, frame the request internally as: User Request, Needed Output, Ava
 
 ## Execution Loop
 
-1. Identify the component being changed (`AGENTS.md`, `.claude/CLAUDE.md`, `.claude/memory/`, `.claude/skills/`, `.claude/tasks/`).
+1. Identify the component being changed (`AGENTS.md`, `.claude/CLAUDE.md`, `.claude/settings.json`, `.claude/hooks/`, `.claude/memory/`, `.claude/skills/`, `.claude/tasks/`).
 2. Confirm its expected input and output (see `AGENTS.md` I/O contracts).
 3. Read the file before editing.
 4. Make the smallest complete change.
@@ -46,10 +46,12 @@ Apply the write rules in the `AGENTS.md` I/O table. Before writing, check the ga
 
 - **`AGENTS.md`** — shared rules only. Keep out personal profiles, task progress, domain facts, and one-off notes.
 - **`.claude/CLAUDE.md`** — Claude-specific execution only. Cross-agent rules belong in `AGENTS.md`, mirrored here only as Claude-specific application.
-- **`.claude/memory/memory.md`** — write only if the fact is confirmed, future-relevant, project-scoped, and free of sensitive content. Otherwise skip.
+- **`.claude/settings.json`** — shared Claude Code defaults only. Keep `autoMemoryEnabled` disabled unless this template is intentionally forked for a project-specific memory storage policy. Register deterministic hooks here; do not add domain assumptions.
+- **`.claude/hooks/`** — non-interactive hook scripts only. Keep them deterministic, project-neutral, idempotent, and safe to run repeatedly.
+- **`.claude/memory/memory.md`** — write only if the fact is confirmed, future-relevant, project-scoped, and free of sensitive content. Otherwise skip. This checked-in file is the canonical shared project memory; Claude auto memory is disabled by default in shared settings.
 - **`.claude/memory/user_preferences.md`** — stable project-scoped preferences only (output format, review standard, confirmed terminology). Not one-time requests, sensitive facts, or personality claims.
-- **`.claude/memory/word.json`** — must stay valid JSON with the `term`/`ko`/`definition`/`use_when` shape. Manage it through the `register-term` skill rather than editing by hand, so fields are validated and duplicates are blocked. Treat it as an actively maintained resource: when a project-specific term recurs and is missing, proactively offer to register it and confirm the four fields with the user first — do not guess a definition.
-- **`.claude/skills/`** — reusable methods only, never one-time tasks. One skill per folder (`.claude/skills/<name>/SKILL.md`); copy `.claude/skills/_template/` and let the project hook regenerate `.claude/skills/skills.md`.
+- **`.claude/memory/word.json`** — must stay valid JSON with the `term`/`ko`/`definition`/`use_when` shape. Manage it through the `register-term` skill rather than editing by hand, so fields are validated and duplicates are blocked. Direct Claude file edits are blocked by the project hook, and Bash changes are revalidated after tool use. Treat it as an actively maintained resource: when a project-specific term recurs and is missing, proactively offer to register it and confirm the four fields with the user first — do not guess a definition.
+- **`.claude/skills/`** — reusable methods only, never one-time tasks. One skill per folder (`.claude/skills/<name>/SKILL.md`); copy `.claude/skills/_template/` and let the `ConfigChange` project hook regenerate `.claude/skills/skills.md`.
 - **`.claude/tasks/tasks.md`** — current work only, never durable memory.
 
 For the standard formats (task packet, skill record, memory entry, final response), use the templates in `AGENTS.md`.
@@ -67,6 +69,9 @@ Ask only when the answer is required and cannot be safely inferred. If partial p
 Before claiming completion:
 
 - Canonical paths match between `AGENTS.md` and `.claude/CLAUDE.md`.
+- `.claude/settings.json` keeps shared auto memory disabled unless an intentional project-specific storage policy is documented.
+- Skill index automation uses a `ConfigChange` hook for `skills`, not a nested-path `FileChanged` glob.
+- `.claude/hooks/guard_word_json.py` blocks direct `word.json` edits and validates the dictionary after Bash tool use.
 - `.claude/memory/word.json` passes `register-term --check` (valid JSON, required fields present, no duplicate terms) after any terminology change.
 - No stale references to renamed files.
 - Final diff contains no unintended project-specific content.

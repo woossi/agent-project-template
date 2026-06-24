@@ -14,6 +14,8 @@ agent-project-template/
     ├── CLAUDE.md              # Claude 런타임 어댑터: AGENTS.md를 import하고 Claude 전용 실행 규칙 추가
     ├── settings.json          # 공유 설정 (플러그인, 권한, 훅 등)
     ├── settings.local.json    # 개인 설정 (git 미추적)
+    ├── hooks/
+    │   └── guard_word_json.py # word.json 직접 편집 차단 및 무결성 검증
     ├── memory/
     │   ├── memory.md          # 지속 컨텍스트·확정된 결정 (작업 로그 아님)
     │   ├── user_preferences.md# 프로젝트 범위의 안정적 선호
@@ -43,7 +45,11 @@ agent-project-template/
 
 ## 자동화
 
-`.claude/settings.json`에는 `SKILL.md` 변경 시 영어 색인을 자동 실행하는 `FileChanged` 훅이 설정되어 있습니다.
+`.claude/settings.json`에는 다음 공유 자동화가 설정되어 있습니다.
+
+- Claude auto memory는 기본 비활성화되어 있습니다. 이 템플릿의 체크인된 `.claude/memory/`가 프로젝트 메모리의 기준입니다.
+- `skills` 구성 변경 시 `ConfigChange` 훅이 영어 스킬 색인을 재생성합니다.
+- `word.json`은 `Edit`/`Write`/`MultiEdit` 직접 편집을 막고, Bash 실행 후 `register-term --check`로 무결성을 재검증합니다.
 
 ## 사용 방법
 
