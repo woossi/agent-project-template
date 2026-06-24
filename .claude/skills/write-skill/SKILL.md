@@ -7,17 +7,18 @@ description: Use when creating or updating a reusable project skill under .claud
 
 ## 사용 시점
 
-반복 절차를 `.claude/skills/<name>/` 스킬로 만들거나 기존 스킬을 갱신해야 할 때 사용한다.
+반복되는 작업 묶음이 하나의 포괄 이름으로 묶일 수 있을 때, 그 묶음을 `.claude/skills/<name>/` 스킬로 승격하거나 기존 스킬을 갱신해야 할 때 사용한다.
 
 ## 목적
 
-스킬을 작업 로그가 아닌 재사용 가능한 절차로 작성하고, 작업·서브에이전트와의 경계를 분리한다.
+반복되는 작업 묶음을 하나의 포괄 이름으로 승격해 재사용 가능한 절차로 작성하고, 작업·서브에이전트와의 경계를 분리한다.
 
 ## 계약
 
-- 스킬은 반복 절차를 정의한다.
+- 스킬은 반복되는 작업 묶음을 하나의 포괄 이름으로 승격한 재사용 절차를 정의한다.
+- 작업은 이 스킬을 `사용할 스킬` 입력으로 참조하며, 절차를 복사하지 않는다.
 - 작업 목표와 진행상황은 `.claude/tasks/tasks.md`에 둔다.
-- 반복 역할은 `.claude/agents/`에 둔다.
+- 특정 스킬 패키지를 독립 컨텍스트에서 다루는 역할은 `.claude/agents/`에 둔다.
 - 스킬이 다른 파일을 포함하면 `SKILL.md`의 `내부 자원`에 모두 적는다.
 
 ## 입력
@@ -30,7 +31,7 @@ description: Use when creating or updating a reusable project skill under .claud
 
 ## 절차
 
-1. 반복 가능한 절차인지 확인한다. 일회성 작업이면 `write-task`를 쓴다.
+1. 반복되는 작업 묶음을 하나의 포괄 이름으로 묶을 수 있는지 확인한다. 일회성 작업이면 `write-task`를 쓴다.
 2. `templates/SKILL.md`를 `.claude/skills/<name>/SKILL.md`로 복사해 채운다.
 3. 필요한 보조 파일은 새 스킬 폴더 안에만 둔다.
 4. 작업 패킷이나 서브에이전트 정의를 스킬 안에 저장하지 않는다.

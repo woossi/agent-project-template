@@ -25,6 +25,16 @@ When instructions conflict, follow this order:
 
 `AGENTS.md` is the shared contract. `.claude/CLAUDE.md` is a runtime adapter and must not override it.
 
+## Component Layer Relationships (Tasks → Skills → Agents)
+
+Tasks, skills, and agents form a bottom-up creation chain. This is a build-and-promotion relationship that describes how each layer is created from the one below it; it is not the conflict-resolution ranking in *Authority Order*, and it does not change that ranking.
+
+- **Tasks (`.claude/tasks/`)** — the smallest unit of work. The agent automatically records and updates the work it executes here, so this layer is agent-maintained, not user-curated. The task packet keeps only the current state (goal, inputs, verification, completion criteria); execution logs and handoff go to `.context/` so the packet never accumulates stale history.
+- **Skills (`.claude/skills/`)** — created by promoting a recurring task bundle. When the same bundle of tasks recurs and can be named by one higher-level name that covers every task in the bundle, that bundle is abstracted into a single reusable skill. The skill-quality bar (clear trigger, inputs, stable procedure, predictable output, quality checks, failure cases) decides whether a promotion is sound. Tasks reference a skill by name and inputs and never copy its procedure.
+- **Agents (`.claude/agents/`)** — created when a specific skills package must be operated in an independent context. A subagent of the main skills-using agent owns and operates that package, takes its task input and verification criteria from `.claude/tasks/`, references the skills (never copying their procedures), and returns results to the task packet or `.context/agents/<agent-name>/`.
+
+Creation chain: atomic work is auto-recorded as **Tasks** → a recurring task bundle that fits one covering name is promoted to a **Skill** → a specific skills package that needs an isolated context is wrapped in an **Agent**.
+
 ## Initial Local Agent Setup
 
 When the user copies this folder to create a local agent project, use the `agent-clone-setup` skill in `--project-setup` mode first. That mode rewrites `AGENTS.md` and `.claude/CLAUDE.md` for the actual agent role and can update `.claude/policies/agent-workspace.json`.
@@ -41,13 +51,13 @@ Use these paths exactly. If a file is missing, do not invent its contents; conti
 | Claude adapter | `.claude/CLAUDE.md` | Claude-specific execution and response rules |
 | Claude settings | `.claude/settings.json` | Shared Claude Code settings, hooks, plugin defaults, and memory mode |
 | Claude hooks | `.claude/hooks/` | Deterministic guard and validation scripts called by `.claude/settings.json` |
-| Claude agents | `.claude/agents/` | Project-scoped Claude subagent definitions and generated agent index |
+| Claude agents | `.claude/agents/` | Subagents that own a specific skills package in an independent context, plus the generated agent index |
 | Agent policies | `.claude/policies/` | Machine-readable policy files consumed by project hooks |
 | Project memory | `.claude/memory/memory.md` | Durable context and accepted decisions |
 | User preferences | `.claude/memory/user_preferences.md` | Stable project-scoped preferences |
 | Terminology | `.claude/memory/word.json` | Machine-readable term dictionary, managed by the `register-term` skill |
-| Skill registry | `.claude/skills/skills.md` | Reusable procedures |
-| Task registry | `.claude/tasks/tasks.md` | Current task packet |
+| Skill registry | `.claude/skills/skills.md` | Reusable procedures promoted from recurring task bundles |
+| Task registry | `.claude/tasks/tasks.md` | Agent-maintained current task packet (smallest unit of work) |
 
 ## Component I/O Contracts
 
@@ -57,13 +67,13 @@ Use these paths exactly. If a file is missing, do not invent its contents; conti
 | `.claude/CLAUDE.md` | `AGENTS.md`, user request, files in read order | Claude execution loop, response format, file-update discipline | Keep synchronized with `AGENTS.md`. No domain-specific assumptions. |
 | `.claude/settings.json` | Claude Code runtime settings and hook registrations | Shared project defaults for plugins, hooks, memory mode, and permissions | Keep project-neutral. Shared settings keep `autoMemoryEnabled` disabled so checked-in `.claude/memory/` remains the canonical project memory. Re-enable auto memory only in a project-specific fork or local settings with explicit storage scope. |
 | `.claude/hooks/` | Claude Code hook JSON on stdin, project files, validation scripts | Non-interactive guard and validation behavior | Keep scripts deterministic, project-neutral, and safe to run repeatedly. Do not put domain content or task progress here. |
-| `.claude/agents/` | Repeated project role, trigger, tool scope, and handoff expectations | One Markdown file per Claude subagent plus generated `agents.md` index | Keep reusable and project-neutral. Do not store task progress here. Align agent `name` values with `.claude/policies/agent-workspace.json` only when the agent has a path or Bash boundary. Do not hand-edit the generated index section. |
+| `.claude/agents/` | A specific skills package that needs an independent context, plus its trigger, tool scope, and handoff expectations | One Markdown file per Claude subagent plus generated `agents.md` index | Create only when a skills package must run in an isolated context. Keep reusable and project-neutral. Reference skills, do not copy their procedures. Do not store task progress here. Align agent `name` values with `.claude/policies/agent-workspace.json` only when the agent has a path or Bash boundary. Do not hand-edit the generated index section. |
 | `.claude/policies/` | Hook-readable project policy such as agent workspace boundaries | Valid JSON policy files and short operating notes | Keep policy data deterministic and machine-readable. Do not store secrets, personal preferences, task progress, or domain content here. |
 | `.claude/memory/memory.md` | Confirmed durable facts, accepted decisions, stable constraints | Short dated entries reusable later | Store only confirmed, likely-to-matter facts. No temporary progress or guesses. This checked-in file is the canonical shared project memory; Claude auto memory is disabled in shared settings by default. |
 | `.claude/memory/user_preferences.md` | Explicit preferences, repeated stable choices | Project-scoped preferences for style, output, review level | No personal profiles or sensitive data. Task-local preferences go in `.claude/tasks/tasks.md`. |
 | `.claude/memory/word.json` | Terms, abbreviations, translations, definitions | Valid JSON dictionary entries | Keep valid JSON, no comments. Each entry uses `term`, `ko`, `definition`, `use_when`. Add or update through the `register-term` skill (it validates fields and blocks duplicates); do not hand-edit ad hoc. Direct Claude file edits are blocked by the project hook, and Bash changes are revalidated after tool use. This dictionary is meant to be grown actively: when a project-specific term recurs and is not yet recorded, proactively propose adding it, confirm the four fields with the user, then register — never invent a definition. |
-| `.claude/skills/` | A repeated workflow with trigger, inputs, procedure, output, failure cases | Reusable skill folders, each with a `SKILL.md`; `.claude/skills/skills.md` is the generated English index | Reusable methods only, not task logs. One skill per folder; use the `write-skill` skill and its template; let the `ConfigChange` project hook regenerate the index. |
-| `.claude/tasks/tasks.md` | User request, objective, inputs, expected output, completion criteria | Current task packet with status and verification | Current work only, not durable memory. Mark uncertainty instead of assuming. |
+| `.claude/skills/` | A recurring task bundle that fits one covering name, with trigger, inputs, procedure, output, failure cases | Reusable skill folders, each with a `SKILL.md`; `.claude/skills/skills.md` is the generated English index | Create by promoting a recurring task bundle into one named, reusable skill. Methods only, not task logs. One skill per folder; use the `write-skill` skill and its template; let the `ConfigChange` project hook regenerate the index. |
+| `.claude/tasks/tasks.md` | Executed work, objective, inputs, expected output, completion criteria | Agent-maintained current task packet (smallest unit of work) with status and verification | Agent-maintained, not user-curated. The packet holds the current state only; execution logs and handoff go to `.context/`, durable facts to `.claude/memory/`. Mark uncertainty instead of assuming. |
 
 ## Standard Formats
 

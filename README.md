@@ -9,6 +9,14 @@
 3. 생성된 `agent-setup.json`, `AGENTS.md`, `.claude/CLAUDE.md`를 확인합니다.
 4. 장기 맥락은 `.claude/memory/`, 현재 작업은 `.claude/tasks/`, 임시 산출물은 `.context/`에 둡니다.
 
+## Component relationships (Tasks → Skills → Agents)
+
+세 컴포넌트는 상향식 생성 사슬을 이룹니다. 정본 정의는 `AGENTS.md`의 *Component Layer Relationships*에 있으며, 요약은 다음과 같습니다.
+
+- **Tasks (`.claude/tasks/`)** — 가장 작은 작업 단위. 에이전트가 실행 작업을 자동으로 기록·갱신하며(사용자가 큐레이션하지 않음), 작업 패킷은 현재 상태만 담습니다. 실행 로그와 handoff는 `.context/`로 둡니다.
+- **Skills (`.claude/skills/`)** — 반복되는 작업 묶음이 하나의 포괄 이름으로 묶일 수 있을 때 그 묶음을 승격해 만든 재사용 절차.
+- **Agents (`.claude/agents/`)** — 특정 스킬 패키지를 독립 컨텍스트에서 관리해야 할 때 만드는 서브에이전트.
+
 ## Initial skill setup
 
 `agent-clone-setup --project-setup`은 아래 필드를 입력으로 받아, 정규화한 정본을 `agent-setup.json`으로 작성하고 곧바로 진입 파일까지 전환합니다. 입력 작성과 초기 전환이 한 번에 끝납니다. 루트의 `agent-setup.json`에는 동작하는 예시 값(`knowledge-base-manager`)이 들어 있습니다.
@@ -81,4 +89,4 @@ python .claude/skills/agent-clone-setup/scripts/init_agent_clone.py \
 
 `.claude/memory/`는 압축적으로 관리합니다.
 확정된 장기 맥락만 남깁니다.
-임시 로그, 진행상황, handoff, 대량 산출물은 `.claude/tasks/`나 `.context/`에 둡니다.
+현재 작업 상태는 `.claude/tasks/`에 두고, 에이전트의 실행 로그·진행상황·handoff·대량 산출물은 `.context/`에 둡니다.

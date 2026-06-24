@@ -29,7 +29,13 @@ Read this section only when creating or restructuring a skill.
 
 ### When To Create A Skill
 
-Create a skill only for a reusable workflow with all of these properties:
+Create a skill by promoting a recurring task bundle: when multiple tasks share
+the same workflow and that bundle can be named by one higher-level name that
+covers every task in it, abstract the bundle into a single reusable skill. This
+bottom-up promotion from repeated task clusters is the key signal for skill
+creation.
+
+The promotion is sound only when the workflow also has all of these properties:
 repeated trigger, clear inputs, stable procedure, predictable output format,
 quality checks, and known failure cases.
 

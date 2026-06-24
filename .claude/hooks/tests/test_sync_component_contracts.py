@@ -61,6 +61,16 @@ class SyncComponentContractsTest(unittest.TestCase):
             self.assertIn("스킬 능력", agent_template)
             self.assertNotIn("`.claude/agents/reviewer.md`", agent_index)
 
+            # Tasks -> Skills -> agents relationship must be encoded in each section.
+            self.assertIn("반복되는 작업", skill_template)
+            self.assertIn("포괄 이름으로 승격", skill_template)
+            self.assertIn("가장 작은 작업 단위", task_template)
+            self.assertIn("자동으로 기록", task_template)
+            self.assertIn("진행 로그", task_template)
+            self.assertIn("특정 스킬 패키지", agent_template)
+            self.assertIn("독립 컨텍스트", agent_template)
+            self.assertIn("참조하여", agent_template)
+
             before = {
                 path: path.read_text(encoding="utf-8")
                 for path in [

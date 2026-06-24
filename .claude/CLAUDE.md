@@ -14,19 +14,19 @@ If the user asks to turn this folder into a local agent project, use `agent-clon
 
 ## Component Handling
 
-Apply the write rules in the `AGENTS.md` I/O table. Before writing, check the gate for each component:
+Apply the write rules in the `AGENTS.md` I/O table, and respect the Tasks → Skills → Agents creation chain defined in `AGENTS.md` (*Component Layer Relationships*): tasks are auto-recorded atomic work, skills are recurring task bundles promoted under one covering name, and agents wrap a specific skills package in an independent context. Before writing, check the gate for each component:
 
 - **`AGENTS.md`** — shared rules only. Keep out personal profiles, task progress, domain facts, and one-off notes.
 - **`.claude/CLAUDE.md`** — Claude-specific execution only. Cross-agent rules belong in `AGENTS.md`, mirrored here only as Claude-specific application.
 - **`.claude/settings.json`** — shared Claude Code defaults only. Keep `autoMemoryEnabled` disabled unless this template is intentionally forked for a project-specific memory storage policy. Register deterministic hooks here; do not add domain assumptions.
 - **`.claude/hooks/`** — non-interactive hook scripts only. Keep them deterministic, project-neutral, idempotent, and safe to run repeatedly.
-- **`.claude/agents/`** — project-scoped Claude subagents only. Keep each agent reusable, keep task progress in `.claude/tasks/` or `.context/`, and align bounded agent names with `.claude/policies/agent-workspace.json`.
+- **`.claude/agents/`** — subagents that own a specific skills package in an independent context. Create one only when a skills package needs isolated context. Reference skills, never copy their procedures. Keep each agent reusable, keep task progress in `.claude/tasks/` or `.context/`, and align bounded agent names with `.claude/policies/agent-workspace.json`.
 - **`.claude/policies/`** — machine-readable project policy consumed by hooks. Keep JSON valid, deterministic, and free of secrets, personal preferences, task progress, and domain content.
 - **`.claude/memory/memory.md`** — write only if the fact is confirmed, future-relevant, project-scoped, and free of sensitive content. Otherwise skip. This checked-in file is the canonical shared project memory; Claude auto memory is disabled by default in shared settings.
 - **`.claude/memory/user_preferences.md`** — stable project-scoped preferences only (output format, review standard, confirmed terminology). Not one-time requests, sensitive facts, or personality claims.
 - **`.claude/memory/word.json`** — must stay valid JSON with the `term`/`ko`/`definition`/`use_when` shape. Manage it through the `register-term` skill rather than editing by hand, so fields are validated and duplicates are blocked. Direct Claude file edits are blocked by the project hook, and Bash changes are revalidated after tool use. Treat it as an actively maintained resource: when a project-specific term recurs and is missing, proactively offer to register it and confirm the four fields with the user first — do not guess a definition.
-- **`.claude/skills/`** — reusable methods only, never one-time tasks. One skill per folder (`.claude/skills/<name>/SKILL.md`); use `write-skill` and let the `ConfigChange` project hook regenerate `.claude/skills/skills.md`.
-- **`.claude/tasks/tasks.md`** — current work only, never durable memory.
+- **`.claude/skills/`** — reusable methods only, never one-time tasks. Promote a skill when a recurring task bundle fits one covering name. One skill per folder (`.claude/skills/<name>/SKILL.md`); use `write-skill` and let the `ConfigChange` project hook regenerate `.claude/skills/skills.md`.
+- **`.claude/tasks/tasks.md`** — agent-maintained current work only, not user-curated and never durable memory. The packet holds the current state; execution logs and handoff go to `.context/`.
 
 ## Final Principle
 

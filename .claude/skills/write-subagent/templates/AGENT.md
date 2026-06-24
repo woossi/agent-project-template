@@ -6,13 +6,13 @@ tools: Read, Grep, Glob
 
 # Role
 
-이 서브에이전트가 반복해서 맡는 책임.
+이 서브에이전트가 독립 컨텍스트에서 관리하는 스킬 패키지와 그 책임.
 
 ## Inputs
 
-- 작업 패킷 또는 사용자 요청
+- 작업 패킷의 작업 입력과 검증 기준
 - 읽어야 할 프로젝트 파일
-- 필요한 스킬 이름
+- 관리할 스킬 패키지의 스킬 이름
 
 ## Procedure
 
@@ -37,8 +37,8 @@ tools: Read, Grep, Glob
 <!-- component-contract:start -->
 ## 계약 연계
 
+- 서브에이전트는 특정 스킬 패키지를 독립 컨텍스트에서 관리하는 역할이다.
 - 서브에이전트는 `.claude/tasks/tasks.md`의 작업 입력과 검증 기준을 받는다.
-- 서브에이전트는 `.claude/skills/`의 스킬 능력을 필요한 경우 읽어 사용한다.
+- 서브에이전트는 `.claude/skills/`의 스킬 능력을 참조하여 사용한다. 절차를 복사하지 않는다.
 - 결과와 남은 위험은 작업 패킷 또는 `.context/agents/<agent-name>/`로 돌려준다.
-- 반복 절차를 에이전트 본문에 복사하지 않는다.
 <!-- component-contract:end -->

@@ -97,6 +97,11 @@ class InitAgentCloneTest(unittest.TestCase):
                 self.assertNotIn(forbidden, combined)
             self.assertFalse((root / ".context/agents/knowledge-base-manager").exists())
 
+            # Generated AGENTS.md must carry the Tasks -> Skills -> agents relationship.
+            self.assertIn("Tasks → Skills → Agents", agents_text)
+            self.assertIn("가장 작은 작업 단위", agents_text)
+            self.assertIn("포괄 이름으로", agents_text)
+
             policy = json.loads((root / ".claude/policies/agent-workspace.json").read_text(encoding="utf-8"))
             self.assertEqual(policy["defaults"]["allow"], ["."])
             self.assertEqual(policy["defaults"]["bash"]["allow"], ["rg *", "sed *"])

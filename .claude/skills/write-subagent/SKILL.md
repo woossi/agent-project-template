@@ -7,17 +7,17 @@ description: Use when creating or updating a reusable Claude subagent definition
 
 ## 사용 시점
 
-반복해서 맡길 역할을 `.claude/agents/<name>.md` 서브에이전트 정의로 만들어야 할 때 사용한다.
+특정 스킬 패키지를 독립 컨텍스트에서 관리해야 하는 역할을 `.claude/agents/<name>.md` 서브에이전트 정의로 만들어야 할 때 사용한다.
 
 ## 목적
 
-서브에이전트의 역할, 입력, 출력, 도구, 작업 경계를 재사용 가능한 정의로 고정한다.
+서브에이전트가 맡는 스킬 패키지, 입력, 출력, 도구, 작업 경계를 재사용 가능한 정의로 고정한다.
 
 ## 계약
 
-- 서브에이전트는 반복 역할을 정의한다.
-- 현재 목표와 완료 기준은 `.claude/tasks/tasks.md`에 둔다.
-- 반복 절차는 `.claude/skills/`에 둔다.
+- 서브에이전트는 특정 스킬 패키지를 독립 컨텍스트에서 관리하는 역할을 정의한다.
+- 현재 목표와 완료 기준은 `.claude/tasks/tasks.md`에서 받는다.
+- 스킬 절차는 `.claude/skills/`에서 참조하고, 에이전트 본문에 복사하지 않는다.
 - 일회성 클론 초기화는 `agent-clone-setup`을 쓴다.
 - 경로 또는 Bash 제한이 있으면 `.claude/policies/agent-workspace.json`의 이름과 맞춘다.
 
@@ -33,7 +33,7 @@ description: Use when creating or updating a reusable Claude subagent definition
 
 ## 절차
 
-1. 반복 역할인지 확인한다. 일회성이면 `agent-clone-setup`을 쓴다.
+1. 특정 스킬 패키지를 독립 컨텍스트에서 관리할 역할인지 확인한다. 일회성이면 `agent-clone-setup`을 쓴다.
 2. `templates/AGENT.md`를 `.claude/agents/<name>.md`로 복사해 채운다.
 3. YAML `name`은 파일명과 같은 안정 이름으로 둔다.
 4. `description`은 `Use when...` 형태의 사용 조건만 적는다.
