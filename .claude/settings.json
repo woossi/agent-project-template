@@ -77,7 +77,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/skills/update-skill-index/scripts/update_index.py\"",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/update_skill_index.py\"",
             "statusMessage": "Updating skill index",
             "timeout": 30
           }
@@ -101,7 +101,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/skills/update-skill-index/scripts/update_index.py\"",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/update_skill_index.py\"",
             "statusMessage": "Updating skill index",
             "timeout": 30
           }

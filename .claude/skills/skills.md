@@ -8,8 +8,8 @@ when the request clearly matches that workflow. The detailed skill documents
 are written in Korean for human editing; this index stays English because it is
 automatically managed.
 
-> The `update-skill-index` ConfigChange hook manages this file automatically
-> when Claude Code detects skill configuration changes.
+> The ConfigChange hook (`.claude/hooks/update_skill_index.py`) manages this file
+> automatically when Claude Code detects skill configuration changes.
 
 ## Skill Index
 
@@ -17,7 +17,6 @@ automatically managed.
 | --- | --- | --- |
 | agent-clone-setup | `agent-clone-setup/` | Open `agent-clone-setup/SKILL.md` only when the request clearly matches the `agent-clone-setup` workflow. |
 | register-term | `register-term/` | Open `register-term/SKILL.md` only when the request clearly matches the `register-term` workflow. |
-| update-skill-index | `update-skill-index/` | Open `update-skill-index/SKILL.md` only when the request clearly matches the `update-skill-index` workflow. |
 | write-skill | `write-skill/` | Open `write-skill/SKILL.md` only when the request clearly matches the `write-skill` workflow. |
 | write-subagent | `write-subagent/` | Open `write-subagent/SKILL.md` only when the request clearly matches the `write-subagent` workflow. |
 | write-task | `write-task/` | Open `write-task/SKILL.md` only when the request clearly matches the `write-task` workflow. |

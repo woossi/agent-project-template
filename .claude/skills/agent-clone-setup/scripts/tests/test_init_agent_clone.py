@@ -38,8 +38,8 @@ def project_setup_payload() -> dict:
         "agent_name": "knowledge-base-manager",
         "agent_purpose": "지식 DB 관리와 지식 그래프 유지 및 업데이트",
         "role": "로컬 지식 관리 에이전트",
-        "workspace_paths": [".", "/Users/ujunbin/knowledge"],
-        "inputs": ["사용자 요청", "/Users/ujunbin/knowledge"],
+        "workspace_paths": ["."],
+        "inputs": ["사용자 요청"],
         "outputs": ["갱신된 지식 DB", "검증된 지식 그래프"],
         "verification": ["변경 파일과 그래프 연결을 확인한다"],
         "constraints": ["근거 없이 지식을 만들지 않는다"],
@@ -91,7 +91,6 @@ class InitAgentCloneTest(unittest.TestCase):
                 "knowledge-base-manager",
                 "지식 DB 관리",
                 "로컬 지식 관리 에이전트",
-                "/Users/ujunbin/knowledge",
             ):
                 self.assertIn(expected, combined)
             for forbidden in ("template", "project-neutral", "fork", "템플릿", "프로젝트-중립", "포크"):
@@ -99,7 +98,7 @@ class InitAgentCloneTest(unittest.TestCase):
             self.assertFalse((root / ".context/agents/knowledge-base-manager").exists())
 
             policy = json.loads((root / ".claude/policies/agent-workspace.json").read_text(encoding="utf-8"))
-            self.assertEqual(policy["defaults"]["allow"], [".", "/Users/ujunbin/knowledge"])
+            self.assertEqual(policy["defaults"]["allow"], ["."])
             self.assertEqual(policy["defaults"]["bash"]["allow"], ["rg *", "sed *"])
 
     def test_project_setup_writes_normalized_input_file(self) -> None:
@@ -115,7 +114,7 @@ class InitAgentCloneTest(unittest.TestCase):
             self.assertIn("agent-setup.json", result.stdout)
             saved = json.loads(input_path.read_text(encoding="utf-8"))
             self.assertEqual(saved["agent_name"], "knowledge-base-manager")
-            self.assertEqual(saved["workspace_paths"], [".", "/Users/ujunbin/knowledge"])
+            self.assertEqual(saved["workspace_paths"], ["."])
             self.assertEqual(saved["bash"]["allow"], ["rg *", "sed *"])
             self.assertNotIn("denied_paths", saved)
 

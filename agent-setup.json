@@ -3,12 +3,10 @@
   "agent_purpose": "지식 DB 관리와 지식 그래프 유지 및 업데이트",
   "role": "로컬 지식 관리 에이전트",
   "workspace_paths": [
-    ".",
-    "/Users/ujunbin/knowledge"
+    "."
   ],
   "inputs": [
-    "사용자 요청",
-    "/Users/ujunbin/knowledge"
+    "사용자 요청"
   ],
   "outputs": [
     "갱신된 지식 DB",
@@ -35,14 +33,5 @@
     "Write",
     "Grep",
     "Glob"
-  ],
-  "bash": {
-    "allow": [
-      "rg *",
-      "sed *"
-    ],
-    "deny": [
-      "rm *"
-    ]
-  }
+  ]
 }

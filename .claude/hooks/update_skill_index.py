@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Maintain the generated English skill index in skills.md.
+"""Maintain the generated English skill index in .claude/skills/skills.md.
 
 The source skill documents can stay Korean. This script keeps the generated
 index English by using stable skill slugs instead of copying Korean prose from
-each SKILL.md file.
+each SKILL.md file. It is invoked by the project hooks in .claude/settings.json
+(PostToolUse and the ConfigChange "skills" matcher); users do not run it by hand.
 """
 from __future__ import annotations
 
@@ -21,10 +22,10 @@ TABLE_HEADER = (
 
 
 def find_skills_dir(explicit: str | None) -> Path:
-    """Find the skills directory from an explicit path or this script location."""
+    """Find the skills directory from an explicit path or the project cwd."""
     if explicit:
         return Path(explicit).resolve()
-    return Path(__file__).resolve().parents[2]
+    return Path.cwd() / ".claude/skills"
 
 
 def extract_name(text: str, fallback: str) -> str:

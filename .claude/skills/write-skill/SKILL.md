@@ -58,10 +58,10 @@ description: Use when creating or updating a reusable project skill under .claud
 - `내부 자원`에 실제 포함 파일과 폴더가 모두 적혀야 한다.
 - 작업 진행상황이나 도메인 사실을 스킬에 넣지 않아야 한다.
 - 작업·서브에이전트와의 연계는 `계약 연계` 섹션에 남아 있어야 한다.
-- `python .claude/skills/update-skill-index/scripts/update_index.py --check`가 통과해야 한다.
+- `python .claude/hooks/update_skill_index.py --check`가 통과해야 한다.
 
 ## 자주 발생하는 실패 사례
 
 - 일회성 작업을 스킬로 만듦 → `write-task`로 작업 패킷을 작성한다.
 - 역할 정의를 스킬에 넣음 → `write-subagent`로 에이전트 정의를 작성한다.
-- 색인을 손으로 수정함 → `update-skill-index`를 실행한다.
+- 색인을 손으로 수정함 → ConfigChange 훅이 `.claude/hooks/update_skill_index.py`로 자동 갱신한다.
