@@ -23,7 +23,7 @@ Apply the write rules in the `AGENTS.md` I/O table. Before writing, check the ga
 - **`.claude/memory/memory.md`** — write only if the fact is confirmed, future-relevant, project-scoped, and free of sensitive content. Otherwise skip. This checked-in file is the canonical shared project memory; Claude auto memory is disabled by default in shared settings.
 - **`.claude/memory/user_preferences.md`** — stable project-scoped preferences only (output format, review standard, confirmed terminology). Not one-time requests, sensitive facts, or personality claims.
 - **`.claude/memory/word.json`** — must stay valid JSON with the `term`/`ko`/`definition`/`use_when` shape. Manage it through the `register-term` skill rather than editing by hand, so fields are validated and duplicates are blocked. Direct Claude file edits are blocked by the project hook, and Bash changes are revalidated after tool use. Treat it as an actively maintained resource: when a project-specific term recurs and is missing, proactively offer to register it and confirm the four fields with the user first — do not guess a definition.
-- **`.claude/skills/`** — reusable methods only, never one-time tasks. One skill per folder (`.claude/skills/<name>/SKILL.md`); copy `.claude/skills/_template/` and let the `ConfigChange` project hook regenerate `.claude/skills/skills.md`.
+- **`.claude/skills/`** — reusable methods only, never one-time tasks. One skill per folder (`.claude/skills/<name>/SKILL.md`); use `write-skill` and let the `ConfigChange` project hook regenerate `.claude/skills/skills.md`.
 - **`.claude/tasks/tasks.md`** — current work only, never durable memory.
 
 ## Final Principle

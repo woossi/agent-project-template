@@ -35,7 +35,7 @@ Use these paths exactly. If a file is missing, do not invent its contents; conti
 | Claude adapter | `.claude/CLAUDE.md` | Claude-specific execution and response rules |
 | Claude settings | `.claude/settings.json` | Shared Claude Code settings, hooks, plugin defaults, and memory mode |
 | Claude hooks | `.claude/hooks/` | Deterministic guard and validation scripts called by `.claude/settings.json` |
-| Claude agents | `.claude/agents/` | Project-scoped Claude subagent definitions and agent index |
+| Claude agents | `.claude/agents/` | Project-scoped Claude subagent definitions and generated agent index |
 | Agent policies | `.claude/policies/` | Machine-readable policy files consumed by project hooks |
 | Project memory | `.claude/memory/memory.md` | Durable context and accepted decisions |
 | User preferences | `.claude/memory/user_preferences.md` | Stable project-scoped preferences |
@@ -51,58 +51,29 @@ Use these paths exactly. If a file is missing, do not invent its contents; conti
 | `.claude/CLAUDE.md` | `AGENTS.md`, user request, files in read order | Claude execution loop, response format, file-update discipline | Keep synchronized with `AGENTS.md`. No domain-specific assumptions. |
 | `.claude/settings.json` | Claude Code runtime settings and hook registrations | Shared project defaults for plugins, hooks, memory mode, and permissions | Keep project-neutral. Shared settings keep `autoMemoryEnabled` disabled so checked-in `.claude/memory/` remains the canonical project memory. Re-enable auto memory only in a project-specific fork or local settings with explicit storage scope. |
 | `.claude/hooks/` | Claude Code hook JSON on stdin, project files, validation scripts | Non-interactive guard and validation behavior | Keep scripts deterministic, project-neutral, and safe to run repeatedly. Do not put domain content or task progress here. |
-| `.claude/agents/` | Repeated project role, trigger, tool scope, and handoff expectations | One Markdown file per Claude subagent plus `agents.md` index | Keep reusable and project-neutral. Do not store task progress here. Align agent `name` values with `.claude/policies/agent-workspace.json` only when the agent has a path or Bash boundary. |
+| `.claude/agents/` | Repeated project role, trigger, tool scope, and handoff expectations | One Markdown file per Claude subagent plus generated `agents.md` index | Keep reusable and project-neutral. Do not store task progress here. Align agent `name` values with `.claude/policies/agent-workspace.json` only when the agent has a path or Bash boundary. Do not hand-edit the generated index section. |
 | `.claude/policies/` | Hook-readable project policy such as agent workspace boundaries | Valid JSON policy files and short operating notes | Keep policy data deterministic and machine-readable. Do not store secrets, personal preferences, task progress, or domain content here. |
 | `.claude/memory/memory.md` | Confirmed durable facts, accepted decisions, stable constraints | Short dated entries reusable later | Store only confirmed, likely-to-matter facts. No temporary progress or guesses. This checked-in file is the canonical shared project memory; Claude auto memory is disabled in shared settings by default. |
 | `.claude/memory/user_preferences.md` | Explicit preferences, repeated stable choices | Project-scoped preferences for style, output, review level | No personal profiles or sensitive data. Task-local preferences go in `.claude/tasks/tasks.md`. |
 | `.claude/memory/word.json` | Terms, abbreviations, translations, definitions | Valid JSON dictionary entries | Keep valid JSON, no comments. Each entry uses `term`, `ko`, `definition`, `use_when`. Add or update through the `register-term` skill (it validates fields and blocks duplicates); do not hand-edit ad hoc. Direct Claude file edits are blocked by the project hook, and Bash changes are revalidated after tool use. This dictionary is meant to be grown actively: when a project-specific term recurs and is not yet recorded, proactively propose adding it, confirm the four fields with the user, then register — never invent a definition. |
-| `.claude/skills/` | A repeated workflow with trigger, inputs, procedure, output, failure cases | Reusable skill folders, each with a `SKILL.md`; `.claude/skills/skills.md` is the generated English index | Reusable methods only, not task logs. One skill per folder; copy `.claude/skills/_template/` to start; let the `ConfigChange` project hook regenerate the index. |
+| `.claude/skills/` | A repeated workflow with trigger, inputs, procedure, output, failure cases | Reusable skill folders, each with a `SKILL.md`; `.claude/skills/skills.md` is the generated English index | Reusable methods only, not task logs. One skill per folder; use the `write-skill` skill and its template; let the `ConfigChange` project hook regenerate the index. |
 | `.claude/tasks/tasks.md` | User request, objective, inputs, expected output, completion criteria | Current task packet with status and verification | Current work only, not durable memory. Mark uncertainty instead of assuming. |
 
 ## Standard Formats
 
-These templates are the single source of truth. Other files reference them rather than redefining them.
-
-### Task Packet — `.claude/tasks/tasks.md`
-
-```md
-# Task
-
-## Status
-pending | in_progress | blocked | complete
-
-## Objective
-One sentence describing the outcome.
-
-## Background
-Why this task is needed.
-
-## Inputs
-- Input file, data, prompt, or source
-
-## Expected Output
-- Concrete deliverable
-
-## Decisions Needed
-- Decision or question
-
-## Risks
-- Risk or uncertainty
-
-## Verification
-- Check that proves the output is valid
-
-## Completion Criteria
-- Condition that makes the task complete
-```
+Skill-owned templates are the single source of truth. Other files reference them rather than redefining them.
 
 ### Skill Folder — `.claude/skills/<name>/`
 
-One skill per folder. `SKILL.md` is the only required file and must list every other file and subfolder under "Internal Resources". Copy `.claude/skills/_template/` to start; the index in `.claude/skills/skills.md` is regenerated by the `ConfigChange` project hook. The `SKILL.md` template is Korean and lives in `.claude/skills/_template/SKILL.md`; read it only when creating or restructuring a skill.
+One skill per folder. `SKILL.md` is the only required file and must list every other file and subfolder under `내부 자원`. Use `.claude/skills/write-skill/SKILL.md`; its template lives at `.claude/skills/write-skill/templates/SKILL.md`.
+
+### Task Packet — `.claude/tasks/tasks.md`
+
+Use `.claude/skills/write-task/SKILL.md`; its template lives at `.claude/skills/write-task/templates/task.md`.
 
 ### Agent File — `.claude/agents/<name>.md`
 
-One Claude subagent per Markdown file. Use `.claude/agents/_template/AGENT.md` to start. The YAML `name` must be stable; if the agent has a workspace boundary, use the same name under `.claude/policies/agent-workspace.json`.
+One Claude subagent per Markdown file. Use `.claude/skills/write-subagent/SKILL.md`; its template lives at `.claude/skills/write-subagent/templates/AGENT.md`. The YAML `name` must be stable; if the agent has a workspace boundary, use the same name under `.claude/policies/agent-workspace.json`.
 
 ### Memory Entry — `.claude/memory/memory.md`
 
