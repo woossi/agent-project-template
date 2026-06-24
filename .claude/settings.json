@@ -115,6 +115,17 @@
             "timeout": 30
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/detect_derivations.py\"",
+            "statusMessage": "Evaluating memory derivation conditions",
+            "timeout": 30
+          }
+        ]
       }
     ],
     "SessionStart": [
@@ -125,6 +136,17 @@
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/detect_promotions.py\"",
             "statusMessage": "Surfacing pending skill/agent promotion candidates",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/detect_derivations.py\"",
+            "statusMessage": "Surfacing pending memory derivation candidates",
             "timeout": 30
           }
         ]

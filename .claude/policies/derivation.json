@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "log": {
+    "signals": ".context/memory-log/signals.jsonl",
+    "candidates": ".context/memory-promotions/candidates.json",
+    "decisions": ".context/memory-promotions/decisions.json"
+  },
+  "preference_derivation": {
+    "min_recurrence": 2,
+    "min_distinct_sessions": 1,
+    "skip_if_recorded": true,
+    "max_candidates": 20
+  },
+  "term_derivation": {
+    "min_recurrence": 2,
+    "min_distinct_sessions": 1,
+    "skip_if_registered": true,
+    "max_candidates": 20
+  }
+}

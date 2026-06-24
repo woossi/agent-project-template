@@ -1,9 +1,10 @@
 # Agent Policies
 
-Machine-readable policy files consumed by the project hooks. Two policies ship today:
+Machine-readable policy files consumed by the project hooks. Three policies ship today:
 
 - `agent-workspace.json` — workspace and Bash boundaries for `.claude/hooks/guard_agent_workspace.py`.
 - `promotion.json` — concrete skill/agent promotion conditions for `.claude/hooks/detect_promotions.py`.
+- `derivation.json` — concrete memory→preference/term derivation conditions for `.claude/hooks/detect_derivations.py`.
 
 ## Agent Workspace Policy
 
@@ -70,15 +71,15 @@ reads this policy, evaluates the ledger, and re-surfaces qualifying candidates.
     "decisions": ".context/promotions/decisions.json"
   },
   "skill_promotion": {
-    "min_recurrence": 3,
-    "min_distinct_sessions": 2,
+    "min_recurrence": 1,
+    "min_distinct_sessions": 1,
     "skip_if_skill_exists": true,
     "max_candidates": 20
   },
   "agent_promotion": {
     "min_package_size": 2,
-    "min_cousage": 3,
-    "min_distinct_sessions": 2,
+    "min_cousage": 1,
+    "min_distinct_sessions": 1,
     "skip_if_agent_exists": true,
     "max_candidates": 20
   }
@@ -95,6 +96,66 @@ reads this policy, evaluates the ledger, and re-surfaces qualifying candidates.
 - `skip_if_skill_exists` / `skip_if_agent_exists` suppress candidates that already exist.
 - `max_candidates` caps how many of each kind are surfaced at once.
 
+The shipped defaults set every count gate to `1` (`min_recurrence`, `min_cousage`,
+and `min_distinct_sessions`), so a candidate surfaces on its first occurrence in a
+single session — about 3x more frequently than the original `3`/`2` gates, which
+required three occurrences spread over two sessions. `min_package_size` is a
+structural size gate, not a frequency knob, so it stays at `2`. Raise these values
+to make promotion stricter again.
+
 Tune thresholds here, never in the hook code. All log paths stay under `.context/`
 (transient, git-ignored). Close a surfaced candidate with
 `detect_promotions.py resolve --kind {skill,agent} --key <key> --decision {promote,decline}`.
+
+## Derivation Policy
+
+`derivation.json` is the memory side of the same enforced-loop idea: it holds the
+conditions that move a broad durable fact in `.claude/memory/memory.md` into a
+narrower store — a stable preference in `.claude/memory/user_preferences.md` or a
+term in `.claude/memory/word.json`. `detect_derivations.py` reads this policy,
+evaluates the signals, and re-surfaces qualifying candidates until each is derived
+and resolved (or declined).
+
+```json
+{
+  "version": 1,
+  "log": {
+    "signals": ".context/memory-log/signals.jsonl",
+    "candidates": ".context/memory-promotions/candidates.json",
+    "decisions": ".context/memory-promotions/decisions.json"
+  },
+  "preference_derivation": {
+    "min_recurrence": 2,
+    "min_distinct_sessions": 1,
+    "skip_if_recorded": true,
+    "max_candidates": 20
+  },
+  "term_derivation": {
+    "min_recurrence": 2,
+    "min_distinct_sessions": 1,
+    "skip_if_registered": true,
+    "max_candidates": 20
+  }
+}
+```
+
+Two deterministic signal sources feed detection:
+
+- **Explicit memory markers** — a `memory.md` entry may carry an optional
+  `Derive: preference` or `Derive: term: <word>` line. Such an entry is treated as
+  an explicit, already-qualifying signal and surfaces immediately, regardless of
+  the recurrence gate. This is the literal "memory → derive" bridge.
+- **Recorded observations** — `detect_derivations.py record-signal --kind
+  {preference,term} --key <key> --session <id>` appends a semantic observation to
+  `signals.jsonl`. A key that recurs at least `min_recurrence` times across at
+  least `min_distinct_sessions` sessions qualifies on the threshold, mirroring how
+  task signatures drive skill promotion.
+
+- `skip_if_recorded` suppresses a preference key already present in
+  `user_preferences.md`; `skip_if_registered` suppresses a term already in
+  `word.json` (case-insensitive). `max_candidates` caps each kind.
+- Authoring stays a judgment step: a preference candidate is written into
+  `user_preferences.md` (confirm it is stable and project-scoped first), a term
+  candidate is registered with the `register-term` skill (confirm the four fields
+  with the user; never invent a definition). Close a candidate with
+  `detect_derivations.py resolve --kind {preference,term} --key <key> --decision {promote,decline}`.
