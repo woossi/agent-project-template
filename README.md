@@ -25,8 +25,7 @@ agent-project-template/
     │   └── register-term/     # word.json 용어 등록·검증
     ├── tasks/
     │   └── tasks.md           # 현재 작업 패킷 (지속 메모리 아님)
-    ├── mcp/                   # MCP 서버 등록 관리 (정의 조각·운영 메모)
-    └── hookify.*.local.md     # hookify 규칙 (절차 누락 방지 리마인더)
+    └── mcp/                   # MCP 서버 등록 관리 (정의 조각·운영 메모)
 ```
 
 ## 핵심 진입점
@@ -42,14 +41,9 @@ agent-project-template/
 | `update-skill-index` | `skills/`를 스캔해 `skills.md`의 색인 표를 자동 재생성합니다. |
 | `register-term` | 용어를 필수 4개 필드(`term`/`ko`/`definition`/`use_when`)로 검증해 `word.json`에 안전하게 등록합니다. |
 
-## 자동화 (hookify)
+## 자동화
 
-`.claude/hookify.*.local.md` 규칙은 특정 상황에서 절차를 빠뜨리지 않도록 리마인더를 띄웁니다.
-
-- `update-skill-index` — 스킬의 `SKILL.md`를 추가/수정하면 색인 갱신을 안내합니다.
-- `register-term` — 용어 등록 의도가 보이면 `register-term` 스킬 사용을 안내합니다.
-
-> 참고: `.claude/settings.json`에는 `SKILL.md` 변경 시 영어 색인을 자동 실행하는 `FileChanged` 훅도 설정되어 있습니다. hookify 규칙은 그에 대한 보조 안전망입니다.
+`.claude/settings.json`에는 `SKILL.md` 변경 시 영어 색인을 자동 실행하는 `FileChanged` 훅이 설정되어 있습니다.
 
 ## 사용 방법
 
