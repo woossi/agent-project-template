@@ -33,6 +33,23 @@ def valid_payload() -> dict:
     }
 
 
+def project_setup_payload() -> dict:
+    return {
+        "agent_name": "knowledge-base-manager",
+        "agent_purpose": "지식 DB 관리와 지식 그래프 유지 및 업데이트",
+        "role": "로컬 지식 관리 에이전트",
+        "workspace_paths": [".", "/Users/ujunbin/knowledge"],
+        "inputs": ["사용자 요청", "/Users/ujunbin/knowledge"],
+        "outputs": ["갱신된 지식 DB", "검증된 지식 그래프"],
+        "verification": ["변경 파일과 그래프 연결을 확인한다"],
+        "constraints": ["근거 없이 지식을 만들지 않는다"],
+        "operating_rules": ["지식은 압축적으로 관리한다"],
+        "memory_rules": ["장기 맥락만 .claude/memory/에 남긴다"],
+        "initial_notes": ["GitHub 템플릿 문구를 남기지 않는다"],
+        "bash": {"allow": ["rg *", "sed *"], "deny": ["rm *"]},
+    }
+
+
 class InitAgentCloneTest(unittest.TestCase):
     def run_script(
         self,
@@ -56,6 +73,34 @@ class InitAgentCloneTest(unittest.TestCase):
             capture_output=True,
             check=False,
         )
+
+    def test_project_setup_rewrites_entry_files_without_template_meta(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / ".claude").mkdir()
+            (root / "AGENTS.md").write_text("reusable template fork project-neutral\n", encoding="utf-8")
+            (root / ".claude/CLAUDE.md").write_text("템플릿 포크 프로젝트-중립\n", encoding="utf-8")
+
+            result = self.run_script(root, project_setup_payload(), "--project-setup", "--update-policy")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            agents_text = (root / "AGENTS.md").read_text(encoding="utf-8")
+            claude_text = (root / ".claude/CLAUDE.md").read_text(encoding="utf-8")
+            combined = agents_text + "\n" + claude_text
+            for expected in (
+                "knowledge-base-manager",
+                "지식 DB 관리",
+                "로컬 지식 관리 에이전트",
+                "/Users/ujunbin/knowledge",
+            ):
+                self.assertIn(expected, combined)
+            for forbidden in ("template", "project-neutral", "fork", "템플릿", "프로젝트-중립", "포크"):
+                self.assertNotIn(forbidden, combined)
+            self.assertFalse((root / ".context/agents/knowledge-base-manager").exists())
+
+            policy = json.loads((root / ".claude/policies/agent-workspace.json").read_text(encoding="utf-8"))
+            self.assertEqual(policy["defaults"]["allow"], [".", "/Users/ujunbin/knowledge"])
+            self.assertEqual(policy["defaults"]["bash"]["allow"], ["rg *", "sed *"])
 
     def test_creates_bootstrap_and_canonical_input(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -107,6 +152,15 @@ class InitAgentCloneTest(unittest.TestCase):
             self.assertEqual(policy["agents"]["reviewer-a"]["allow"], ["AGENTS.md", ".claude/**"])
             self.assertEqual(policy["agents"]["reviewer-a"]["deny"], [".env", "data/raw/**"])
             self.assertEqual(policy["agents"]["reviewer-a"]["bash"]["allow"], ["rg *"])
+
+    def test_skill_document_routes_project_adaptation_to_project_setup_mode(self) -> None:
+        text = (REPO_ROOT / ".claude/skills/agent-clone-setup/SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("초기 전환", text)
+        self.assertIn("프로젝트 자체", text)
+        self.assertIn("--project-setup", text)
+        self.assertIn("AGENTS.md", text)
+        self.assertIn(".claude/CLAUDE.md", text)
 
 
 if __name__ == "__main__":

@@ -80,6 +80,31 @@ class GuardAgentWorkspaceTest(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn("outside allowed workspace", result.stderr)
 
+    def test_allows_absolute_path_when_explicitly_allowlisted(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as external:
+            root = Path(tmp)
+            knowledge = Path(external) / "knowledge"
+            result = self.run_hook(
+                root,
+                {
+                    "version": 1,
+                    "defaults": {"allow": ["."], "deny": []},
+                    "agents": {
+                        "writer": {
+                            "allow": ["docs/**", str(knowledge / "**")],
+                            "deny": [],
+                        }
+                    },
+                },
+                {
+                    "hook_event_name": "PreToolUse",
+                    "tool_name": "Read",
+                    "tool_input": {"file_path": str(knowledge / "graph.md")},
+                },
+            )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_blocks_denied_path_even_when_allowed(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

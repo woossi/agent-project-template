@@ -150,13 +150,25 @@ def relative_path(raw_path: str, root: Path) -> str | None:
     return rel.as_posix() or "."
 
 
+def path_targets(raw_path: str, root: Path) -> tuple[str | None, str]:
+    candidate = Path(raw_path).expanduser()
+    if not candidate.is_absolute():
+        candidate = root / candidate
+    resolved = candidate.resolve(strict=False)
+    try:
+        rel = resolved.relative_to(root).as_posix() or "."
+    except ValueError:
+        rel = None
+    return rel, resolved.as_posix()
+
+
 def normalize_pattern(pattern: str, root: Path) -> str:
     path = Path(pattern).expanduser()
     if path.is_absolute():
         try:
             return path.resolve(strict=False).relative_to(root).as_posix()
         except ValueError:
-            return pattern
+            return path.resolve(strict=False).as_posix()
     normalized = pattern.replace("\\", "/")
     while normalized.startswith("./"):
         normalized = normalized[2:]
@@ -173,28 +185,37 @@ def path_matches(pattern: str, rel_path: str, root: Path) -> bool:
     return rel_path == pattern or fnmatch.fnmatchcase(rel_path, pattern)
 
 
+def path_matches_target(pattern: str, rel_path: str | None, abs_path: str, root: Path) -> bool:
+    if rel_path is not None and path_matches(pattern, rel_path, root):
+        return True
+    if Path(pattern).expanduser().is_absolute():
+        return path_matches(pattern, abs_path, root)
+    return False
+
+
 def command_matches(pattern: str, command: str) -> bool:
     return fnmatch.fnmatchcase(command, pattern)
 
 
 def check_path_policy(paths: list[str], root: Path, config: dict[str, Any]) -> int:
     for raw_path in paths:
-        rel = relative_path(raw_path, root)
-        if rel is None:
+        rel, abs_path = path_targets(raw_path, root)
+        display_path = rel if rel is not None else abs_path
+        if any(path_matches_target(pattern, rel, abs_path, root) for pattern in config["deny"]):
             print(
-                f"Blocked {raw_path}: outside project root for agent {config['agent']}.",
+                f"Blocked {display_path}: denied by workspace policy for agent {config['agent']}.",
                 file=sys.stderr,
             )
             return 2
-        if any(path_matches(pattern, rel, root) for pattern in config["deny"]):
+        if not any(path_matches_target(pattern, rel, abs_path, root) for pattern in config["allow"]):
+            if rel is None:
+                print(
+                    f"Blocked {abs_path}: outside project root for agent {config['agent']}.",
+                    file=sys.stderr,
+                )
+                return 2
             print(
-                f"Blocked {rel}: denied by workspace policy for agent {config['agent']}.",
-                file=sys.stderr,
-            )
-            return 2
-        if not any(path_matches(pattern, rel, root) for pattern in config["allow"]):
-            print(
-                f"Blocked {rel}: outside allowed workspace for agent {config['agent']}.",
+                f"Blocked {display_path}: outside allowed workspace for agent {config['agent']}.",
                 file=sys.stderr,
             )
             return 2

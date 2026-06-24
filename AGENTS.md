@@ -25,6 +25,12 @@ When instructions conflict, follow this order:
 
 `AGENTS.md` is the shared contract. `.claude/CLAUDE.md` is a runtime adapter and must not override it.
 
+## Initial Local Agent Setup
+
+When the user copies this folder to create a local agent project, use the `agent-clone-setup` skill in `--project-setup` mode first. That mode rewrites `AGENTS.md` and `.claude/CLAUDE.md` for the actual agent role and can update `.claude/policies/agent-workspace.json`.
+
+Do not create `.context/agents/` bootstrap packets or `.claude/agents/` subagent files unless the user explicitly asks for a cloned subagent.
+
 ## Canonical Files
 
 Use these paths exactly. If a file is missing, do not invent its contents; continue with available context and report the gap only when it affects the task.

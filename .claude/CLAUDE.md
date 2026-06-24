@@ -10,6 +10,8 @@ Claude runtime adapter for this agent-template project. The shared `AGENTS.md` c
 
 Optimize for reusable, verifiable work. Do not add project-specific domains, datasets, methods, or goals unless the user explicitly asks for a project-specific adaptation.
 
+If the user asks to turn this folder into a local agent project, use `agent-clone-setup` in `--project-setup` mode. Create `.context/agents/` bootstrap packets or `.claude/agents/` subagent files only when the user explicitly asks for a cloned subagent.
+
 ## Component Handling
 
 Apply the write rules in the `AGENTS.md` I/O table. Before writing, check the gate for each component:
