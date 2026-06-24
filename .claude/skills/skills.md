@@ -1,72 +1,57 @@
-# 스킬
+# Skills
 
-재사용 가능한 작업 절차의 **색인**입니다. 각 스킬은 자기 폴더(`skills/<이름>/`)를 가지며, `SKILL.md` 하나만 필수입니다.
+This file is the generated skill index. Each skill lives in its own folder
+(`skills/<name>/`) and must include a `SKILL.md` file.
 
-진입 시에는 아래 **스킬 색인**만 읽으세요. 개별 스킬의 본문(`SKILL.md`)과 내부 코드는 그 스킬이 필요할 때만 엽니다. 아래 "스킬 작성 규칙"은 **새 스킬을 만들 때만** 읽으면 됩니다.
+Read only the **Skill Index** table at startup. Open a skill's `SKILL.md` only
+when the request clearly matches that workflow. The detailed skill documents
+are written in Korean for human editing; this index stays English because it is
+automatically managed.
 
-> 색인은 `update-skill-index` 스킬이 자동 갱신합니다.
-> 수동 갱신: `python skills/update-skill-index/scripts/update_index.py`
+> The `update-skill-index` hook manages this file automatically when a skill
+> `SKILL.md` changes.
 
-## 스킬 색인
+## Skill Index
 
-| 스킬 | 폴더 | 한 줄 설명 |
+| Skill | Folder | Load rule |
 | --- | --- | --- |
-| register-term | `register-term/` | 용어의 정의를 사용자에게 명확히 받아, 필수 4개 필드(`term`/`ko`/`definition`/`use_when`)를 갖춘 항목으로 `word.json`에 안전하게(중복·필드 누락·JSON 깨짐 없이) 기록한다. 즉흥적이거나 불완전한 용어 등록을 방지한다. |
-| update-skill-index | `update-skill-index/` | `skills/`를 스캔해 각 스킬의 `SKILL.md`에서 이름과 목적을 읽어 `skills.md`의 색인 표를 자동으로 재생성한다. 수동 색인 관리 누락을 방지한다. |
+| register-term | `register-term/` | Open `register-term/SKILL.md` only when the request clearly matches the `register-term` workflow. |
+| update-skill-index | `update-skill-index/` | Open `update-skill-index/SKILL.md` only when the request clearly matches the `update-skill-index` workflow. |
 
 ---
 
-## 스킬 작성 규칙
+## Skill Authoring Rules
 
-> 새 스킬을 만들거나 구조를 바꿀 때만 읽으세요. 일상 작업에서는 위 색인만으로 충분합니다.
+Read this section only when creating or restructuring a skill.
 
-### 언제 스킬로 만드나
+### When To Create A Skill
 
-다음을 모두 갖춘 워크플로일 때만: 반복되는 트리거 · 명확한 입력 · 안정적 절차 · 예측 가능한 출력 형식 · 품질 점검 기준 · 알려진 실패 사례. (일회성 작업·진행 기록·메모리는 스킬이 아님)
+Create a skill only for a reusable workflow with all of these properties:
+repeated trigger, clear inputs, stable procedure, predictable output format,
+quality checks, and known failure cases.
 
-### 폴더 구조 (고정)
+One-off tasks, progress logs, and durable facts are not skills.
+
+### Fixed Folder Structure
 
 ```text
 skills/
-  skills.md            # 색인 (이 파일)
-  _template/           # 새 스킬을 만들 때 복사하는 본보기
-  <스킬이름>/           # 스킬 하나 = 폴더 하나 (kebab-case 권장)
-    SKILL.md           # 필수: 메타 + 절차 + 모든 내부 자원 명시
-    <자유 파일/폴더>     # 코드·참조·예제·데이터 등 자유 구성 (예: scripts/, references/)
+  skills.md            # generated index file
+  _template/           # template copied when creating a new skill
+  <skill-name>/        # one skill = one folder, English kebab-case
+    SKILL.md           # required: Korean human-authored skill body
+    <free files/folders>
 ```
 
-- 스킬 하나당 폴더 하나. 폴더 이름이 곧 스킬 이름.
-- `SKILL.md`는 폴더 내 **모든 파일·폴더를 "내부 자원" 절에 명시**해야 함 (떠도는 파일 금지).
-- 새 스킬은 `_template/`을 복사해 시작하고, 색인은 위 자동 갱신 스크립트로 추가.
-- 폴더를 삭제·이름변경하면 색인과 다른 참조도 같은 작업에서 갱신.
+- Use one folder per skill.
+- Use English kebab-case for the folder name because the generated index uses
+  folder names as English routing signals.
+- `SKILL.md` must list every file and subfolder under "내부 자원".
+- Start new skills by copying `_template/`.
+- Do not edit the Skill Index table by hand; the project hook regenerates it.
+- If a folder is deleted or renamed, update references in the same change.
 
-### SKILL.md 양식
+### SKILL.md Template
 
-```md
-# 스킬: <이름>
-
-## 사용 시점
-트리거 조건.
-
-## 목적
-재사용 목표. (색인의 "한 줄 설명"이 이 절 첫 문장에서 추출됨)
-
-## 입력
-- 필요한 입력
-
-## 절차
-1. 단계 (내부 자원은 `scripts/run.py`처럼 폴더 기준 상대경로로 참조)
-
-## 출력 형식
-기대하는 결과 형식.
-
-## 내부 자원
-- `scripts/<파일>` — 역할
-- (이 폴더의 모든 파일·하위폴더를 빠짐없이 나열)
-
-## 품질 점검
-- 검증 규칙
-
-## 자주 발생하는 실패 사례
-- 실패 양상과 해결 방법
-```
+The canonical human-authored skill template is in `_template/SKILL.md`. Keep
+that template Korean so people can write and review skill procedures directly.
