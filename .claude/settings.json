@@ -10,7 +10,10 @@
   "disabledMcpjsonServers": [],
   "extraKnownMarketplaces": {
     "claude-code-plugins": {
-      "source": { "source": "github", "repo": "anthropics/claude-code" }
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-code"
+      }
     }
   },
   "enabledPlugins": {
@@ -126,6 +129,17 @@
             "timeout": 30
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/detect_feedback.py\"",
+            "statusMessage": "Evaluating inbound agent feedback",
+            "timeout": 30
+          }
+        ]
       }
     ],
     "SessionStart": [
@@ -147,6 +161,17 @@
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/detect_derivations.py\"",
             "statusMessage": "Surfacing pending memory derivation candidates",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/detect_feedback.py\"",
+            "statusMessage": "Surfacing pending inbound feedback",
             "timeout": 30
           }
         ]

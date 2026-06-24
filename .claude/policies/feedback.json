@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "agent": {
+    "self": "",
+    "peer": "",
+    "peer_inbox": ""
+  },
+  "log": {
+    "inbox": ".context/feedback/inbox.jsonl",
+    "outbox": ".context/feedback/outbox.jsonl",
+    "candidates": ".context/feedback/candidates.json",
+    "decisions": ".context/feedback/decisions.json"
+  },
+  "surface": {
+    "max_open": 10,
+    "min_severity": "minor",
+    "recurrence_signal": {
+      "min_recurrence": 2,
+      "min_distinct_sessions": 1
+    }
+  },
+  "kinds": ["praise", "issue", "request_change", "question"],
+  "severity_order": ["info", "minor", "major", "critical"]
+}
