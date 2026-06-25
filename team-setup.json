@@ -2,11 +2,17 @@
   "team": "team-umc",
   "members": [
     "data-curator",
-    "paper-scout"
+    "paper-scout",
+    "manuscript-writer",
+    "stats-validator",
+    "quality-reviewer"
   ],
   "roles": {
     "data-curator": "프로젝트 관련 자료·데이터·분석 결과·그림을 체계적으로 관리하고 팀 컨텍스트 자원으로 지원",
-    "paper-scout": "연구 논문 서칭 에이전트: 고품질 학술 논문을 검색·선별하고 PDF를 다운로드한다"
+    "paper-scout": "연구 논문 서칭 에이전트: 고품질 학술 논문을 검색·선별하고 PDF를 다운로드한다",
+    "manuscript-writer": "원고 작성 에이전트: SSCI Q1 기준에 맞춰 논문 파트별(서론·관련연구·방법·결과·논의) 글을 작성·재작성하고 LaTeX 원고를 정련한다",
+    "stats-validator": "통계·계량 분석 검증 에이전트: analysis/의 분석 파이프라인(EB 수축, 공간적 자기상관, 텍스트 전처리·LLM 코딩 등)을 독립 재현하고, 원고의 수치·표·방법 주장이 데이터·코드와 일치하는지 대조·검증한다. 검증하지 못한 수치는 불확실로 표시한다",
+    "quality-reviewer": "독립 품질 검수 에이전트: 집필자와 분리되어 전 섹션 정합성·완결성, 방법론 기여의 SSCI Q1 심사기준 정렬, 선정 저널 투고요건 충족을 판정한다. 원고를 직접 집필하지 않고 검수 의견·체크리스트·재작업 지시만 산출한다"
   },
   "authoring_owner": "data-curator",
   "min_distinct_agents": 2,

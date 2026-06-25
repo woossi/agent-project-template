@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import tempfile
@@ -44,12 +45,22 @@ class UpdateAgentIndexTest(unittest.TestCase):
         )
         return index
 
-    def run_script(self, *args: str) -> subprocess.CompletedProcess[str]:
+    def run_script(
+        self,
+        *args: str,
+        env: dict[str, str] | None = None,
+        cwd: str | None = None,
+    ) -> subprocess.CompletedProcess[str]:
+        run_env = None
+        if env is not None:
+            run_env = {**os.environ, **env}
         return subprocess.run(
             [sys.executable, str(SCRIPT), *args],
             text=True,
             capture_output=True,
             check=False,
+            env=run_env,
+            cwd=cwd,
         )
 
     def test_updates_agent_index_and_check_detects_staleness(self) -> None:
@@ -73,6 +84,37 @@ class UpdateAgentIndexTest(unittest.TestCase):
             current = self.run_script("--agents-dir", str(root / ".claude/agents"), "--check")
             self.assertEqual(current.returncode, 0, current.stderr)
             self.assertIn("agent index is current", current.stdout)
+
+    def test_resolves_index_via_project_dir_not_cwd(self) -> None:
+        """Regression: a PostToolUse hook runs with the shell cwd at any project
+        subdirectory, so the index must be resolved from CLAUDE_PROJECT_DIR, not
+        Path.cwd(). Run with no --agents-dir and cwd pointed elsewhere."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.make_root(root)
+            elsewhere = root / "subdir" / "deep"
+            elsewhere.mkdir(parents=True)
+
+            result = self.run_script(
+                env={"CLAUDE_PROJECT_DIR": str(root)}, cwd=str(elsewhere)
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_missing_index_is_non_blocking_as_hook_but_fails_check(self) -> None:
+        """As a hook (no --check) a missing index must exit 0 so it never blocks
+        an unrelated tool call; under --check it is a contract failure."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)  # no .claude/agents/agents.md created
+
+            hook = self.run_script(env={"CLAUDE_PROJECT_DIR": str(root)}, cwd=str(root))
+            self.assertEqual(hook.returncode, 0, hook.stderr)
+            self.assertIn("skipping", hook.stderr)
+
+            check = self.run_script(
+                "--check", env={"CLAUDE_PROJECT_DIR": str(root)}, cwd=str(root)
+            )
+            self.assertEqual(check.returncode, 1)
+            self.assertIn("does not exist", check.stderr)
 
 
 if __name__ == "__main__":

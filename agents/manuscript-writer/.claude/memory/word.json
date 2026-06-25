@@ -1,0 +1,5 @@
+{
+  "schema_version": "1.0",
+  "description": "Private terminology for agent manuscript-writer. Team-shared terms live in .team/word.json.",
+  "terms": []
+}

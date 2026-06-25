@@ -1,0 +1,12 @@
+{
+  "id": "umc-논문화__sscr-투고-체크리스트-재생성-context-산출물",
+  "goal": "umc-논문화",
+  "title": "SSCR 투고 체크리스트 재생성(.context 산출물)",
+  "criterion": "투고 패키지 완비(cover letter, 초록, 키워드, figure/table, 참고문헌 양식)",
+  "assignee": "paper-scout",
+  "status": "pending",
+  "created_by": "orchestrator",
+  "updated_by": "orchestrator",
+  "created_ts_ns": 1782386887366324000,
+  "updated_ts_ns": 1782386887366325000
+}

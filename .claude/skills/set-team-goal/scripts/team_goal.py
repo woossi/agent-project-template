@@ -32,9 +32,30 @@ class GoalError(RuntimeError):
     """Raised on missing contract elements or an unknown goal id."""
 
 
+def _find_anchored_store(name: str) -> Path:
+    """Resolve a relative store name against the team root, not the cwd.
+
+    The CLI is run from anywhere under the repo (agent folders, skill dirs). A
+    bare ``.team`` resolved against the cwd lands in the wrong place, so goals and
+    tasks get written to or read from a phantom store. For a relative store name
+    we walk up from the cwd for a directory containing ``<name>/team.json`` (the
+    canonical shared store) and anchor there; otherwise fall back to the
+    cwd-relative path (original behaviour) so fresh trees and tests still work.
+    """
+    cwd = Path.cwd()
+    for base in (cwd, *cwd.parents):
+        candidate = base / name
+        if (candidate / "team.json").is_file():
+            return candidate
+    return cwd / name
+
+
 def resolve_store(explicit: str | None) -> Path:
     raw = explicit or os.environ.get("CLAUDE_TEAM_STORE") or ".team"
-    return Path(raw).expanduser()
+    path = Path(raw).expanduser()
+    if path.is_absolute():
+        return path
+    return _find_anchored_store(raw)
 
 
 def resolve_identity(explicit: str | None) -> str:

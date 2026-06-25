@@ -37,9 +37,43 @@ DEFAULT_LOG = {
 }
 
 
+def _find_repo_root(start: Path) -> Path:
+    """Walk up from ``start`` to the team repo root.
+
+    The root is the directory that anchors the shared store: it contains
+    ``.team/team.json`` (canonical) or, as a fallback, ``AGENTS.md``. Peers run
+    hooks from anywhere under the repo (agent folders, skill dirs), so a bare
+    cwd is not a reliable anchor. If nothing matches we keep ``start``.
+    """
+    for base in (start, *start.parents):
+        if (base / ".team" / "team.json").is_file() or (base / "AGENTS.md").is_file():
+            return base
+    return start
+
+
 def project_dir(payload: dict[str, Any]) -> Path:
-    raw = os.environ.get("CLAUDE_PROJECT_DIR") or payload.get("cwd") or os.getcwd()
-    return Path(str(raw)).expanduser().resolve()
+    """Resolve the per-agent log anchor.
+
+    The task ledger and promotion state are *per-agent private* (each peer is
+    isolated to ``agents/<name>/`` and its ``.context`` is not shared). So we
+    anchor to the repo root, then descend into ``agents/<CLAUDE_AGENT_NAME>/``
+    when an agent identity is set. This keeps every peer's ledger separated no
+    matter where the hook fires (the raw cwd / payload cwd is the session root
+    for all peers and would otherwise collapse them into the root ``.context``).
+
+    ``CLAUDE_PROJECT_DIR``, when explicitly set, still wins as a hard override.
+    """
+    explicit = os.environ.get("CLAUDE_PROJECT_DIR")
+    if explicit:
+        return Path(explicit).expanduser().resolve()
+    start = Path(str(payload.get("cwd") or os.getcwd())).expanduser().resolve()
+    root = _find_repo_root(start)
+    agent = os.environ.get("CLAUDE_AGENT_NAME") or ""
+    if agent:
+        agent_root = root / "agents" / agent
+        if agent_root.is_dir():
+            return agent_root
+    return root
 
 
 def load_log_paths(root: Path) -> dict[str, str]:

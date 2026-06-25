@@ -18,6 +18,7 @@ automatically managed.
 | agent-clone-setup | `agent-clone-setup/` | Open `agent-clone-setup/SKILL.md` only when the request clearly matches the `agent-clone-setup` workflow. |
 | create-team-agent | `create-team-agent/` | Open `create-team-agent/SKILL.md` only when the request clearly matches the `create-team-agent` workflow. |
 | give-feedback | `give-feedback/` | Open `give-feedback/SKILL.md` only when the request clearly matches the `give-feedback` workflow. |
+| journal-submission-checklist | `journal-submission-checklist/` | Open `journal-submission-checklist/SKILL.md` only when the request clearly matches the `journal-submission-checklist` workflow. |
 | process-feedback | `process-feedback/` | Open `process-feedback/SKILL.md` only when the request clearly matches the `process-feedback` workflow. |
 | register-term | `register-term/` | Open `register-term/SKILL.md` only when the request clearly matches the `register-term` workflow. |
 | reminders-team-bridge | `reminders-team-bridge/` | Open `reminders-team-bridge/SKILL.md` only when the request clearly matches the `reminders-team-bridge` workflow. |

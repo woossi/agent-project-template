@@ -40,9 +40,31 @@ class InboxError(RuntimeError):
     """Raised on bad identity, missing roster, or unknown recipient."""
 
 
+def _find_anchored_store(name: str) -> Path:
+    """Resolve a relative store name against the team root, not the cwd.
+
+    Peers run this CLI from anywhere under the repo (agent folders, skill dirs).
+    A bare ``.team`` resolved against the cwd lands in the wrong place and
+    messages are silently lost. So for a relative store name we walk up from the
+    cwd looking for a directory that already contains ``<name>/team.json`` (the
+    canonical shared store), and anchor there. If none is found we fall back to
+    the cwd-relative path (original behaviour), which keeps fresh/empty trees and
+    tests working.
+    """
+    cwd = Path.cwd()
+    for base in (cwd, *cwd.parents):
+        candidate = base / name
+        if (candidate / "team.json").is_file():
+            return candidate
+    return cwd / name
+
+
 def resolve_store(explicit: str | None) -> Path:
     raw = explicit or os.environ.get("CLAUDE_TEAM_STORE") or ".team"
-    return Path(raw).expanduser()
+    path = Path(raw).expanduser()
+    if path.is_absolute():
+        return path
+    return _find_anchored_store(raw)
 
 
 def resolve_identity(explicit: str | None) -> str:

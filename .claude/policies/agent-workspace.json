@@ -2,12 +2,42 @@
   "agents": {
     "data-curator": {
       "deny": [
-        "agents/paper-scout/**"
+        "agents/paper-scout/**",
+        "agents/manuscript-writer/**",
+        "agents/stats-validator/**",
+        "agents/quality-reviewer/**"
       ]
     },
     "paper-scout": {
       "deny": [
-        "agents/data-curator/**"
+        "agents/data-curator/**",
+        "agents/manuscript-writer/**",
+        "agents/stats-validator/**",
+        "agents/quality-reviewer/**"
+      ]
+    },
+    "manuscript-writer": {
+      "deny": [
+        "agents/data-curator/**",
+        "agents/paper-scout/**",
+        "agents/stats-validator/**",
+        "agents/quality-reviewer/**"
+      ]
+    },
+    "stats-validator": {
+      "deny": [
+        "agents/data-curator/**",
+        "agents/paper-scout/**",
+        "agents/manuscript-writer/**",
+        "agents/quality-reviewer/**"
+      ]
+    },
+    "quality-reviewer": {
+      "deny": [
+        "agents/data-curator/**",
+        "agents/paper-scout/**",
+        "agents/manuscript-writer/**",
+        "agents/stats-validator/**"
       ]
     }
   },

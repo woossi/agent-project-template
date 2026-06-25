@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 from pathlib import Path
@@ -15,10 +16,16 @@ TABLE_HEADER = (
 )
 
 
+def project_root() -> Path:
+    """Resolve the project root like the other hooks (cwd is unreliable here)."""
+    raw = os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
+    return Path(str(raw)).expanduser().resolve()
+
+
 def find_agents_dir(explicit: str | None) -> Path:
     if explicit:
         return Path(explicit).resolve()
-    return Path.cwd() / ".claude/agents"
+    return project_root() / ".claude/agents"
 
 
 def project_root_for(agents_dir: Path) -> Path:
@@ -90,8 +97,13 @@ def main(argv: list[str] | None = None) -> int:
     agents_dir = find_agents_dir(args.agents_dir)
     agents_md = agents_dir / "agents.md"
     if not agents_md.exists():
-        print(f"error: {agents_md} does not exist", file=sys.stderr)
-        return 2
+        # Missing index is a contract failure under --check, but as a PostToolUse
+        # hook it must never block an unrelated tool call, so exit 0 quietly.
+        if args.check:
+            print(f"error: {agents_md} does not exist", file=sys.stderr)
+            return 1
+        print(f"agent index not found at {agents_md}; skipping", file=sys.stderr)
+        return 0
 
     rows = collect_rows(agents_dir)
     new_index = render_index(rows)

@@ -9,6 +9,7 @@ each SKILL.md file. It is invoked by the project hooks in .claude/settings.json
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 from pathlib import Path
@@ -21,11 +22,21 @@ TABLE_HEADER = (
 )
 
 
+def project_root() -> Path:
+    """Resolve the project root the same way the other hooks do.
+
+    Hooks are invoked with the script path under ``$CLAUDE_PROJECT_DIR`` but the
+    shell cwd may be any subdirectory of the project, so we must not rely on it.
+    """
+    raw = os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
+    return Path(str(raw)).expanduser().resolve()
+
+
 def find_skills_dir(explicit: str | None) -> Path:
-    """Find the skills directory from an explicit path or the project cwd."""
+    """Find the skills directory from an explicit path or the project root."""
     if explicit:
         return Path(explicit).resolve()
-    return Path.cwd() / ".claude/skills"
+    return project_root() / ".claude/skills"
 
 
 def extract_name(text: str, fallback: str) -> str:
@@ -99,8 +110,13 @@ def main(argv: list[str] | None = None) -> int:
     skills_dir = find_skills_dir(args.skills_dir)
     skills_md = skills_dir / "skills.md"
     if not skills_md.exists():
-        print(f"error: {skills_md} does not exist", file=sys.stderr)
-        return 2
+        # Under --check the missing index is a contract failure. As a PostToolUse
+        # hook it must never block an unrelated tool call, so exit 0 quietly.
+        if args.check:
+            print(f"error: {skills_md} does not exist", file=sys.stderr)
+            return 1
+        print(f"skill index not found at {skills_md}; skipping", file=sys.stderr)
+        return 0
 
     rows = collect_rows(skills_dir)
     new_index = render_index(rows)

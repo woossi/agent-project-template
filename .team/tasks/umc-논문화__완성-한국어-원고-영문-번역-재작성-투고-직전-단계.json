@@ -1,0 +1,12 @@
+{
+  "id": "umc-논문화__완성-한국어-원고-영문-번역-재작성-투고-직전-단계",
+  "goal": "umc-논문화",
+  "title": "완성 한국어 원고 영문 번역·재작성(투고 직전 단계)",
+  "criterion": "투고 패키지 완비(cover letter, 초록, 키워드, figure/table, 참고문헌 양식)",
+  "assignee": "manuscript-writer",
+  "status": "pending",
+  "created_by": "orchestrator",
+  "updated_by": "orchestrator",
+  "created_ts_ns": 1782384445455443000,
+  "updated_ts_ns": 1782386869303403000
+}

@@ -56,9 +56,42 @@ DEFAULTS: dict[str, Any] = {
 MAX_SKILLS_PER_OCCURRENCE = 6
 
 
+def _find_repo_root(start: Path) -> Path:
+    """Walk up from ``start`` to the team repo root.
+
+    The root anchors the shared store: it contains ``.team/team.json``
+    (canonical) or, as a fallback, ``AGENTS.md``. If nothing matches, keep
+    ``start``.
+    """
+    for base in (start, *start.parents):
+        if (base / ".team" / "team.json").is_file() or (base / "AGENTS.md").is_file():
+            return base
+    return start
+
+
 def project_dir(payload: dict[str, Any]) -> Path:
-    raw = os.environ.get("CLAUDE_PROJECT_DIR") or payload.get("cwd") or os.getcwd()
-    return Path(str(raw)).expanduser().resolve()
+    """Resolve the per-agent ledger/promotion anchor.
+
+    The ledger and promotion state are per-agent private. Anchor to the repo
+    root, then descend into ``agents/<CLAUDE_AGENT_NAME>/`` when an identity is
+    set, so every peer's candidates/decisions stay separated regardless of where
+    the hook fires. ``CLAUDE_PROJECT_DIR`` remains a hard override when set.
+
+    This must match ``task_ledger.project_dir`` exactly: the ledger writer and
+    the promotion reader have to agree on the same ``.context`` directory, or
+    candidates are written where the detector never reads them.
+    """
+    explicit = os.environ.get("CLAUDE_PROJECT_DIR")
+    if explicit:
+        return Path(explicit).expanduser().resolve()
+    start = Path(str(payload.get("cwd") or os.getcwd())).expanduser().resolve()
+    root = _find_repo_root(start)
+    agent = os.environ.get("CLAUDE_AGENT_NAME") or ""
+    if agent:
+        agent_root = root / "agents" / agent
+        if agent_root.is_dir():
+            return agent_root
+    return root
 
 
 def _merge(base: dict[str, Any], override: Any) -> dict[str, Any]:

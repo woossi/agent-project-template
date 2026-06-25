@@ -1,0 +1,13 @@
+{
+  "id": "umc-논문화__ssci-q1-후보-저널-조사-1차-대안-선정-jcr-분위-확인",
+  "goal": "umc-논문화",
+  "title": "SSCI Q1 후보 저널 조사·1차/대안 선정(JCR 분위 확인)",
+  "criterion": "목표 저널을 SSCI 상위 25%(JCR Q1)에서 1차/대안 선정하고 저널 양식·투고 요건 충족",
+  "assignee": "paper-scout",
+  "status": "done",
+  "created_by": "orchestrator",
+  "updated_by": "paper-scout",
+  "created_ts_ns": 1782384445344726000,
+  "updated_ts_ns": 1782384445344726000,
+  "result": "1차 Social Science Computer Review(SSCI Q1), 대안 A Information Technology for Development, 대안 B Government Information Quarterly. 후보 8개 SSCI Q1 교차확인. 핸드오프: agents/paper-scout/.context/handoff/ssci-q1-저널-선정.md. Clarivate JCR 직접 확인은 미완(불확실)."
+}
