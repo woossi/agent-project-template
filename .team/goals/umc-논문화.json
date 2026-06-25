@@ -1,20 +1,26 @@
 {
   "id": "umc-논문화",
   "title": "UMC 논문화",
-  "objective": "UMC 분석 결과를 투고 가능한 논문으로 완성",
+  "objective": "UMC 분석 결과를 SSCI 상위 25%(Q1) 저널에 투고 가능한 수준의 논문으로 완성한다",
   "scope": "umc 목록 작업에 한정",
-  "deliverable": "투고 가능한 논문 초고 1편",
+  "deliverable": "SSCI Q1 저널 투고용 원고 1편(전 섹션 + 방법론 기여 명확화 + 투고 패키지)",
   "success_criteria": [
-    "전 섹션 초고 완성",
-    "방법론 기여 명확화"
+    "전 섹션 초고 완성(서론·관련연구·방법·결과·논의·결론)",
+    "방법론 기여를 SSCI Q1 심사 기준에 맞게 명확화",
+    "목표 저널을 SSCI 상위 25%(JCR Q1)에서 1차/대안 선정하고 저널 양식·투고 요건 충족",
+    "투고 패키지 완비(cover letter, 초록, 키워드, figure/table, 참고문헌 양식)"
   ],
   "verification": [
-    "지도교수 리뷰 통과"
+    "지도교수 리뷰 통과",
+    "선정 저널의 JCR 분위가 Q1(상위 25%)임을 확인하고 저널 투고 체크리스트 충족 확인"
   ],
-  "constraints": [],
+  "constraints": [
+    "근거 없이 내용을 만들지 않는다",
+    "검증하지 않은 주장은 불확실로 표시한다"
+  ],
   "status": "active",
   "created_by": "orchestrator",
-  "updated_by": "orchestrator",
+  "updated_by": "user",
   "created_ts_ns": 1782369629389540000,
-  "updated_ts_ns": 1782369629389540000
+  "updated_ts_ns": 1782380466721155000
 }

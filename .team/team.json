@@ -5,10 +5,12 @@
   "shared_store": ".team",
   "reminders_list": "umc",
   "members": [
-    "data-curator"
+    "data-curator",
+    "paper-scout"
   ],
   "roles": {
-    "data-curator": "프로젝트 관련 자료·데이터·분석 결과·그림을 체계적으로 관리하고 팀 컨텍스트 자원으로 지원"
+    "data-curator": "프로젝트 관련 자료·데이터·분석 결과·그림을 체계적으로 관리하고 팀 컨텍스트 자원으로 지원",
+    "paper-scout": "연구 논문 서칭 에이전트: 고품질 학술 논문을 검색·선별하고 PDF를 다운로드한다"
   },
   "goals_dir": ".team/goals",
   "inbox": ".team/inbox"
