@@ -1,13 +1,13 @@
 {
   "agents": {
-    "orchestrator": {
+    "data-curator": {
       "deny": [
-        "agents/worker-1/**"
+        "agents/paper-scout/**"
       ]
     },
-    "worker-1": {
+    "paper-scout": {
       "deny": [
-        "agents/orchestrator/**"
+        "agents/data-curator/**"
       ]
     }
   },

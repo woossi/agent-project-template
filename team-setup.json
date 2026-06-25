@@ -1,14 +1,14 @@
 {
   "team": "team-umc",
   "members": [
-    "orchestrator",
-    "worker-1"
+    "data-curator",
+    "paper-scout"
   ],
   "roles": {
-    "orchestrator": "백로그 분해·할당·완료 추적",
-    "worker-1": "작업 실행·진행 기록·완료 체크"
+    "data-curator": "프로젝트 관련 자료·데이터·분석 결과·그림을 체계적으로 관리하고 팀 컨텍스트 자원으로 지원",
+    "paper-scout": "연구 논문 서칭 에이전트: 고품질 학술 논문을 검색·선별하고 PDF를 다운로드한다"
   },
-  "authoring_owner": "orchestrator",
+  "authoring_owner": "data-curator",
   "min_distinct_agents": 2,
   "reminders_list": "umc"
 }

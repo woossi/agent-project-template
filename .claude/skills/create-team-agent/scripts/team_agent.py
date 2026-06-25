@@ -14,7 +14,8 @@ Layout produced under ``agents/<name>/`` (project root when that agent runs):
         tasks/        (REAL, private)  tasks.md
         hooks      -> ../../../.claude/hooks       (SYMLINK, shared single source)
         policies   -> ../../../.claude/policies    (SYMLINK)
-        skills     -> ../../../.claude/skills       (SYMLINK)
+        skills/    (REAL dir) per-skill: <shared> -> ../../../../.claude/skills/<shared>
+                   (SYMLINK each) + <private>/ (REAL dir, isolated to this agent)
         settings.json -> ../../../.claude/settings.json (SYMLINK)
         CLAUDE.md  -> ../../../.claude/CLAUDE.md    (SYMLINK)
       AGENTS.md    -> ../../AGENTS.md               (SYMLINK)
@@ -42,10 +43,12 @@ from pathlib import Path
 from typing import Any
 
 # Shared subtrees symlinked into each agent's .claude (target relative to agents/<name>/.claude/).
+# NOTE: ``skills`` is NOT here — it is wired per-skill by _wire_skills so an agent can
+# hold PRIVATE skills (real dirs) alongside SHARED ones (symlinks). A whole-dir symlink
+# would force all-or-nothing and leak any private skill into the shared single source.
 SHARED_IN_CLAUDE = {
     "hooks": "../../../.claude/hooks",
     "policies": "../../../.claude/policies",
-    "skills": "../../../.claude/skills",
     "settings.json": "../../../.claude/settings.json",
     "CLAUDE.md": "../../../.claude/CLAUDE.md",
 }
@@ -82,6 +85,52 @@ def _ensure_symlink(link: Path, target: str, *, force: bool) -> str:
     link.parent.mkdir(parents=True, exist_ok=True)
     os.symlink(target, link)
     return "created"
+
+
+def _wire_skills(team_root: Path, agent_claude: Path, *, force: bool) -> dict[str, str]:
+    """Wire ``.claude/skills`` as a REAL directory of per-skill symlinks to the
+    shared root skills, preserving any PRIVATE (real) skill dirs this agent holds.
+
+    Why not a single whole-dir symlink: that makes shared and private skills
+    mutually exclusive — anything added lands in the shared single source and
+    leaks to every peer. Per-skill symlinks keep shared skills drift-free (one
+    source) while leaving room for private real dirs isolated to this agent.
+
+    Idempotent: re-running links in any newly added shared skills and leaves a
+    same-named private real dir untouched (it shadows the shared name on purpose).
+    A legacy whole-dir symlink is migrated to a real dir only under ``force``.
+    """
+    root_skills = team_root / ".claude" / "skills"
+    agent_skills = agent_claude / "skills"
+    out: dict[str, str] = {}
+
+    if agent_skills.is_symlink():
+        if not force:
+            out["skills"] = "whole-symlink (use --force to migrate)"
+            return out
+        agent_skills.unlink()  # migrate legacy whole-dir symlink -> real dir
+    if agent_skills.exists() and not agent_skills.is_dir():
+        out["skills"] = "blocked-real-file"
+        return out
+    agent_skills.mkdir(parents=True, exist_ok=True)
+
+    if not root_skills.is_dir():
+        out["skills"] = "no-shared-skills"
+        return out
+
+    for child in sorted(root_skills.iterdir(), key=lambda p: p.name):
+        # Only skill folders are linked; skip generated index files (skills.md)
+        # and private/hidden entries (leading "." or "_").
+        if not child.is_dir() or child.name.startswith((".", "_")):
+            continue
+        link = agent_skills / child.name
+        if link.exists() and not link.is_symlink():
+            out[f"skills/{child.name}"] = "private (kept)"  # private dir shadows shared name
+            continue
+        target = f"../../../../.claude/skills/{child.name}"
+        out[f"skills/{child.name}"] = _ensure_symlink(link, target, force=True)
+    out["skills"] = "wired"
+    return out
 
 
 def _seed_private_assets(agent_claude: Path, name: str) -> None:
@@ -164,6 +213,7 @@ def create_agent(team_root: Path, name: str, *, role: str | None = None, force: 
     symlinks = {}
     for rel, target in SHARED_IN_CLAUDE.items():
         symlinks[rel] = _ensure_symlink(agent_claude / rel, target, force=force)
+    symlinks.update(_wire_skills(team_root, agent_claude, force=force))
     symlinks["AGENTS.md"] = _ensure_symlink(agent_dir / "AGENTS.md", "../../AGENTS.md", force=force)
 
     descriptor = agent_dir / "AGENT.md"
