@@ -9,6 +9,8 @@
 3. 생성된 `agent-setup.json`, `AGENTS.md`, `.claude/CLAUDE.md`를 확인합니다.
 4. 장기 맥락은 `.claude/memory/`, 현재 작업은 `.claude/tasks/`, 임시 산출물은 `.context/`에 둡니다.
 
+> 단일 에이전트가 아니라 **여러 에이전트를 팀으로** 운영하려면 아래 [멀티에이전트 팀 세팅](#멀티에이전트-팀-세팅-model-y-터미널-claude)을 참고하세요.
+
 ## Component relationships (Tasks → Skills → Agents)
 
 세 컴포넌트는 상향식 생성 사슬을 이룹니다. 정본 정의는 `AGENTS.md`의 *Component Layer Relationships*에 있으며, 요약은 다음과 같습니다.
@@ -101,6 +103,155 @@ python .claude/skills/agent-clone-setup/scripts/init_agent_clone.py \
 두 프로젝트를 페어링하려면 각 프로젝트에서 `feedback.json`의 `agent` 블록,
 `agent-workspace.json`의 상대 inbox allow, `AGENTS.md` 작업 경계를 채웁니다.
 자세한 절차와 설계는 `.claude/policies/FEEDBACK.md`를 보세요.
+
+## 멀티에이전트 팀 세팅 (Model Y, 터미널 Claude)
+
+단일 에이전트 클론(위) 외에, 이 템플릿은 **동일 구조 peer 에이전트들의 팀**으로도 운영할 수 있습니다.
+Conductor 없이 **터미널 Claude**로 각 에이전트를 띄우며, 공유 `.claude/` 한 벌을 symlink로 공유하고
+정체성(`CLAUDE_AGENT_NAME`)만 다릅니다. 사람은 **미리알림**으로, 에이전트끼리는 **받은 편지함**으로 같은 작업 위에서 협업합니다.
+
+### 구조
+
+```
+<Team 루트 = 이 저장소>
+  .claude/                     # 공유 템플릿 1벌 (hooks·policies·skills·계약) — 단일 소스
+  .team/                       # 팀 공유 상태
+    team.json                  #   로스터·미리알림 바인딩·목표 디렉토리
+    goals/<id>.json            #   목표 (계약 요소 포함)            [durable]
+    tasks/<goal>__<slug>.json  #   목표에서 분해된 작업              [durable]
+    word.json · memory/        #   팀 용어·결정 (owner 직렬화)       [durable]
+    policies/team-*.json       #   팀 승격/파생 임계값·거버넌스
+    inbox/<수신자>/<msgid>.json #   받은 편지함                       [runtime, git-ignore]
+    promotions/ · derivations/ #   팀 후보·결정                      [runtime, git-ignore]
+  agents/<이름>/                # 에이전트별 작업 공간
+    .claude/memory · tasks     #   개별(사적) 실파일
+    .claude/{hooks,policies,skills,settings.json,CLAUDE.md} → 루트로 symlink (공유)
+    AGENTS.md → 루트로 symlink
+    .context/                  #   개별 실행 원장                    [runtime, git-ignore]
+```
+
+### 1. 전제조건
+
+- macOS + `python3`. 테스트: `python3 -m pytest .claude -q`.
+- 미리알림 연동은 `osascript`(JXA)와 **자동화(TCC) 권한**이 필요합니다. 샌드박스 셸이면 권한 허용 또는 샌드박스 해제 후 실행하세요(미허용 시 `-1743`).
+
+### 2. 팀 정의 — `.team/team.json`
+
+로스터(=에이전트 이름), 바인딩할 미리알림 목록, 목표 디렉토리를 적습니다.
+
+```json
+{
+  "version": 1,
+  "team": "research-umc",
+  "topology": "model-y",
+  "shared_store": ".team",
+  "reminders_list": "umc",
+  "members": ["orchestrator", "worker-1"],
+  "goals_dir": ".team/goals",
+  "inbox": ".team/inbox"
+}
+```
+
+거버넌스(누가 팀 자산을 저작하는지)는 `.team/policies/team-promotion.json`·`team-derivation.json`의
+`governance.authoring_owner`(기본 `orchestrator`)와 `min_distinct_agents`(기본 2)에서 조정합니다.
+
+### 3. 에이전트 생성 — `create-team-agent`
+
+생성 시점은 사용자가 판단합니다. 생성하면 개별 자산(memory·tasks·`.context`)은 실파일로 seed되고,
+공유 자산(hooks·policies·skills·settings·계약)은 루트로 symlink되며 `team.json` 로스터에 등록됩니다.
+
+```bash
+python .claude/skills/create-team-agent/scripts/team_agent.py create orchestrator --role "백로그 분해·할당·완료 추적"
+python .claude/skills/create-team-agent/scripts/team_agent.py create worker-1     --role "작업 실행·진행 기록·완료 체크"
+python .claude/skills/create-team-agent/scripts/team_agent.py list   # 폴더↔로스터 정합 확인
+```
+
+### 4. 에이전트로 실행 — 런치 계약
+
+각 터미널에서 **정체성만 다르게** 주고, 해당 에이전트 폴더에서 `claude`를 띄웁니다.
+
+```bash
+# 터미널 1
+export CLAUDE_AGENT_NAME=orchestrator
+cd agents/orchestrator && claude
+
+# 터미널 2
+export CLAUDE_AGENT_NAME=worker-1
+cd agents/worker-1 && claude
+```
+
+`CLAUDE_AGENT_NAME`은 guard(`guard_agent_workspace.py`)와 모든 팀 CLI가 읽는 정체성입니다.
+설정하지 않으면 `main`으로 떨어져 정체성이 붕괴하므로 **반드시 export**합니다. 폴더 경계 덕에
+각 에이전트의 `.context/`는 자동 격리되고, 형제 폴더 접근은 차단됩니다.
+
+### 5. 두 작업 채널
+
+**미리알림 (목록=팀, 할일=Task)** — 사람도 보는 백로그:
+
+```bash
+B=.claude/skills/reminders-team-bridge/scripts/reminders_bridge.py
+python $B list-teams                       # 목록(=팀 후보) + open/total
+python $B pull umc                          # 팀 백로그 읽기(JSON)
+python $B annotate umc "[worker-1] 착수" --id <reminder-id>   # 노트에 진행상태
+python $B complete umc --id <reminder-id>   # 완료 체크백
+```
+
+**받은 편지함 (peer↔peer 다대다)** — 에이전트끼리 구조화 메시지:
+
+```bash
+I=.claude/skills/team-inbox/scripts/team_inbox.py
+python $I post --to worker-1 --subject "위임" --body "<할일 id> 맡아주세요"   # 발신=$CLAUDE_AGENT_NAME
+python $I read                              # 자기 unread
+python $I ack --id <msgid>                  # 처리 표시(멱등)
+```
+
+### 6. 목표 — `set-team-goal`
+
+사용자가 추상 목표를 **계약 요소**와 함께 설정하면, 팀이 success_criteria마다 구체 Task로 분해합니다.
+목표는 미리알림과 별개이며, `progress`가 자율 작업의 **정지조건**이 됩니다.
+
+```bash
+G=.claude/skills/set-team-goal/scripts/team_goal.py
+python $G --by orchestrator set --title "UMC 논문화" --objective "..." --deliverable "..." \
+  --success-criteria "전 섹션 초고 완성" --success-criteria "방법론 기여 명확화" --verification "지도교수 리뷰 통과"
+python $G --by orchestrator decompose --id umc-논문화 --task "섹션 초고" --criterion "전 섹션 초고 완성" --assign worker-1
+python $G progress --id umc-논문화          # 어떤 기준이 done task로 덮였는지 + complete 여부
+```
+
+### 7. 팀 승격/파생 (개별 루프 위의 2계층)
+
+개별 루프(세션 재발)는 그대로 두고, 팀 계층은 **여러 에이전트에 걸친 재발**(`min_distinct_agents`)로 트리거합니다.
+탐지기는 `agents/*/.context/`를 읽기 전용 롤업해 후보를 SessionStart마다 표면화합니다.
+
+```bash
+# 팀 승격(스킬/에이전트) — distinct-agent 재발
+python .claude/hooks/detect_team_promotions.py evaluate
+python .claude/hooks/detect_team_promotions.py resolve --kind team_skill --key <sig> --decision promote --by orchestrator
+
+# 팀 파생(용어/선호/메모리) — 저작은 owner 직렬화
+python .claude/hooks/detect_team_derivations.py evaluate
+python .claude/skills/team-derive-author/scripts/team_derive.py --by orchestrator \
+  register-term --term LISA --ko "국소 모란 지수" --definition "..." --use-when "..."   # owner만
+python .claude/hooks/detect_team_derivations.py resolve --kind term --key LISA --decision promote --by orchestrator
+```
+
+### 팀 컴포넌트 한눈에
+
+| 스킬/훅 | 역할 |
+| --- | --- |
+| `create-team-agent` | Model Y peer 스캐폴딩 + 로스터 등록 |
+| `reminders-team-bridge` | 미리알림 ↔ 팀 백로그 양방향(JXA) |
+| `team-inbox` | peer↔peer 다대다 채널(불변 파일·atomic·멱등) |
+| `set-team-goal` | 목표(계약 요소) + 분해 + 정지조건 progress |
+| `team-derive-author` | 팀 용어·메모리 저작(owner 직렬화) |
+| `detect_team_promotions.py` | 팀 스킬/에이전트 승격(distinct-agent) |
+| `detect_team_derivations.py` | 팀 용어/선호/메모리 파생(distinct-agent + `Share:` 마커) |
+| `task_ledger.py record-skill-use` | 심볼릭 공유 skill 사용 신호 stamp |
+
+### durable vs runtime
+
+`.team/{goals,tasks,memory,word.json,policies}`와 에이전트 seed는 **추적**합니다.
+`.team/{inbox,promotions,derivations}`와 `agents/*/.context/`는 런타임이라 **git-ignore**됩니다.
 
 ## Memory rule
 
