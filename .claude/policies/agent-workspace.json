@@ -1,19 +1,27 @@
 {
-  "version": 1,
+  "agents": {
+    "orchestrator": {
+      "deny": [
+        "agents/worker-1/**"
+      ]
+    },
+    "worker-1": {
+      "deny": [
+        "agents/orchestrator/**"
+      ]
+    }
+  },
   "defaults": {
-    "allow": ["."],
-    "deny": [],
+    "allow": [
+      ".",
+      "/Users/ujunbin/project/umc/**",
+      "/Users/ujunbin/research/UMC/**"
+    ],
     "bash": {
       "allow": [],
       "deny": []
-    }
-  },
-  "agents": {
-    "orchestrator": {
-      "deny": ["agents/worker-1/**"]
     },
-    "worker-1": {
-      "deny": ["agents/orchestrator/**"]
-    }
-  }
+    "deny": []
+  },
+  "version": 1
 }
