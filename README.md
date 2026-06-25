@@ -91,6 +91,17 @@ python .claude/skills/agent-clone-setup/scripts/init_agent_clone.py \
 
 `.context/`는 git-ignore 대상이라 커밋되지 않습니다. 승격 조건(스킬·에이전트 임계값)은 `.claude/policies/promotion.json`에서 조정합니다.
 
+## Inter-agent feedback
+
+두 에이전트 프로젝트를 양방향 작업 피드백으로 잇는 드롭인 시스템이 포함되어 있습니다.
+`detect_feedback.py` hook + `feedback.json` 정책 + `give-feedback`/`process-feedback` 스킬로,
+한 에이전트가 상대 산출물에 보낸 피드백이 상대 받은편지함(`.context/feedback/inbox.jsonl`)에
+쌓이고 매 세션·턴 재표면화되어 처리·승격·파생 사슬에 연결됩니다.
+
+두 프로젝트를 페어링하려면 각 프로젝트에서 `feedback.json`의 `agent` 블록,
+`agent-workspace.json`의 상대 inbox allow, `AGENTS.md` 작업 경계를 채웁니다.
+자세한 절차와 설계는 `.claude/policies/FEEDBACK.md`를 보세요.
+
 ## Memory rule
 
 `.claude/memory/`는 압축적으로 관리합니다.

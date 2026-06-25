@@ -1,10 +1,11 @@
 # Agent Policies
 
-Machine-readable policy files consumed by the project hooks. Three policies ship today:
+Machine-readable policy files consumed by the project hooks. Four policies ship today:
 
 - `agent-workspace.json` — workspace and Bash boundaries for `.claude/hooks/guard_agent_workspace.py`.
 - `promotion.json` — concrete skill/agent promotion conditions for `.claude/hooks/detect_promotions.py`.
 - `derivation.json` — concrete memory→preference/term derivation conditions for `.claude/hooks/detect_derivations.py`.
+- `feedback.json` — inter-agent feedback routing and thresholds for `.claude/hooks/detect_feedback.py` (see `FEEDBACK.md`).
 
 ## Agent Workspace Policy
 
