@@ -1,7 +1,0 @@
-# User Preferences — agent: worker-1
-
-Private, agent-scoped preferences. Team-wide preferences live in the team store.
-
-## Active Preferences
-
-No preferences recorded yet.

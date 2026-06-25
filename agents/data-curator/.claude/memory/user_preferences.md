@@ -1,4 +1,4 @@
-# User Preferences — agent: orchestrator
+# User Preferences — agent: data-curator
 
 Private, agent-scoped preferences. Team-wide preferences live in the team store.
 
