@@ -8,3 +8,11 @@ __pycache__/
 
 # Conductor workspace-local context
 .context/
+
+# Team runtime: inbox messages and per-agent work context (keep the dirs, ignore contents)
+.team/inbox/*/
+agents/*/.context/
+
+# Team promotion runtime (candidates recomputed; decisions are instance state)
+.team/promotions/
+.team/derivations/

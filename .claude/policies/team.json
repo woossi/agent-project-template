@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "model": "apple-reminders",
+  "topology": "hybrid",
+  "mapping": {
+    "team": "reminders list (목록)",
+    "task": "reminders reminder (할일)",
+    "status_channel": "reminder body/notes",
+    "priority_source": "reminder priority (0 none, 1 high, 5 medium, 9 low)"
+  },
+  "shared_store_root": ".team",
+  "bridge_skill": "reminders-team-bridge",
+  "team_entry_shape": {
+    "reminders_list": "<list name = team name>",
+    "members": ["<stable agent name>"],
+    "shared_assets": ["memory", "word", "inbox"],
+    "asset_owner": {"memory": "<agent>", "word": "<agent>"}
+  },
+  "teams": {}
+}

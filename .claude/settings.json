@@ -150,6 +150,28 @@
             "timeout": 30
           }
         ]
+      },
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/detect_team_promotions.py\"",
+            "statusMessage": "Surfacing pending team-promotion candidates",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/detect_team_derivations.py\"",
+            "statusMessage": "Surfacing pending team-derivation candidates",
+            "timeout": 30
+          }
+        ]
       }
     ],
     "ConfigChange": [

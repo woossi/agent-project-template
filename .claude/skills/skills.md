@@ -16,7 +16,12 @@ automatically managed.
 | Skill | Folder | Load rule |
 | --- | --- | --- |
 | agent-clone-setup | `agent-clone-setup/` | Open `agent-clone-setup/SKILL.md` only when the request clearly matches the `agent-clone-setup` workflow. |
+| create-team-agent | `create-team-agent/` | Open `create-team-agent/SKILL.md` only when the request clearly matches the `create-team-agent` workflow. |
 | register-term | `register-term/` | Open `register-term/SKILL.md` only when the request clearly matches the `register-term` workflow. |
+| reminders-team-bridge | `reminders-team-bridge/` | Open `reminders-team-bridge/SKILL.md` only when the request clearly matches the `reminders-team-bridge` workflow. |
+| set-team-goal | `set-team-goal/` | Open `set-team-goal/SKILL.md` only when the request clearly matches the `set-team-goal` workflow. |
+| team-derive-author | `team-derive-author/` | Open `team-derive-author/SKILL.md` only when the request clearly matches the `team-derive-author` workflow. |
+| team-inbox | `team-inbox/` | Open `team-inbox/SKILL.md` only when the request clearly matches the `team-inbox` workflow. |
 | write-skill | `write-skill/` | Open `write-skill/SKILL.md` only when the request clearly matches the `write-skill` workflow. |
 | write-subagent | `write-subagent/` | Open `write-subagent/SKILL.md` only when the request clearly matches the `write-subagent` workflow. |
 | write-task | `write-task/` | Open `write-task/SKILL.md` only when the request clearly matches the `write-task` workflow. |

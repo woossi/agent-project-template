@@ -8,5 +8,12 @@
       "deny": []
     }
   },
-  "agents": {}
+  "agents": {
+    "orchestrator": {
+      "deny": ["agents/worker-1/**"]
+    },
+    "worker-1": {
+      "deny": ["agents/orchestrator/**"]
+    }
+  }
 }

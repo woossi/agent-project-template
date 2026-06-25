@@ -114,6 +114,12 @@ def build_event(payload: dict[str, Any], root: Path) -> dict[str, Any] | None:
         "tool": tool_name,
         "paths": paths,
     }
+    # Additive, backward-compatible: stamp the agent identity when present so the
+    # team-tier detector can count distinct agents. Absent in single-agent mode;
+    # the per-agent evaluator ignores unknown keys.
+    agent = os.environ.get("CLAUDE_AGENT_NAME") or ""
+    if agent:
+        event["agent"] = agent
     if skill:
         event["skill"] = skill
     return event
@@ -155,10 +161,16 @@ def run_record_task(argv: list[str]) -> int:
     parser.add_argument("--objective", default="", help="Short human-readable objective")
     parser.add_argument("--skills", action="append", help="Skill names used (comma-separated or repeated)")
     parser.add_argument("--paths", action="append", help="Primary paths touched (comma-separated or repeated)")
+    parser.add_argument(
+        "--agent",
+        default=None,
+        help="Agent identity for distinct-agent team counting (default: $CLAUDE_AGENT_NAME)",
+    )
     parser.add_argument("--project-root", default=None, help="Project root override")
     args = parser.parse_args(argv)
 
     root = Path(args.project_root).expanduser().resolve() if args.project_root else project_dir({})
+    agent = args.agent if args.agent is not None else (os.environ.get("CLAUDE_AGENT_NAME") or "")
     record = {
         "session": args.session,
         "signature": args.signature.strip(),
@@ -166,6 +178,8 @@ def run_record_task(argv: list[str]) -> int:
         "skills": split_list(args.skills),
         "paths": split_list(args.paths),
     }
+    if agent:
+        record["agent"] = agent
     if not record["signature"]:
         print("error: --signature must not be empty", file=sys.stderr)
         return 2
@@ -175,10 +189,42 @@ def run_record_task(argv: list[str]) -> int:
     return 0
 
 
+def run_record_skill_use(argv: list[str]) -> int:
+    """Explicitly stamp a shared-skill use (team-tier fallback, P1.5).
+
+    A peer's ``.claude/skills`` is a symlink to the team root, so a Read of a shared
+    ``SKILL.md`` resolves outside the agent root and is NOT path-matched into a
+    skill-usage event. This subcommand records the skill use directly so the
+    team-tier detector (and the per-agent loop) still see it.
+    """
+    parser = argparse.ArgumentParser(prog="task_ledger.py record-skill-use")
+    parser.add_argument("--skill", required=True, help="Shared skill name that was used")
+    parser.add_argument("--session", default="", help="Session id")
+    parser.add_argument("--agent", default=None, help="Agent identity (default: $CLAUDE_AGENT_NAME)")
+    parser.add_argument("--project-root", default=None, help="Project root override")
+    args = parser.parse_args(argv)
+
+    root = Path(args.project_root).expanduser().resolve() if args.project_root else project_dir({})
+    skill = args.skill.strip()
+    if not skill:
+        print("error: --skill must not be empty", file=sys.stderr)
+        return 2
+    agent = args.agent if args.agent is not None else (os.environ.get("CLAUDE_AGENT_NAME") or "")
+    event: dict[str, Any] = {"session": args.session, "tool": "SkillUse", "paths": [], "skill": skill}
+    if agent:
+        event["agent"] = agent
+    log = load_log_paths(root)
+    append_jsonl(root / log["events"], event)
+    print(f"recorded skill use '{skill}' -> {log['events']}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv and argv[0] == "record-task":
         return run_record_task(argv[1:])
+    if argv and argv[0] == "record-skill-use":
+        return run_record_skill_use(argv[1:])
     # Hook mode never raises: logging must not break the tool call.
     try:
         return run_hook()

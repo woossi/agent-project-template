@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "agent_ledger": {
+    "tasks": ".context/task-log/tasks.jsonl",
+    "events": ".context/task-log/events.jsonl"
+  },
+  "log": {
+    "candidates_dir": ".team/promotions/candidates",
+    "decisions_dir": ".team/promotions/decisions"
+  },
+  "team_skill_promotion": {
+    "min_distinct_agents": 2,
+    "min_total_recurrence": 2,
+    "skip_if_skill_exists": true,
+    "max_candidates": 20
+  },
+  "team_agent_promotion": {
+    "min_package_size": 2,
+    "min_distinct_agents": 2,
+    "skip_if_agent_exists": true,
+    "max_candidates": 20
+  },
+  "governance": {
+    "mode": "orchestrator-authors",
+    "authoring_owner": "orchestrator"
+  }
+}

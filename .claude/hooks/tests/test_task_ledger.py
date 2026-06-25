@@ -33,6 +33,27 @@ def read_jsonl(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
+class RecordSkillUseTest(unittest.TestCase):
+    def test_record_skill_use_stamps_event(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            rc = task_ledger.main([
+                "record-skill-use", "--skill", "reminders-team-bridge",
+                "--agent", "worker-1", "--session", "s1", "--project-root", str(root),
+            ])
+            self.assertEqual(rc, 0)
+            events = read_jsonl(root / ".context/task-log/events.jsonl")
+            self.assertEqual(len(events), 1)
+            self.assertEqual(events[0]["tool"], "SkillUse")
+            self.assertEqual(events[0]["skill"], "reminders-team-bridge")
+            self.assertEqual(events[0]["agent"], "worker-1")
+
+    def test_empty_skill_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            rc = task_ledger.main(["record-skill-use", "--skill", "  ", "--project-root", tmp])
+            self.assertEqual(rc, 2)
+
+
 class TaskLedgerTest(unittest.TestCase):
     def test_edit_event_is_captured(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "team": "research-umc",
+  "topology": "model-y",
+  "shared_store": ".team",
+  "reminders_list": "umc",
+  "members": ["orchestrator", "worker-1"],
+  "roles": {
+    "orchestrator": "Reads the team's Reminders backlog, splits work, assigns via the inbox, tracks completion.",
+    "worker-1": "Claims an assigned task, executes it, annotates progress into the reminder body, checks it off when done."
+  },
+  "goals_dir": ".team/goals",
+  "inbox": ".team/inbox"
+}

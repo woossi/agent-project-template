@@ -1,0 +1,240 @@
+#!/usr/bin/env python3
+"""Create a homogeneous team peer agent (Model Y).
+
+The user decides WHEN to create an agent; this scaffolds the 1-tier folder so that
+all of its assets are auto-managed by the existing per-agent loops, identically to
+every other peer. It references the template-conversion idea of agent-clone-setup but
+does NOT rewrite the role contract (peers must stay byte-identical in structure).
+
+Layout produced under ``agents/<name>/`` (project root when that agent runs):
+
+    agents/<name>/
+      .claude/
+        memory/       (REAL, private)  memory.md, user_preferences.md, word.json
+        tasks/        (REAL, private)  tasks.md
+        hooks      -> ../../../.claude/hooks       (SYMLINK, shared single source)
+        policies   -> ../../../.claude/policies    (SYMLINK)
+        skills     -> ../../../.claude/skills       (SYMLINK)
+        settings.json -> ../../../.claude/settings.json (SYMLINK)
+        CLAUDE.md  -> ../../../.claude/CLAUDE.md    (SYMLINK)
+      AGENTS.md    -> ../../AGENTS.md               (SYMLINK)
+      AGENT.md     (role descriptor)
+      .context/    (REAL, private, gitignored)
+
+Identity is injected at launch via ``export CLAUDE_AGENT_NAME=<name>`` (read by the
+guard and every team CLI) — it is NOT baked into the shared settings.json.
+
+Shared dirs are symlinks so the team-single-source stays drift-free. NOTE: reading a
+symlinked *skill file* via the Read tool escapes the agent root and is blocked by the
+guard; agents reference shared skills via the Skill tool / autoload, and skill-use is
+recorded by the team-tier recorder (see the team-tier plan §3.6). hooks/policies are
+consumed by Python (not the Read tool), so their symlinks are fine.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+import uuid
+from pathlib import Path
+from typing import Any
+
+# Shared subtrees symlinked into each agent's .claude (target relative to agents/<name>/.claude/).
+SHARED_IN_CLAUDE = {
+    "hooks": "../../../.claude/hooks",
+    "policies": "../../../.claude/policies",
+    "skills": "../../../.claude/skills",
+    "settings.json": "../../../.claude/settings.json",
+    "CLAUDE.md": "../../../.claude/CLAUDE.md",
+}
+
+
+class AgentError(RuntimeError):
+    """Raised on a bad team root or an existing agent without --force."""
+
+
+def default_team_root() -> Path:
+    return Path(__file__).resolve().parents[4]
+
+
+def _atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.parent / f".tmp-{uuid.uuid4().hex}"
+    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    os.replace(tmp, path)
+
+
+def _ensure_symlink(link: Path, target: str, *, force: bool) -> str:
+    if link.is_symlink():
+        if os.readlink(link) == target:
+            return "ok"
+        if not force:
+            return "differs"
+        link.unlink()
+    elif link.exists():
+        if not force:
+            return "blocked-real-file"
+        if link.is_dir():
+            return "blocked-real-dir"
+        link.unlink()
+    link.parent.mkdir(parents=True, exist_ok=True)
+    os.symlink(target, link)
+    return "created"
+
+
+def _seed_private_assets(agent_claude: Path, name: str) -> None:
+    mem = agent_claude / "memory"
+    mem.mkdir(parents=True, exist_ok=True)
+    memory_md = mem / "memory.md"
+    if not memory_md.exists():
+        memory_md.write_text(
+            f"# Memory — agent: {name}\n\n"
+            "Private working memory (facts this agent learns while working).\n"
+            "Team-wide decisions and goals live in the team store (.team/memory, .team/goals).\n\n"
+            "## Durable Facts\n",
+            encoding="utf-8",
+        )
+    prefs = mem / "user_preferences.md"
+    if not prefs.exists():
+        prefs.write_text(
+            f"# User Preferences — agent: {name}\n\n"
+            "Private, agent-scoped preferences. Team-wide preferences live in the team store.\n\n"
+            "## Active Preferences\n\nNo preferences recorded yet.\n",
+            encoding="utf-8",
+        )
+    word = mem / "word.json"
+    if not word.exists():
+        word.write_text(
+            json.dumps(
+                {
+                    "schema_version": "1.0",
+                    "description": f"Private terminology for agent {name}. Team-shared terms live in .team/word.json.",
+                    "terms": [],
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    tasks = agent_claude / "tasks"
+    tasks.mkdir(parents=True, exist_ok=True)
+    tasks_md = tasks / "tasks.md"
+    if not tasks_md.exists():
+        tasks_md.write_text(
+            "# 작업\n\n## 상태\n대기\n\n## 목표\n(아직 할당된 작업 없음)\n",
+            encoding="utf-8",
+        )
+
+
+def _register_in_roster(team_root: Path, name: str) -> bool:
+    team_file = team_root / ".team" / "team.json"
+    if team_file.exists():
+        data = json.loads(team_file.read_text(encoding="utf-8"))
+    else:
+        data = {"version": 1, "members": []}
+    members = data.get("members")
+    if not isinstance(members, list):
+        members = []
+    if name in members:
+        data["members"] = members
+        return False
+    members.append(name)
+    data["members"] = members
+    _atomic_write_json(team_file, data)
+    return True
+
+
+def create_agent(team_root: Path, name: str, *, role: str | None = None, force: bool = False) -> dict[str, Any]:
+    if not (team_root / ".claude").is_dir():
+        raise AgentError(f"team root has no .claude/: {team_root}")
+    agent_dir = team_root / "agents" / name
+    existed = agent_dir.exists()
+    if existed and not force:
+        return {"name": name, "dir": str(agent_dir), "created": False, "exists": True}
+
+    agent_claude = agent_dir / ".claude"
+    agent_claude.mkdir(parents=True, exist_ok=True)
+    (agent_dir / ".context").mkdir(parents=True, exist_ok=True)
+
+    _seed_private_assets(agent_claude, name)
+
+    symlinks = {}
+    for rel, target in SHARED_IN_CLAUDE.items():
+        symlinks[rel] = _ensure_symlink(agent_claude / rel, target, force=force)
+    symlinks["AGENTS.md"] = _ensure_symlink(agent_dir / "AGENTS.md", "../../AGENTS.md", force=force)
+
+    descriptor = agent_dir / "AGENT.md"
+    if not descriptor.exists():
+        descriptor.write_text(
+            f"# Agent: {name}\n\n"
+            f"Role: {role or 'homogeneous team peer'}\n\n"
+            f"Launch: `export CLAUDE_AGENT_NAME={name}` then run `claude` from this folder.\n\n"
+            "Shared (symlinked to team root, identical across peers): .claude/{hooks,policies,skills,"
+            "settings.json,CLAUDE.md}, AGENTS.md.\n"
+            "Private (this agent only): .claude/memory, .claude/tasks, .context.\n",
+            encoding="utf-8",
+        )
+
+    roster_added = _register_in_roster(team_root, name)
+
+    return {
+        "name": name,
+        "dir": str(agent_dir),
+        "created": True,
+        "reused": existed,
+        "symlinks": symlinks,
+        "roster_added": roster_added,
+    }
+
+
+def list_agents(team_root: Path) -> dict[str, Any]:
+    agents_dir = team_root / "agents"
+    folders = sorted(p.name for p in agents_dir.glob("*") if p.is_dir()) if agents_dir.exists() else []
+    team_file = team_root / ".team" / "team.json"
+    roster = []
+    if team_file.exists():
+        roster = json.loads(team_file.read_text(encoding="utf-8")).get("members", [])
+    return {"agent_folders": folders, "roster": roster, "out_of_sync": sorted(set(folders) ^ set(roster))}
+
+
+# ---------------- CLI ----------------
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="team_agent.py", description="Create a homogeneous team peer agent (Model Y).")
+    parser.add_argument("--team-root", default=None, help="Team root (default: repo root inferred from this script).")
+    sub = parser.add_subparsers(dest="op", required=True)
+
+    p_create = sub.add_parser("create", help="Scaffold a new peer agent folder and register it.")
+    p_create.add_argument("name")
+    p_create.add_argument("--role", default=None, help="Short role descriptor (does NOT rewrite the shared contract).")
+    p_create.add_argument("--force", action="store_true", help="Re-wire symlinks on an existing agent (keeps private seeds).")
+
+    sub.add_parser("list", help="List agent folders vs roster and any drift.")
+
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    team_root = Path(args.team_root).expanduser() if args.team_root else default_team_root()
+    try:
+        if args.op == "create":
+            result = create_agent(team_root, args.name, role=args.role, force=args.force)
+        elif args.op == "list":
+            result = list_agents(team_root)
+        else:  # pragma: no cover
+            raise AgentError(f"unhandled op: {args.op}")
+    except AgentError as exc:
+        json.dump({"ok": False, "error": str(exc)}, sys.stdout, ensure_ascii=False)
+        sys.stdout.write("\n")
+        return 1
+    json.dump({"ok": True, "op": args.op, "result": result}, sys.stdout, ensure_ascii=False, indent=2)
+    sys.stdout.write("\n")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

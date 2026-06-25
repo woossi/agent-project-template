@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "agent_ledger": {
+    "signals": ".context/memory-log/signals.jsonl",
+    "team_signals": ".context/memory-log/team-signals.jsonl",
+    "memory": ".claude/memory/memory.md"
+  },
+  "team_store": {
+    "word": ".team/word.json",
+    "preferences": ".team/user_preferences.md",
+    "memory_dir": ".team/memory"
+  },
+  "log": {
+    "candidates_dir": ".team/derivations/candidates",
+    "decisions_dir": ".team/derivations/decisions"
+  },
+  "term_derivation": {"min_distinct_agents": 2, "skip_if_registered": true, "max_candidates": 20},
+  "preference_derivation": {"min_distinct_agents": 2, "skip_if_recorded": true, "max_candidates": 20},
+  "memory_derivation": {"min_distinct_agents": 2, "skip_if_recorded": true, "max_candidates": 20},
+  "governance": {"mode": "orchestrator-authors", "authoring_owner": "orchestrator"}
+}

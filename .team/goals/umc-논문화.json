@@ -1,0 +1,20 @@
+{
+  "id": "umc-논문화",
+  "title": "UMC 논문화",
+  "objective": "UMC 분석 결과를 투고 가능한 논문으로 완성",
+  "scope": "umc 목록 작업에 한정",
+  "deliverable": "투고 가능한 논문 초고 1편",
+  "success_criteria": [
+    "전 섹션 초고 완성",
+    "방법론 기여 명확화"
+  ],
+  "verification": [
+    "지도교수 리뷰 통과"
+  ],
+  "constraints": [],
+  "status": "active",
+  "created_by": "orchestrator",
+  "updated_by": "orchestrator",
+  "created_ts_ns": 1782369629389540000,
+  "updated_ts_ns": 1782369629389540000
+}
