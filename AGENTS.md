@@ -1,20 +1,19 @@
 # AGENTS.md
 
-## Purpose
+## 목적
 
-This folder is a reusable agent-project template. It fixes the roles and I/O rules for the components that future projects share:
+이 프로젝트는 `team-umc` 팀(Model Y 멀티 에이전트)을 실행한다. 같은 트리를 공유하는 peer 에이전트들이 `CLAUDE_AGENT_NAME` 정체성으로 구분되어 함께 일한다.
 
-- `AGENTS.md`, `.claude/CLAUDE.md`, `.claude/memory/`, `.claude/skills/`, `.claude/tasks/`
-- `.claude/settings.json`, `.claude/hooks/`, `.claude/agents/`, `.claude/policies/`
+- 역할: UMC 논문화를 수행하는 Model Y 멀티 에이전트 연구 팀의 공유 진입 계약 — orchestrator가 백로그를 분해·할당하고 worker가 실행·기록하며, 미리알림(umc 목록)과 받은 편지함으로 조정한다
+- 목표: UMC 연구 프로젝트의 분석 결과를 투고 가능한 논문으로 완성한다
+- 기본 응답 언어는 한국어다. 요청 산출물이 다른 언어를 요구할 때만 바꾼다.
 
-Keep it project-neutral. Do not customize it to one topic, dataset, method, client, or publication target unless the user explicitly asks for a project-specific fork.
+## 권한 순서
 
-## Authority Order
+충돌이 있으면 아래 순서로 따른다.
 
-When instructions conflict, follow this order:
-
-1. Current user request
-2. Higher-level workspace or tool instructions
+1. 현재 사용자 요청
+2. 상위 시스템, 워크스페이스, 도구 지시
 3. `AGENTS.md`
 4. `.claude/CLAUDE.md`
 5. `.claude/policies/`
@@ -23,135 +22,103 @@ When instructions conflict, follow this order:
 8. `.claude/agents/`
 9. `.claude/skills/`
 
-`AGENTS.md` is the shared contract. `.claude/CLAUDE.md` is a runtime adapter and must not override it.
+## 작업 경계
 
-## Component Layer Relationships (Tasks → Skills → Agents)
+허용 작업 경로:
+- .
+- /Users/ujunbin/project/umc (UMC 분석 프로젝트)
+- /Users/ujunbin/research/UMC (UMC 논문화 작업)
 
-Tasks, skills, and agents form a bottom-up creation chain. This is a build-and-promotion relationship that describes how each layer is created from the one below it; it is not the conflict-resolution ranking in *Authority Order*, and it does not change that ranking.
+명시 차단 경로:
+- (none)
 
-- **Tasks (`.claude/tasks/`)** — the smallest unit of work. The agent automatically records and updates the work it executes here, so this layer is agent-maintained, not user-curated. The task packet keeps only the current state (goal, inputs, verification, completion criteria); execution logs and handoff go to `.context/` so the packet never accumulates stale history.
-- **Skills (`.claude/skills/`)** — created by promoting a recurring task bundle. When the same bundle of tasks recurs and can be named by one higher-level name that covers every task in the bundle, that bundle is abstracted into a single reusable skill. The skill-quality bar (clear trigger, inputs, stable procedure, predictable output, quality checks, failure cases) decides whether a promotion is sound. Tasks reference a skill by name and inputs and never copy its procedure.
-- **Agents (`.claude/agents/`)** — created when a specific skills package must be operated in an independent context. A subagent of the main skills-using agent owns and operates that package, takes its task input and verification criteria from `.claude/tasks/`, references the skills (never copying their procedures), and returns results to the task packet or `.context/agents/<agent-name>/`.
+사용자 요청이 다른 경로를 명시하지 않으면 위 경계 밖을 탐색하지 않는다.
+외부 경로는 필요한 최소 파일만 읽고, 변경 전에는 목적과 산출물을 분명히 한다.
 
-Creation chain: atomic work is auto-recorded as **Tasks** → a recurring task bundle that fits one covering name is promoted to a **Skill** → a specific skills package that needs an isolated context is wrapped in an **Agent**.
+## 입력
 
-### Enforced Promotion Loop
+- UMC 분석 프로젝트(`/Users/ujunbin/project/umc`)와 논문화 작업(`/Users/ujunbin/research/UMC`)의 데이터·산출물
+- 미리알림 umc 목록의 작업 백로그
+- 팀 목표(.team/goals/)와 받은 편지함(.team/inbox/) 메시지
+- 사용자 요청
 
-The creation chain is not only a convention; deterministic hooks and a policy enforce its *trigger* while leaving authoring to judgment:
+## 산출물
 
-- `.claude/hooks/task_ledger.py` (PostToolUse) auto-records every executed action and every skill use (a `SKILL.md` read) to `.context/task-log/`. This makes "the agent records all executed work" a measured fact, not a promise. Semantic task signatures are appended through `task_ledger.py record-task` (driven by the `write-task` skill).
-- `.claude/hooks/detect_promotions.py` (PostToolUse and SessionStart) evaluates the ledger against `.claude/policies/promotion.json` and re-surfaces every qualifying candidate — after each action and at session start, so cross-session candidates appear immediately — until it is promoted or declined. It echoes the firing event name back in `hookSpecificOutput.hookEventName` as Claude Code requires.
-- Concrete conditions live in `.claude/policies/promotion.json`. Defaults: a **skill** candidate is a task signature recurring at least `min_recurrence` times across at least `min_distinct_sessions` sessions and not already a skill; an **agent** candidate is a skills package co-used at least `min_cousage` times across at least `min_distinct_sessions` sessions and not already owned by an agent.
-- Authoring stays a judgment step: a surfaced skill candidate is built with `write-skill`, an agent candidate with `write-subagent`, and each candidate is closed with `detect_promotions.py resolve` (`--decision promote` or `--decision decline`). Agent-package detection is fully deterministic; skill detection relies on the recorded task signatures.
+- 투고 가능한 논문 초고(전 섹션)
+- 방법론 기여를 명확히 한 원고
+- 진행상태 기록과 완료 통지
 
-## Memory Derivation Relationship (Memory → User Preferences / Terminology)
+## 실행 규칙
 
-`.claude/memory/memory.md` holds broad durable facts. Two narrower stores specialize it: `.claude/memory/user_preferences.md` (stable, project-scoped preferences) and `.claude/memory/word.json` (the terminology dictionary). When a durable fact is really a stable preference or a recurring term, it should be *derived* out of the broad store into the specific one. This is a derivation relationship, not the conflict-resolution ranking in *Authority Order*.
+- 목표를 Tasks로 분해해 에이전트에 할당하고 완료를 추적한다
+- 미리알림과 받은 편지함 두 채널로 조정한다
+- 필요한 최소 맥락만 읽는다
 
-### Enforced Derivation Loop
+## 도구
 
-The same enforced-trigger / judgment-authoring split that governs promotion also governs derivation:
+- Read
+- Edit
+- Write
+- Grep
+- Glob
+- Bash
 
-- `.claude/hooks/detect_derivations.py` (PostToolUse and SessionStart) evaluates two deterministic signal sources against `.claude/policies/derivation.json` and re-surfaces every qualifying candidate until it is derived or declined. It echoes the firing event name back in `hookSpecificOutput.hookEventName` as Claude Code requires, exactly like `detect_promotions.py`.
-- **Explicit memory markers** — a `memory.md` entry may carry an optional `Derive: preference` or `Derive: term: <word>` line. Such an entry is an explicit, already-qualifying signal and surfaces immediately. This is the literal "memory → derive" bridge.
-- **Recorded observations** — `detect_derivations.py record-signal --kind {preference,term} --key <key> --session <id>` appends a semantic observation to `.context/memory-log/signals.jsonl`. A key recurring at least `min_recurrence` times across at least `min_distinct_sessions` sessions qualifies on the threshold, mirroring how task signatures drive skill promotion.
-- Concrete conditions live in `.claude/policies/derivation.json`; a candidate already present in `user_preferences.md` (preference) or `word.json` (term) is skipped.
-- Authoring stays a judgment step: a preference candidate is written into `user_preferences.md` (confirm it is stable and project-scoped first), a term candidate is registered with the `register-term` skill (confirm the four fields with the user; never invent a definition), and each candidate is closed with `detect_derivations.py resolve` (`--decision promote` or `--decision decline`).
+## 검증
 
-## Initial Local Agent Setup
+- 전 섹션 초고 완성
+- 방법론 기여 명확화
+- 지도교수 리뷰 통과
 
-When the user copies this folder to create a local agent project, use the `agent-clone-setup` skill in `--project-setup` mode first. That mode rewrites `AGENTS.md` and `.claude/CLAUDE.md` for the actual agent role and can update `.claude/policies/agent-workspace.json`.
+## 제약
 
-Do not create `.context/agents/` bootstrap packets or `.claude/agents/` subagent files unless the user explicitly asks for a cloned subagent.
+- umc 목록 작업에 한정한다
+- 근거 없이 내용을 만들지 않는다
+- 검증하지 않은 주장은 불확실로 표시한다
 
-## Canonical Files
+## 컴포넌트 계층 관계 (Tasks → Skills → Agents)
 
-Use these paths exactly. If a file is missing, do not invent its contents; continue with available context and report the gap only when it affects the task.
+작업, 스킬, 에이전트는 상향식 생성 사슬을 이룬다(이 사슬은 위 권한 순서와 다른 축이다).
 
-| Component | Path | Role |
-| --- | --- | --- |
-| Shared contract | `AGENTS.md` | Cross-agent rules, component roles, I/O protocol |
-| Claude adapter | `.claude/CLAUDE.md` | Claude-specific execution and response rules |
-| Claude settings | `.claude/settings.json` | Shared Claude Code settings, hooks, plugin defaults, and memory mode |
-| Claude hooks | `.claude/hooks/` | Deterministic guard and validation scripts called by `.claude/settings.json` |
-| Claude agents | `.claude/agents/` | Subagents that own a specific skills package in an independent context, plus the generated agent index |
-| Agent policies | `.claude/policies/` | Machine-readable policy files consumed by project hooks |
-| Project memory | `.claude/memory/memory.md` | Durable context and accepted decisions |
-| User preferences | `.claude/memory/user_preferences.md` | Stable project-scoped preferences |
-| Terminology | `.claude/memory/word.json` | Machine-readable term dictionary, managed by the `register-term` skill |
-| Skill registry | `.claude/skills/skills.md` | Reusable procedures promoted from recurring task bundles |
-| Task registry | `.claude/tasks/tasks.md` | Agent-maintained current task packet (smallest unit of work) |
+- 작업(`.claude/tasks/`)은 가장 작은 작업 단위다. 에이전트가 실행 작업을 자동으로 기록·갱신하며(사용자가 큐레이션하지 않음), 작업 패킷은 현재 상태만 담는다. 실행 로그와 handoff는 `.context/`에 둔다.
+- 스킬(`.claude/skills/`)은 반복되는 작업 묶음이 하나의 포괄 이름으로 묶일 수 있을 때 그 묶음을 승격해 만든 재사용 절차다.
+- 에이전트(`.claude/agents/`)는 특정 스킬 패키지를 독립 컨텍스트에서 관리해야 할 때 만드는 서브에이전트다.
 
-## Component I/O Contracts
+이 사슬의 트리거는 훅으로 강제된다. `.claude/hooks/task_ledger.py`가 실행 작업과 스킬 사용을 `.context/task-log/`에 자동 기록하고, `.claude/hooks/detect_promotions.py`가 `.claude/policies/promotion.json`의 조건으로 평가해 승격 후보를 매 턴과 세션 시작마다 다시 띄운다. 스킬 후보는 `write-skill`, 에이전트 후보는 `write-subagent`로 저작하고 `detect_promotions.py resolve`로 닫는다.
 
-| Component | Reads / takes in | Produces | Write rule |
-| --- | --- | --- | --- |
-| `AGENTS.md` | User request, workspace rules, file tree when structure matters | Stable rules, canonical paths, read/write/handoff rules | Update only when a component contract changes. Keep project-neutral. No preferences, task progress, or domain content. |
-| `.claude/CLAUDE.md` | `AGENTS.md`, user request, files in read order | Claude execution loop, response format, file-update discipline | Keep synchronized with `AGENTS.md`. No domain-specific assumptions. |
-| `.claude/settings.json` | Claude Code runtime settings and hook registrations | Shared project defaults for plugins, hooks, memory mode, and permissions | Keep project-neutral. Shared settings keep `autoMemoryEnabled` disabled so checked-in `.claude/memory/` remains the canonical project memory. Re-enable auto memory only in a project-specific fork or local settings with explicit storage scope. |
-| `.claude/hooks/` | Claude Code hook JSON on stdin, project files, validation scripts | Non-interactive guard and validation behavior | Keep scripts deterministic, project-neutral, and safe to run repeatedly. Do not put domain content or task progress here. |
-| `.claude/agents/` | A specific skills package that needs an independent context, plus its trigger, tool scope, and handoff expectations | One Markdown file per Claude subagent plus generated `agents.md` index | Create only when a skills package must run in an isolated context. Keep reusable and project-neutral. Reference skills, do not copy their procedures. Do not store task progress here. Align agent `name` values with `.claude/policies/agent-workspace.json` only when the agent has a path or Bash boundary. Do not hand-edit the generated index section. |
-| `.claude/policies/` | Hook-readable project policy such as agent workspace boundaries (`agent-workspace.json`), promotion conditions (`promotion.json`), memory derivation conditions (`derivation.json`), and inter-agent feedback routing (`feedback.json`; design in `FEEDBACK.md`) | Valid JSON policy files and short operating notes | Keep policy data deterministic and machine-readable. Do not store secrets, personal preferences, task progress, or domain content here. |
-| `.claude/memory/memory.md` | Confirmed durable facts, accepted decisions, stable constraints | Short dated entries reusable later | Store only confirmed, likely-to-matter facts. No temporary progress or guesses. This checked-in file is the canonical shared project memory; Claude auto memory is disabled in shared settings by default. A fact that is really a stable preference or a recurring term carries an optional `Derive:` marker so `detect_derivations.py` surfaces it for moving into `user_preferences.md` or `word.json`. |
-| `.claude/memory/user_preferences.md` | Explicit preferences, repeated stable choices | Project-scoped preferences for style, output, review level | Write only when the user explicitly states a preference, it is repeated and stable, and it applies to this project. No personal profiles or sensitive data. Task-local preferences go in `.claude/tasks/tasks.md`. Preference candidates are surfaced by `detect_derivations.py` (from `memory.md` `Derive:` markers or recorded signals) and closed with its `resolve` subcommand. |
-| `.claude/memory/word.json` | Terms, abbreviations, translations, definitions | Valid JSON dictionary entries | Keep valid JSON, no comments. Each entry uses `term`, `ko`, `definition`, `use_when`. Add or update through the `register-term` skill (it validates fields and blocks duplicates); do not hand-edit ad hoc. Direct Claude file edits are blocked by the project hook, and Bash changes are revalidated after tool use. This dictionary is meant to be grown actively: when a project-specific term recurs and is not yet recorded, proactively propose adding it, confirm the four fields with the user, then register — never invent a definition. Recurring unregistered terms are surfaced as candidates by `detect_derivations.py`. |
-| `.claude/skills/` | A recurring task bundle that fits one covering name, with trigger, inputs, procedure, output, failure cases | Reusable skill folders, each with a `SKILL.md`; `.claude/skills/skills.md` is the generated English index | Create by promoting a recurring task bundle into one named, reusable skill. Methods only, not task logs. One skill per folder; use the `write-skill` skill and its template; let the `ConfigChange` project hook regenerate the index. |
-| `.claude/tasks/tasks.md` | Executed work, objective, inputs, expected output, completion criteria | Agent-maintained current task packet (smallest unit of work) with status and verification | Agent-maintained, not user-curated. The packet holds the current state only; execution logs and handoff go to `.context/`, durable facts to `.claude/memory/`. Mark uncertainty instead of assuming. |
+같은 방식으로 메모리 파생도 강제된다. `.claude/memory/memory.md`의 넓은 장기 사실 중 안정적 선호나 반복 용어는 `.claude/hooks/detect_derivations.py`가 `.claude/policies/derivation.json` 조건으로 평가해 후보로 띄운다. 메모리 항목의 선택적 `Derive: preference` / `Derive: term: <단어>` 표시나 `record-signal`로 기록된 신호가 입력이며, 선호 후보는 `user_preferences.md`에 적고 용어 후보는 `register-term` 스킬로 등록한 뒤 `detect_derivations.py resolve`로 닫는다.
 
-## Standard Formats
+## 파일 계약
 
-Skill-owned templates are the single source of truth. Other files reference them rather than redefining them.
+| 파일 | 역할 |
+| --- | --- |
+| `AGENTS.md` | 에이전트 공유 계약과 작업 경계 |
+| `.claude/CLAUDE.md` | Claude 실행 어댑터 |
+| `.claude/settings.json` | Claude Code 설정과 hook 등록 |
+| `.claude/hooks/` | settings.json이 호출하는 결정적 가드·검증 스크립트 |
+| `.claude/policies/` | hook이 읽는 기계 판독 정책(JSON): 작업 경계와 승격 조건(`promotion.json`) |
+| `.claude/memory/` | 장기 맥락과 확정된 결정 |
+| `.claude/tasks/` | 에이전트가 자동 기록·갱신하는 가장 작은 작업 단위(현재 상태) |
+| `.claude/skills/` | 반복 작업 묶음을 포괄 이름으로 승격한 재사용 절차 |
+| `.claude/agents/` | 특정 스킬 패키지를 독립 컨텍스트에서 관리하는 서브에이전트 |
+| `.context/` | 에이전트 실행 로그, 임시 handoff, 검증 산출물 |
+| `.team/` | Model Y 팀 공유 store: 로스터(`team.json`)·목표(`goals/`)·받은 편지함(`inbox/`)·팀 정책·팀 승격/파생 |
+| `agents/<이름>/` | peer 에이전트별 작업·메모리·`.context`(정체성으로 격리, 공유 자산은 root로 symlink) |
 
-### Skill Folder — `.claude/skills/<name>/`
+## 메모리 규칙
 
-One skill per folder. `SKILL.md` is the only required file and must list every other file and subfolder under `내부 자원`. Use `.claude/skills/write-skill/SKILL.md`; its template lives at `.claude/skills/write-skill/templates/SKILL.md`.
+- 개별 작업 사실은 agents/<이름>/.claude/memory/에 둔다
+- 팀 합의 결정과 목표는 .team/memory/와 .team/goals/에 둔다
 
-### Task Packet — `.claude/tasks/tasks.md`
+`.claude/memory/`에는 확정된 장기 맥락만 짧게 남긴다.
+현재 작업 상태는 `.claude/tasks/`에 두고, 실행 로그·진행상황·handoff·대량 산출물은 `.context/`에 둔다.
 
-Use `.claude/skills/write-task/SKILL.md`; its template lives at `.claude/skills/write-task/templates/task.md`.
+## 팀 구조 (Model Y)
 
-### Agent File — `.claude/agents/<name>.md`
+이 프로젝트는 단일 에이전트가 아니라 **공유 1벌 + 정체성 N개**(Model Y)로 운영하는 팀이다. Conductor 없이 터미널 Claude로 각 peer를 실행하며, 같은 파일시스템의 `.team/` 공유 store로 조정한다.
 
-One Claude subagent per Markdown file. Use `.claude/skills/write-subagent/SKILL.md`; its template lives at `.claude/skills/write-subagent/templates/AGENT.md`. The YAML `name` must be stable; if the agent has a workspace boundary, use the same name under `.claude/policies/agent-workspace.json`.
-
-### Memory Entry — `.claude/memory/memory.md`
-
-```md
-## YYYY-MM-DD - Short Title
-
-Fact:
-Source:
-Use Later When:
-Derive:   # optional — `preference` or `term: <word>` to surface a derivation candidate
-```
-
-`Derive:` is optional and backward-compatible. Omit it for an ordinary durable fact. Set `Derive: preference` when the fact is really a stable preference, or `Derive: term: <word>` when it names a recurring term; `detect_derivations.py` then surfaces it for moving into `user_preferences.md` or `word.json` (via the `register-term` skill).
-
-### Final Response
-
-```md
-## Result
-What changed or what was produced.
-
-## Notes
-Important caveats, verification, or file paths.
-
-## Next Step
-Only when a natural next action exists.
-```
-
-For small requests, shorten the format instead of forcing headings.
-
-## File Update Rules
-
-- Keep changes scoped to the request.
-- Do not modify secrets, private notes, raw datasets, `.env` files, PDFs, or final deliverables unless asked.
-- Read user-created content before overwriting it.
-- Preserve existing structure unless the structure itself is the problem.
-- When renaming or replacing files, update all internal references in the same pass.
-
-## Project-Neutrality Rules
-
-- Do not assume a research field, method, dataset, institution, or publication target.
-- Keep project-specific facts in the project that uses the template, not here.
-- The only durable fact this template preserves is how components exchange inputs and outputs.
+- **정체성**: 각 터미널에서 `export CLAUDE_AGENT_NAME=<이름>` 후 실행한다. 미설정 시 `main`으로 떨어져 정체성이 붕괴하므로 반드시 export한다. guard와 받은 편지함이 이 값을 읽는다.
+- **로스터**: `.team/team.json`(멤버·역할·미리알림 바인딩). 현재 멤버는 `orchestrator`(백로그 분해·할당·완료 추적)와 `worker-1`(작업 실행·진행 기록·완료 체크)다.
+- **격리**: `.claude/policies/agent-workspace.json`이 각 이름을 자기 작업 폴더로 한정하고 형제 폴더(`agents/<다른이름>/`)를 차단한다. 공유 자산(`.claude/{hooks,policies,skills,settings.json,CLAUDE.md}`, `AGENTS.md`)은 root로 symlink되어 동일성이 자동 보장된다.
+- **두 채널**: 미리알림(목록 `umc`, 사람도 보는 백로그·진행상태 — `reminders-team-bridge`)과 받은 편지함(`.team/inbox/`, 에이전트끼리 구조화 메시지 — `team-inbox`).
+- **목표·작업**: 팀 목표는 `set-team-goal`로 `.team/goals/`에 기록하고 Tasks로 분해해 할당한다. 팀 합의 결정·용어·선호는 `.team/memory/`·`.team/word.json`·`.team/user_preferences.md`로 파생한다(`team-derive-author`). 팀 계층 승격/파생은 `.team/policies/team-promotion.json`·`team-derivation.json` 조건으로 distinct-agent 축에서 평가된다.
+- **팀 정의 갱신**: 로스터·정책은 `team-init`이 `team-setup.json` 하나로 재생성한다.

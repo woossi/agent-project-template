@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "team": "research-umc",
+  "team": "team-umc",
   "topology": "model-y",
   "shared_store": ".team",
   "reminders_list": "umc",
