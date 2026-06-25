@@ -22,6 +22,6 @@
   },
   "governance": {
     "mode": "orchestrator-authors",
-    "authoring_owner": "orchestrator"
+    "authoring_owner": "data-curator"
   }
 }

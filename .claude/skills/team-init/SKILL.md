@@ -11,7 +11,7 @@
 ## 계약
 
 - 읽는 입력: `team-setup.json`(파일 `--input` 또는 stdin). 필수 `team`, `members`. 선택 `reminders_list`, `roles`, `authoring_owner`(기본 `members[0]`), `min_distinct_agents`(기본 2).
-- 만드는 출력: `.team/team.json`, `.team/policies/team-promotion.json`, `.team/policies/team-derivation.json`, `.team/{goals,inbox}/.gitkeep`. 정규화 입력을 `team-setup.json`으로 저장(끄려면 `--no-save-input`). stdout JSON 요약.
+- 만드는 출력: `.team/team.json`, `.team/policies/team-promotion.json`, `.team/policies/team-derivation.json`, `.team/{goals,inbox}/.gitkeep`, 그리고 guard가 읽는 `.claude/policies/agent-workspace.json`(형제 격리 `agents` 맵을 로스터에서 재생성, 작업 경계 `defaults`는 기존 값 보존). 정규화 입력을 `team-setup.json`으로 저장(끄려면 `--no-save-input`). stdout JSON 요약.
 - 쓰면 안 되는 위치: 개별 에이전트 자산을 직접 만들지 않는다(그건 `create-team-agent`/`--create-agents`가 한다). 런타임(`.team/inbox` 내용 등)은 만들지 않는다.
 
 ## 입력
@@ -50,14 +50,16 @@
 { "ok": true, "op": "init", "result": {
   "team": "research-umc", "members": ["orchestrator","worker-1"],
   "authoring_owner": "orchestrator", "min_distinct_agents": 2, "reminders_list": "umc",
-  "files": [".team/team.json", ".team/policies/team-promotion.json", ".team/policies/team-derivation.json"],
+  "files": [".team/team.json", ".team/policies/team-promotion.json", ".team/policies/team-derivation.json", ".claude/policies/agent-workspace.json"],
   "agents_created": [] } }
 ```
 
+> 멤버를 바꾼 뒤에는 반드시 `init`을 다시 돌려 `agent-workspace.json`의 형제 격리를 로스터와 일치시킨다. 이 `agents` 맵은 손으로 유지하면 stale해져 격리가 조용히 깨진다(실제로 발생했던 버그). 작업 경계(`defaults.allow`)는 기존 파일에서 보존되므로 재생성해도 경로를 잃지 않는다.
+
 ## 내부 자원
 
-- `scripts/team_init.py` — `init`(파일/stdin 입력→정의 작성, `--create-agents`, `--save-input`/`--no-save-input`, `--team-root`). 정책은 탐지기가 읽는 스키마로 생성하고, `min_distinct_agents`·`authoring_owner`를 전파. atomic 쓰기.
-- `scripts/tests/test_team_init.py` — CI 안전 테스트: 검증(team/members/owner/min), 정책 전파, 파일·디렉토리 작성, `--create-agents`(스텁), CLI 저장.
+- `scripts/team_init.py` — `init`(파일/stdin 입력→정의 작성, `--create-agents`, `--save-input`/`--no-save-input`, `--team-root`). 정책은 탐지기가 읽는 스키마로 생성하고, `min_distinct_agents`·`authoring_owner`를 전파. `build_agent_workspace_policy`로 guard의 형제 격리 정책을 로스터에서 재생성하되 기존 `defaults`(작업 경계)를 읽어 보존. atomic 쓰기.
+- `scripts/tests/test_team_init.py` — CI 안전 테스트: 검증(team/members/owner/min), 정책 전파, 파일·디렉토리 작성, `--create-agents`(스텁), CLI 저장, 형제 격리 재생성·작업 경계 보존.
 
 ## 품질 점검
 

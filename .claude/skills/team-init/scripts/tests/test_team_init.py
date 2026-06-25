@@ -72,6 +72,20 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(ti.build_promotion_policy(s)["governance"]["authoring_owner"], "worker-1")
         self.assertEqual(ti.build_derivation_policy(s)["governance"]["authoring_owner"], "worker-1")
 
+    def test_workspace_policy_sibling_deny_from_roster(self):
+        s = ti.normalize_setup(setup(members=["data-curator", "paper-scout"]))
+        pol = ti.build_agent_workspace_policy(s)
+        self.assertEqual(pol["agents"]["data-curator"]["deny"], ["agents/paper-scout/**"])
+        self.assertEqual(pol["agents"]["paper-scout"]["deny"], ["agents/data-curator/**"])
+        self.assertEqual(sorted(pol["agents"]), ["data-curator", "paper-scout"])
+
+    def test_workspace_policy_preserves_existing_defaults(self):
+        s = ti.normalize_setup(setup(members=["a", "b"]))
+        existing = {"version": 1, "defaults": {"allow": [".", "/abs/umc/**"], "deny": [], "bash": {}}, "agents": {}}
+        pol = ti.build_agent_workspace_policy(s, existing)
+        self.assertIn("/abs/umc/**", pol["defaults"]["allow"])  # work boundary kept
+        self.assertEqual(sorted(pol["agents"]), ["a", "b"])  # agents map regenerated
+
 
 class InitTests(unittest.TestCase):
     def setUp(self):
@@ -89,9 +103,25 @@ class InitTests(unittest.TestCase):
         self.assertTrue((self.root / ".team/policies/team-derivation.json").exists())
         self.assertTrue((self.root / ".team/goals/.gitkeep").exists())
         self.assertTrue((self.root / ".team/inbox/.gitkeep").exists())
+        # the guard's sibling-isolation policy is regenerated too (no manual drift)
+        self.assertTrue((self.root / ".claude/policies/agent-workspace.json").exists())
         # written team.json is valid and bound
         tj = json.loads((self.root / ".team/team.json").read_text(encoding="utf-8"))
         self.assertEqual(tj["reminders_list"], "umc")
+
+    def test_init_regenerates_workspace_policy_preserving_boundaries(self):
+        # an existing policy carries project work boundaries that are NOT in team-setup
+        wp = self.root / ".claude/policies/agent-workspace.json"
+        wp.parent.mkdir(parents=True, exist_ok=True)
+        wp.write_text(json.dumps({
+            "version": 1,
+            "defaults": {"allow": [".", "/Users/x/project/umc/**"], "deny": [], "bash": {"allow": [], "deny": []}},
+            "agents": {"orchestrator": {"deny": ["agents/worker-1/**"]}},  # stale names
+        }), encoding="utf-8")
+        ti.init_team(self.root, ti.normalize_setup(setup(members=["data-curator", "paper-scout"])))
+        pol = json.loads(wp.read_text(encoding="utf-8"))
+        self.assertEqual(sorted(pol["agents"]), ["data-curator", "paper-scout"])  # stale keys gone
+        self.assertIn("/Users/x/project/umc/**", pol["defaults"]["allow"])  # boundary preserved
 
     def test_policies_are_valid_for_hooks(self):
         ti.init_team(self.root, ti.normalize_setup(setup(min_distinct_agents=2)))

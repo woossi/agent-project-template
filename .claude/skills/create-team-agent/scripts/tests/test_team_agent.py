@@ -180,6 +180,52 @@ class ListTests(_Case):
         self.assertIn("ghost", out["out_of_sync"])  # in roster, no folder
 
 
+class SyncTests(_Case):
+    def test_sync_reconciles_new_shared_skill(self):
+        ta.create_agent(self.root, "worker-2")
+        skills = self.root / "agents/worker-2/.claude/skills"
+        # a new shared skill is added at the source after the agent existed
+        (self.root / ".claude/skills/new-shared").mkdir()
+        (self.root / ".claude/skills/new-shared/SKILL.md").write_text("# 스킬: new-shared", encoding="utf-8")
+        self.assertFalse((skills / "new-shared").exists())
+        out = ta.sync_agent(self.root, self.root / "agents/worker-2")
+        self.assertEqual(out["wired"]["skills/new-shared"], "created")
+        self.assertTrue((skills / "new-shared").is_symlink())
+
+    def test_sync_prunes_stale_symlink(self):
+        ta.create_agent(self.root, "worker-2")
+        skills = self.root / "agents/worker-2/.claude/skills"
+        self.assertTrue((skills / "team-inbox").is_symlink())
+        import shutil
+        shutil.rmtree(self.root / ".claude/skills/team-inbox")  # shared skill removed at source
+        out = ta.sync_agent(self.root, self.root / "agents/worker-2")
+        self.assertIn("team-inbox", out["pruned"])
+        self.assertFalse((skills / "team-inbox").exists())
+        self.assertTrue((skills / "write-task").is_symlink())  # live one kept
+
+    def test_sync_keeps_private_dir(self):
+        ta.create_agent(self.root, "worker-2")
+        skills = self.root / "agents/worker-2/.claude/skills"
+        (skills / "my-private").mkdir()
+        (skills / "my-private/SKILL.md").write_text("# 스킬: my-private", encoding="utf-8")
+        ta.sync_agent(self.root, self.root / "agents/worker-2")
+        self.assertTrue((skills / "my-private").is_dir() and not (skills / "my-private").is_symlink())
+
+    def test_sync_all_via_cli(self):
+        ta.create_agent(self.root, "worker-2")
+        ta.create_agent(self.root, "worker-3")
+        (self.root / ".claude/skills/late-shared").mkdir()
+        (self.root / ".claude/skills/late-shared/SKILL.md").write_text("# 스킬: late-shared", encoding="utf-8")
+        rc = ta.main(["--team-root", str(self.root), "sync", "--all"])
+        self.assertEqual(rc, 0)
+        for n in ("worker-2", "worker-3"):
+            self.assertTrue((self.root / f"agents/{n}/.claude/skills/late-shared").is_symlink())
+
+    def test_sync_unknown_agent_errors(self):
+        with self.assertRaises(ta.AgentError):
+            ta.sync_agents(self.root, "ghost")
+
+
 class CliTests(_Case):
     def test_cli_create_and_list(self):
         rc = ta.main(["--team-root", str(self.root), "create", "worker-2", "--role", "builder"])

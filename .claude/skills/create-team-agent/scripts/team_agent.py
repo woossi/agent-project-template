@@ -250,6 +250,66 @@ def list_agents(team_root: Path) -> dict[str, Any]:
     return {"agent_folders": folders, "roster": roster, "out_of_sync": sorted(set(folders) ^ set(roster))}
 
 
+def _prune_stale_skill_symlinks(team_root: Path, agent_claude: Path) -> list[str]:
+    """Remove per-skill symlinks whose shared source no longer exists.
+
+    _wire_skills only ADDS shared skills (shared -> agent); when a shared skill is
+    deleted or renamed, every peer keeps a dangling symlink. This is the reverse
+    direction (agent -> shared) that keeps the single source authoritative.
+    """
+    agent_skills = agent_claude / "skills"
+    root_skills = team_root / ".claude" / "skills"
+    pruned: list[str] = []
+    if not agent_skills.is_dir() or agent_skills.is_symlink():
+        return pruned
+    prefix = "../../../../.claude/skills/"
+    for child in sorted(agent_skills.iterdir(), key=lambda p: p.name):
+        if not child.is_symlink():
+            continue  # private real dirs are never pruned
+        target = os.readlink(child)
+        if target.startswith(prefix):
+            shared_name = target[len(prefix):].strip("/")
+            if not (root_skills / shared_name).is_dir():
+                child.unlink()
+                pruned.append(child.name)
+    return pruned
+
+
+def sync_agent(team_root: Path, agent_dir: Path, *, force: bool = False, prune: bool = True) -> dict[str, Any]:
+    """Reconcile ONE existing agent's skills against the shared single source.
+
+    Reuses ``_wire_skills`` (adds any new shared skill, keeps private dirs, migrates a
+    legacy whole-dir symlink under ``force``) and additionally prunes stale per-skill
+    symlinks whose shared source was removed. This is the reproduce/sync entry point
+    that ``_wire_skills`` (create-time only) never exposed for existing agents.
+    """
+    agent_claude = agent_dir / ".claude"
+    wired = _wire_skills(team_root, agent_claude, force=force)
+    pruned = _prune_stale_skill_symlinks(team_root, agent_claude) if prune else []
+    return {"wired": wired, "pruned": pruned}
+
+
+def sync_agents(team_root: Path, name: str | None = None, *, all_agents: bool = False, force: bool = False) -> dict[str, Any]:
+    """Reconcile one or every agent's skills folder against the shared single source.
+
+    The missing reproduce/sync tool: after a shared skill is added or removed, run
+    ``sync --all`` to re-wire every peer identically (and migrate any agent still on the
+    legacy whole-dir ``skills`` symlink), or ``sync <name>`` for one.
+    """
+    if not (team_root / ".claude").is_dir():
+        raise AgentError(f"team root has no .claude/: {team_root}")
+    agents_dir = team_root / "agents"
+    if all_agents:
+        targets = sorted(p.name for p in agents_dir.glob("*") if p.is_dir()) if agents_dir.exists() else []
+    elif name:
+        if not (agents_dir / name).is_dir():
+            raise AgentError(f"no such agent folder: agents/{name}")
+        targets = [name]
+    else:
+        raise AgentError("sync needs an agent NAME or --all")
+    return {"synced": targets, "skills": {n: sync_agent(team_root, agents_dir / n, force=force) for n in targets}}
+
+
 # ---------------- CLI ----------------
 
 def build_parser() -> argparse.ArgumentParser:
@@ -264,6 +324,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("list", help="List agent folders vs roster and any drift.")
 
+    p_sync = sub.add_parser("sync", help="Re-wire an agent's skills against the shared set (add/prune symlinks, keep private).")
+    p_sync.add_argument("name", nargs="?", default=None, help="Agent to sync (omit with --all).")
+    p_sync.add_argument("--all", dest="all_agents", action="store_true", help="Sync every agent folder.")
+    p_sync.add_argument("--force", action="store_true", help="Migrate a legacy whole-dir 'skills' symlink to a real dir.")
+
     return parser
 
 
@@ -275,6 +340,8 @@ def main(argv: list[str] | None = None) -> int:
             result = create_agent(team_root, args.name, role=args.role, force=args.force)
         elif args.op == "list":
             result = list_agents(team_root)
+        elif args.op == "sync":
+            result = sync_agents(team_root, args.name, all_agents=args.all_agents, force=args.force)
         else:  # pragma: no cover
             raise AgentError(f"unhandled op: {args.op}")
     except AgentError as exc:

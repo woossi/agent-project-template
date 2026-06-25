@@ -29,7 +29,13 @@ Model Y 구조로 `agents/<name>/`를 만든다 — **개별(사적)** 자산은
    ```
    기존 폴더를 다시 배선하려면 `--force`(사적 seed는 보존, 끊긴 symlink만 복구).
 2. **정체성 주입(런치 계약):** 그 에이전트로 일할 터미널에서 `export CLAUDE_AGENT_NAME=<name>` 후 `agents/<name>/`에서 `claude` 실행. 이 값이 guard·받은 편지함·팀 신호의 정체성이다.
-3. **확인:** `python scripts/team_agent.py list`로 폴더↔로스터 정합(`out_of_sync` 비어야 함)을 본다.
+3. **스킬 동기화(공유 스킬 추가/삭제 후):**
+   ```bash
+   python scripts/team_agent.py sync --all          # 전 에이전트 재배선(없는 공유 스킬 symlink 추가, 사라진 것 prune)
+   python scripts/team_agent.py sync <name>          # 한 에이전트만
+   ```
+   전용 스킬(실디렉토리)은 절대 건드리지 않는다. 기존에 `skills`가 통째 symlink였던 에이전트는 `sync --force`가 실디렉토리로 마이그레이션한다.
+4. **확인:** `python scripts/team_agent.py list`로 폴더↔로스터 정합(`out_of_sync` 비어야 함)을 본다.
 
 생성되는 레이아웃:
 ```
@@ -37,26 +43,34 @@ agents/<name>/
   .claude/
     memory/  (사적)  memory.md · user_preferences.md · word.json
     tasks/   (사적)  tasks.md
-    hooks/ policies/ skills/ settings.json CLAUDE.md  → root .claude로 symlink (공유)
+    hooks/ policies/ settings.json CLAUDE.md  → root .claude로 symlink (공유, 통째)
+    skills/  (실디렉토리)  공유 스킬은 개별 symlink, 전용 스킬은 실디렉토리로 공존
+      <공유>  → ../../../../.claude/skills/<공유>   (공유 스킬마다 1개)
+      <전용>/ (사적)  이 에이전트만의 전용 스킬
   AGENTS.md  → 루트로 symlink (공유)
   AGENT.md   (role 디스크립터)
   .context/  (사적, gitignore)
 ```
+
+`skills`만 통째 symlink가 아니라 **실디렉토리 + per-skill 배선**이다(`_wire_skills`). 통째 symlink면 전용 스킬을 넣는 순간 root 공유로 새어 모든 peer에 노출되기 때문이다. 실디렉토리 안에서 공유는 symlink, 전용은 실디렉토리로 공존해 단일소스와 격리를 동시에 만족한다.
 
 ## 출력 형식
 
 ```json
 { "ok": true, "op": "create", "result": {
   "name": "worker-2", "dir": "agents/worker-2", "created": true,
-  "symlinks": {"hooks": "created", "policies": "created", "skills": "created",
-               "settings.json": "created", "CLAUDE.md": "created", "AGENTS.md": "created"},
+  "symlinks": {"hooks": "created", "policies": "created", "settings.json": "created",
+               "CLAUDE.md": "created", "skills": "wired", "skills/team-inbox": "created",
+               "AGENTS.md": "created"},
   "roster_added": true } }
 ```
 
+`sync`의 출력은 `result.skills`(또는 `sync --all`이면 `result.skills.<name>`)에 `{ "wired": <_wire_skills 결과>, "pruned": [...] }` 형식으로 담긴다. `_wire_skills`는 공유 스킬을 `skills/<name>: created|ok`로, 전용 스킬은 `private (kept)`로 보고하고, `pruned`는 공유 소스가 사라져 제거된 stale symlink다.
+
 ## 내부 자원
 
-- `scripts/team_agent.py` — CLI/라이브러리. `create`(스캐폴딩+정체성 규약+공유 symlink+로스터 등록, 멱등, `--force`로 재배선하되 seed 보존), `list`(폴더↔로스터 drift). 로스터는 `.team/team.json` members를 원자적(`os.replace`)으로 갱신.
-- `scripts/tests/test_team_agent.py` — CI 안전 단위 테스트(임시 team root): 구조·시드·symlink 타겟·로스터·멱등·`--force` seed 보존·drift 보고·CLI 왕복.
+- `scripts/team_agent.py` — CLI/라이브러리. `create`(스캐폴딩+정체성 규약+공유 symlink+per-skill 스킬 배선(`_wire_skills`)+로스터 등록, 멱등, `--force`로 재배선하되 seed 보존), `sync`(스킬 폴더를 공유 단일소스에 맞춰 재배선 — `_wire_skills` 재사용으로 공유 추가·전용 보존하고 stale symlink prune, `--all`/한 에이전트, `--force`로 통째 symlink 마이그레이션), `list`(폴더↔로스터 drift). 로스터는 `.team/team.json` members를 원자적(`os.replace`)으로 갱신.
+- `scripts/tests/test_team_agent.py` — CI 안전 단위 테스트(임시 team root): 구조·시드·symlink 타겟·로스터·멱등·`--force` seed 보존·drift 보고·CLI 왕복, per-skill 배선·전용 보존·통째 symlink 마이그레이션·`sync` 재배선·stale prune·`sync --all`.
 
 ## 품질 점검
 

@@ -133,6 +133,38 @@ def build_derivation_policy(setup: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def build_agent_workspace_policy(setup: dict[str, Any], existing: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Regenerate the guard's sibling-isolation policy from the roster.
+
+    The ``agents`` map is 100% derivable from the members (each peer denies every other
+    peer's ``agents/<other>/**``), so team-init owns it — hand-maintaining it is what let
+    it go stale and silently break isolation. ``defaults`` (the project work boundaries,
+    which are NOT in team-setup.json) are preserved from the existing policy so this
+    regeneration never drops a configured allow path.
+    """
+    members = setup["members"]
+    agents = {
+        name: {"deny": [f"agents/{other}/**" for other in members if other != name]}
+        for name in members
+    }
+    base = existing if isinstance(existing, dict) else {}
+    defaults = base.get("defaults")
+    if not isinstance(defaults, dict):
+        defaults = {"allow": ["."], "bash": {"allow": [], "deny": []}, "deny": []}
+    version = base.get("version", 1)
+    return {"agents": agents, "defaults": defaults, "version": version}
+
+
+def _load_json_or_none(path: Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    return data if isinstance(data, dict) else None
+
+
 def _atomic_write_json(path: Path, payload: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.parent / f".tmp-{uuid.uuid4().hex}"
@@ -157,6 +189,16 @@ def init_team(team_root: Path, setup: dict[str, Any], *, create_agents: bool = F
     _atomic_write_json(store / "team.json", build_team_json(setup))
     _atomic_write_json(store / "policies/team-promotion.json", build_promotion_policy(setup))
     _atomic_write_json(store / "policies/team-derivation.json", build_derivation_policy(setup))
+
+    # The guard's sibling-isolation policy is project-scoped (.claude/policies), not in
+    # the team store, but its agents map is pure roster output — regenerate it here so it
+    # can never drift out of step with the members again. Preserve existing work boundaries.
+    workspace_policy_path = team_root / ".claude/policies/agent-workspace.json"
+    _atomic_write_json(
+        workspace_policy_path,
+        build_agent_workspace_policy(setup, _load_json_or_none(workspace_policy_path)),
+    )
+
     for keep in ("goals/.gitkeep", "inbox/.gitkeep"):
         p = store / keep
         p.parent.mkdir(parents=True, exist_ok=True)
@@ -174,6 +216,7 @@ def init_team(team_root: Path, setup: dict[str, Any], *, create_agents: bool = F
             ".team/team.json",
             ".team/policies/team-promotion.json",
             ".team/policies/team-derivation.json",
+            ".claude/policies/agent-workspace.json",
         ],
         "agents_created": [a.get("name") for a in agents if a.get("created")],
     }

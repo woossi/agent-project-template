@@ -117,7 +117,7 @@
 이 프로젝트는 단일 에이전트가 아니라 **공유 1벌 + 정체성 N개**(Model Y)로 운영하는 팀이다. Conductor 없이 터미널 Claude로 각 peer를 실행하며, 같은 파일시스템의 `.team/` 공유 store로 조정한다.
 
 - **정체성**: 각 터미널에서 `export CLAUDE_AGENT_NAME=<이름>` 후 실행한다. 미설정 시 `main`으로 떨어져 정체성이 붕괴하므로 반드시 export한다. guard와 받은 편지함이 이 값을 읽는다.
-- **로스터**: `.team/team.json`(멤버·역할·미리알림 바인딩). 현재 멤버는 `orchestrator`(백로그 분해·할당·완료 추적)와 `worker-1`(작업 실행·진행 기록·완료 체크)다.
+- **로스터**: `.team/team.json`(멤버·역할·미리알림 바인딩). 현재 멤버는 `data-curator`(자료·데이터·분석 결과·그림 관리, 팀 컨텍스트 자원 지원, governance authoring owner)와 `paper-scout`(학술 논문 검색·선별·PDF 수집)다. 로스터·형제 격리 정책은 `team-setup.json` 하나로 `team-init`이 재생성하므로 손으로 멤버 이름을 고치지 않는다.
 - **격리**: `.claude/policies/agent-workspace.json`이 각 이름을 자기 작업 폴더로 한정하고 형제 폴더(`agents/<다른이름>/`)를 차단한다. 공유 자산(`.claude/{hooks,policies,skills,settings.json,CLAUDE.md}`, `AGENTS.md`)은 root로 symlink되어 동일성이 자동 보장된다.
 - **두 채널**: 미리알림(목록 `umc`, 사람도 보는 백로그·진행상태 — `reminders-team-bridge`)과 받은 편지함(`.team/inbox/`, 에이전트끼리 구조화 메시지 — `team-inbox`).
 - **목표·작업**: 팀 목표는 `set-team-goal`로 `.team/goals/`에 기록하고 Tasks로 분해해 할당한다. 팀 합의 결정·용어·선호는 `.team/memory/`·`.team/word.json`·`.team/user_preferences.md`로 파생한다(`team-derive-author`). 팀 계층 승격/파생은 `.team/policies/team-promotion.json`·`team-derivation.json` 조건으로 distinct-agent 축에서 평가된다.
