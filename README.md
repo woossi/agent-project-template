@@ -76,7 +76,8 @@ python .claude/skills/agent-clone-setup/scripts/init_agent_clone.py \
 
 | 파일 | 역할 |
 | --- | --- |
-| `agent-setup.json` | 프로젝트 전환 입력. 비워 두면 스킬이 stdin 값으로 작성합니다 |
+| `agent-setup.json` | 단일 에이전트 프로젝트 전환 입력. 비워 두면 스킬이 stdin 값으로 작성합니다 |
+| `team-setup.json` | 팀 정의 입력(`team-init`). `team`·`members` 필수, 선택 `reminders_list`·`roles`·`authoring_owner`·`min_distinct_agents` |
 
 ## Auto-updated files
 
@@ -135,28 +136,36 @@ Conductor 없이 **터미널 Claude**로 각 에이전트를 띄우며, 공유 `
 - macOS + `python3`. 테스트: `python3 -m pytest .claude -q`.
 - 미리알림 연동은 `osascript`(JXA)와 **자동화(TCC) 권한**이 필요합니다. 샌드박스 셸이면 권한 허용 또는 샌드박스 해제 후 실행하세요(미허용 시 `-1743`).
 
-### 2. 팀 정의 — `.team/team.json`
+### 2. 팀 정의 — `team-setup.json` → `team-init`
 
-로스터(=에이전트 이름), 바인딩할 미리알림 목록, 목표 디렉토리를 적습니다.
+팀 정의는 손으로 여러 파일에 쓰지 않고, **`team-setup.json` 한 장**에서 생성합니다(루트에 동작 예시 포함).
+`agent-clone-setup`의 *json→전환*, `create-team-agent`의 *스캐폴딩*을 팀 레벨로 합친 진입점입니다.
 
 ```json
 {
-  "version": 1,
   "team": "research-umc",
-  "topology": "model-y",
-  "shared_store": ".team",
   "reminders_list": "umc",
   "members": ["orchestrator", "worker-1"],
-  "goals_dir": ".team/goals",
-  "inbox": ".team/inbox"
+  "roles": {
+    "orchestrator": "백로그 분해·할당·완료 추적",
+    "worker-1": "작업 실행·진행 기록·완료 체크"
+  },
+  "authoring_owner": "orchestrator",
+  "min_distinct_agents": 2
 }
 ```
 
-거버넌스(누가 팀 자산을 저작하는지)는 `.team/policies/team-promotion.json`·`team-derivation.json`의
-`governance.authoring_owner`(기본 `orchestrator`)와 `min_distinct_agents`(기본 2)에서 조정합니다.
+```bash
+python .claude/skills/team-init/scripts/team_init.py init --input team-setup.json
+```
+
+이 한 번으로 `.team/team.json` + `.team/policies/team-{promotion,derivation}.json` + 디렉토리가 생성되고,
+`authoring_owner`(누가 팀 자산을 저작하는지)·`min_distinct_agents`(팀 승격 임계값)가 정책에 전파됩니다.
+`--create-agents`를 붙이면 아래 3절(멤버 에이전트 생성)까지 한 번에 끝납니다. stdin으로도 줄 수 있습니다.
 
 ### 3. 에이전트 생성 — `create-team-agent`
 
+`team-init --create-agents`가 멤버를 한 번에 만들지만, 나중에 멤버를 **추가**하거나 개별 생성할 때는 이 스킬을 직접 씁니다.
 생성 시점은 사용자가 판단합니다. 생성하면 개별 자산(memory·tasks·`.context`)은 실파일로 seed되고,
 공유 자산(hooks·policies·skills·settings·계약)은 루트로 symlink되며 `team.json` 로스터에 등록됩니다.
 
@@ -239,6 +248,7 @@ python .claude/hooks/detect_team_derivations.py resolve --kind term --key LISA -
 
 | 스킬/훅 | 역할 |
 | --- | --- |
+| `team-init` | `team-setup.json` → `.team` 정의(team.json·정책·디렉토리) 생성, `--create-agents`로 멤버까지 |
 | `create-team-agent` | Model Y peer 스캐폴딩 + 로스터 등록 |
 | `reminders-team-bridge` | 미리알림 ↔ 팀 백로그 양방향(JXA) |
 | `team-inbox` | peer↔peer 다대다 채널(불변 파일·atomic·멱등) |

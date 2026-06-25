@@ -14,8 +14,23 @@
     "candidates_dir": ".team/derivations/candidates",
     "decisions_dir": ".team/derivations/decisions"
   },
-  "term_derivation": {"min_distinct_agents": 2, "skip_if_registered": true, "max_candidates": 20},
-  "preference_derivation": {"min_distinct_agents": 2, "skip_if_recorded": true, "max_candidates": 20},
-  "memory_derivation": {"min_distinct_agents": 2, "skip_if_recorded": true, "max_candidates": 20},
-  "governance": {"mode": "orchestrator-authors", "authoring_owner": "orchestrator"}
+  "term_derivation": {
+    "min_distinct_agents": 2,
+    "skip_if_registered": true,
+    "max_candidates": 20
+  },
+  "preference_derivation": {
+    "min_distinct_agents": 2,
+    "skip_if_recorded": true,
+    "max_candidates": 20
+  },
+  "memory_derivation": {
+    "min_distinct_agents": 2,
+    "skip_if_recorded": true,
+    "max_candidates": 20
+  },
+  "governance": {
+    "mode": "orchestrator-authors",
+    "authoring_owner": "orchestrator"
+  }
 }

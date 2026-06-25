@@ -1,17 +1,11 @@
 {
-  "version": 1,
   "team": "research-umc",
-  "topology": "model-y",
-  "shared_store": ".team",
   "reminders_list": "umc",
-  "members": [
-    "orchestrator",
-    "worker-1"
-  ],
+  "members": ["orchestrator", "worker-1"],
   "roles": {
     "orchestrator": "백로그 분해·할당·완료 추적",
     "worker-1": "작업 실행·진행 기록·완료 체크"
   },
-  "goals_dir": ".team/goals",
-  "inbox": ".team/inbox"
+  "authoring_owner": "orchestrator",
+  "min_distinct_agents": 2
 }
