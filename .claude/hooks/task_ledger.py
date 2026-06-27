@@ -46,7 +46,10 @@ def _find_repo_root(start: Path) -> Path:
     cwd is not a reliable anchor. If nothing matches we keep ``start``.
     """
     for base in (start, *start.parents):
-        if (base / ".project" / "team.json").is_file() or (base / "AGENTS.md").is_file():
+        if (base / ".project" / "team.json").is_file():
+            return base
+    for base in (start, *start.parents):
+        if (base / "AGENTS.md").is_file():
             return base
     return start
 
@@ -61,13 +64,13 @@ def project_dir(payload: dict[str, Any]) -> Path:
     matter where the hook fires (the raw cwd / payload cwd is the session root
     for all peers and would otherwise collapse them into the root ``.context``).
 
-    ``CLAUDE_PROJECT_DIR``, when explicitly set, still wins as a hard override.
+    ``CLAUDE_PROJECT_DIR`` supplies the shared repo root when the hook is launched from a
+    symlinked worker folder, but it is not the ledger destination. When an agent identity is
+    set, descend to that registered worker folder first.
     """
     explicit = os.environ.get("CLAUDE_PROJECT_DIR")
-    if explicit:
-        return Path(explicit).expanduser().resolve()
     start = Path(str(payload.get("cwd") or os.getcwd())).expanduser().resolve()
-    root = _find_repo_root(start)
+    root = Path(explicit).expanduser().resolve() if explicit else _find_repo_root(start)
     agent = os.environ.get("CLAUDE_AGENT_NAME") or ""
     if agent:
         agent_root = _agent_root(root, agent)
@@ -217,6 +220,16 @@ def run_record_task(argv: list[str]) -> int:
         default=None,
         help="Agent identity for distinct-agent team counting (default: $CLAUDE_AGENT_NAME)",
     )
+    parser.add_argument(
+        "--retro",
+        default=None,
+        help=(
+            "Mandatory one-line retrospective on task completion: was a better result possible / "
+            "what to improve. Use 'none' (or '개선없음') when nothing to improve. "
+            "A non-empty improvement flags this signature as a worker-skill improvement candidate "
+            "(authored by the team lead, not the worker)."
+        ),
+    )
     parser.add_argument("--project-root", default=None, help="Project root override")
     args = parser.parse_args(argv)
 
@@ -231,6 +244,17 @@ def run_record_task(argv: list[str]) -> int:
     }
     if agent:
         record["agent"] = agent
+    # Retrospective is optional on the CLI (back-compat: old callers omit it), but
+    # the write-task procedure mandates passing it on every completion. When given,
+    # store the raw text; detect_promotions reads `retro` to decide whether the
+    # signature is a worker-skill *improvement* candidate (non-empty improvement =
+    # better result was possible). Sentinels meaning "nothing to improve" normalize
+    # to empty so they never raise an improvement candidate.
+    if args.retro is not None:
+        retro = args.retro.strip()
+        if retro.lower() in {"none", "n/a", "-"} or retro in {"개선없음", "없음"}:
+            retro = ""
+        record["retro"] = retro
     if not record["signature"]:
         print("error: --signature must not be empty", file=sys.stderr)
         return 2

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -168,6 +169,42 @@ class TaskLedgerTest(unittest.TestCase):
             "write-skill",
         )
         self.assertIsNone(task_ledger.skill_from_paths(["docs/SKILL.md"]))
+
+    def test_find_repo_root_prefers_project_marker_over_worker_agents_symlink(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            worker = root / "teams/data/de"
+            worker.mkdir(parents=True)
+            (root / ".project").mkdir()
+            (root / ".project/team.json").write_text("{}", encoding="utf-8")
+            (worker / "AGENTS.md").write_text("# symlink stand-in", encoding="utf-8")
+            self.assertEqual(task_ledger._find_repo_root(worker), root)
+
+    def test_project_dir_uses_registered_worker_under_explicit_project_dir(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            worker = root / "teams/data/de"
+            worker.mkdir(parents=True)
+            (root / ".project").mkdir()
+            (root / ".project/team.json").write_text(json.dumps({
+                "members": ["de"],
+                "subteams": [{"name": "data", "members": ["de"], "orchestrator": "de"}],
+            }), encoding="utf-8")
+            old_project = os.environ.get("CLAUDE_PROJECT_DIR")
+            old_agent = os.environ.get("CLAUDE_AGENT_NAME")
+            try:
+                os.environ["CLAUDE_PROJECT_DIR"] = str(root)
+                os.environ["CLAUDE_AGENT_NAME"] = "de"
+                self.assertEqual(task_ledger.project_dir({"cwd": str(worker)}), worker.resolve())
+            finally:
+                if old_project is None:
+                    os.environ.pop("CLAUDE_PROJECT_DIR", None)
+                else:
+                    os.environ["CLAUDE_PROJECT_DIR"] = old_project
+                if old_agent is None:
+                    os.environ.pop("CLAUDE_AGENT_NAME", None)
+                else:
+                    os.environ["CLAUDE_AGENT_NAME"] = old_agent
 
 
 if __name__ == "__main__":

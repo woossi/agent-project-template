@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -39,6 +40,11 @@ from widgets.modals import (PostInboxModal, AddTaskModal,
 # osascript로 수십 초까지 걸려 UI를 얼리므로 자동 폴링에서 제외하고, 'R' 키로
 # 명시 요청할 때만 백그라운드 스레드에서 당겨온다(낙관적 추가는 그 사이 즉시 반영).
 REFRESH_SECONDS = 3.0
+
+# 워커 상시 구동(autorun) 폴링 주기. 이 주기마다 가동 안 중인 일반 워커를 깨워 자기 팀
+# 보드를 확인시킨다. refresh(3s)보다 길게 둬 깨움이 과하지 않게 한다(작업 없으면 즉시 종료).
+AUTORUN_SECONDS = 45.0
+AUTORUN_COOLDOWN_SECONDS = 10 * 60.0
 
 
 class Dashboard(App):
@@ -67,6 +73,7 @@ class Dashboard(App):
         Binding("R", "pull_reminders", "미리알림당기기"),
         Binding("c", "instruct", "지시"),
         Binding("g", "instruct_team", "팀일괄구동"),
+        Binding("A", "toggle_autorun", "상시구동"),
         Binding("x", "reset_session", "세션리셋"),
         Binding("a", "add_task", "작업추가"),
         Binding("p", "post_inbox", "발행"),
@@ -90,6 +97,14 @@ class Dashboard(App):
         self._tasks_pulled: bool = False  # 아직 한 번도 안 당김
         self._pulling: bool = False       # 백그라운드 당기기 진행 중(중복 방지)
         self._instructing: set[str] = set()  # 가동 중인 워커 집합(워커별 동시 지시 허용)
+        # 워커 상시 구동(autorun): 켜지면 주기마다 가동 안 중인 일반 워커(팀장 제외)를
+        # 'tasks 보드 확인·수행·보고' preset으로 자동으로 깨운다. 작업이 없으면 워커는
+        # '받은 작업 없음'만 보고하고 즉시 종료하므로, 보드에 새 작업이 생길 때만 실질
+        # 가동된다. _instructing 락으로 이미 도는 워커는 건너뛰어 중복·토큰폭발을 막는다.
+        self._autorun_on: bool = False
+        self._autorun_seconds: float = AUTORUN_SECONDS
+        self._autorun_cooldown_seconds: float = AUTORUN_COOLDOWN_SECONDS
+        self._autorun_last_wake: dict[str, float] = {}
 
     def _reminders_list_name(self) -> str:
         data = store._load_json(self.root / ".project" / "team.json") or {}
@@ -119,6 +134,9 @@ class Dashboard(App):
         self.title = "UMC 팀 관제"
         self.refresh_data()
         self.set_interval(REFRESH_SECONDS, self.refresh_data)
+        # 워커 상시 구동 폴링 — 타이머는 항상 돌되 _autorun_on이 켜졌을 때만 실제로 깨운다
+        # ('A' 키로 토글). 주기는 refresh보다 길게(AUTORUN_SECONDS) 둔다.
+        self.set_interval(self._autorun_seconds, self._autorun_tick)
 
     # ---------------- refresh ----------------
 
@@ -136,8 +154,9 @@ class Dashboard(App):
         self.query_one(CandidateQueue).update_snapshot(snap)
         self._render_backlog()
         self._render_strip(snap)
+        autorun = "[상시ON]" if self._autorun_on else "상시OFF"
         self.sub_title = (f"{self.root.name} · 미리알림:{self.reminders_list} · "
-                          f"inbox {len(snap.inbox)} · 가동 {len(running)}/{len(snap.workers)}")
+                          f"inbox {len(snap.inbox)} · 가동 {len(running)}/{len(snap.workers)} · {autorun}")
 
     def _render_strip(self, snap: "store.Snapshot") -> None:
         """팀 부하 현재량 스트립. 전부 store/세션풀에서 결정적으로 나오는 절대량."""
@@ -220,12 +239,22 @@ class Dashboard(App):
     #  안에서 headless로 구동·응답 수신한다. TmuxLauncher 코드는 남겨 두되 UI 경로 없음.)
 
     def action_instruct(self) -> None:
-        """선택 워커에게 headless 지시. tmux 없이 직접 구동·응답 수신."""
+        """선택 워커에게 headless 지시. tmux 없이 직접 구동·응답 수신.
+
+        계층 거버넌스(2026-06-27): 개별 지시는 팀장(lead)에게만 보낸다. 일반 워커는
+        팀장이 팀 보드로 작업을 분배하므로, 총괄도 워커를 직접 지휘하지 않고 그 팀의
+        팀장을 통한다. 워커가 선택되면 차단하고 해당 팀장을 안내한다(엄격 모드, 사용자 결정)."""
         sel = self._selected_worker()
         if not sel:
             self._toast(False, "워커를 먼저 선택하세요(사이드바)")
             return
         worker, team = sel
+        # 역할 게이트: 팀장이 아니면 직접 지시 불가 — 그 팀의 팀장을 통하라.
+        if not self._is_lead(worker):
+            lead = self._team_lead(team)
+            hint = f" — 팀장({lead})을 골라 지시하세요" if lead else " — 팀장을 통해 지시하세요"
+            self._toast(False, f"{worker}는 워커라 직접 지시 불가{hint}")
+            return
         # 워커별 락: 같은 워커가 이미 가동 중이면만 막고, 다른 팀/워커는 동시 지시 허용.
         if worker in self._instructing:
             self._toast(False, f"{worker} 지시 처리 중 — 끝나면 다시")
@@ -244,9 +273,10 @@ class Dashboard(App):
         self.push_screen(InstructModal(worker, submit, resuming=resuming, team=team))
 
     def action_instruct_team(self) -> None:
-        """선택 워커가 속한 팀의 모든 워커를 동시에 headless로 깨워, 각자 '팀 메일박스
-        확인·claim·처리' inbox preset을 일괄 지시한다. 리더가 발행한 작업이 메일박스에
-        쌓여만 있고 아무도 안 가져가던 문제(active 0)를 푼다 — 워커들이 자기 담당을 claim."""
+        """선택 워커가 속한 팀의 모든 워커를 동시에 headless로 깨운다. 역할별로 다른
+        preset을 준다 — lead는 'inbox'(팀 메일박스 claim→팀 보드 분배), 워커는 'tasks'
+        (팀 보드에서 자기 섹션을 read해 수행·보고). 메일박스 claim/ack는 팀장만 하고,
+        워커는 보드 작업만 수행·보고한다."""
         sel = self._selected_worker()
         if not sel:
             self._toast(False, "워커를 먼저 선택하세요(그 워커의 팀 전체를 구동)")
@@ -262,7 +292,8 @@ class Dashboard(App):
             if w in self._instructing:
                 skipped.append(w)
                 continue
-            prompt = preset_prompt("inbox", worker=w, team=team)
+            preset_key = "inbox" if self._is_lead(w) else "tasks"
+            prompt = preset_prompt(preset_key, worker=w, team=team)
             console.add_prompt(w, prompt)
             self._instructing.add(w)
             console.set_active(w, True)
@@ -276,6 +307,64 @@ class Dashboard(App):
             if st.name == team:
                 return list(st.members)
         return []
+
+    def _is_lead(self, worker: str) -> bool:
+        """팀장(orchestrator) 여부 — store snapshot의 is_orchestrator로 분기."""
+        for w in (self._snap.workers if self._snap else []):
+            if w.name == worker:
+                return w.is_orchestrator
+        return False
+
+    def _team_lead(self, team: str) -> str | None:
+        """그 팀의 팀장(orchestrator) 이름 — 워커 직접지시 차단 시 안내용."""
+        for st in (self._snap.subteams if self._snap else []):
+            if st.name == team:
+                return st.orchestrator
+        return None
+
+    # ---------------- 워커 상시 구동 (autorun) ----------------
+
+    def action_toggle_autorun(self) -> None:
+        """상시 구동 모드 토글('A'). 켜면 주기마다 일반 워커가 자동으로 자기 팀 보드를
+        확인·수행·보고한다. 팀장은 제외(당신이 지시할 때만). 끄면 다시 수동(c/g)만."""
+        self._autorun_on = not self._autorun_on
+        if self._autorun_on:
+            self._toast(True, f"상시 구동 ON — {int(self._autorun_seconds)}초마다 워커가 보드를 확인합니다")
+            self._autorun_tick()  # 켜는 즉시 1회 실행(다음 주기까지 안 기다림)
+        else:
+            self._toast(True, "상시 구동 OFF — 워커는 c/g로 수동 구동만")
+        self.refresh_data()  # sub_title의 상시 표시 갱신
+
+    def _autorun_tick(self) -> None:
+        """주기 호출. 상시 모드가 켜졌을 때만, 가동 안 중인 일반 워커(팀장 제외)를
+        'tasks 보드 확인·수행·보고' preset으로 깨운다.
+
+        과가동·토큰폭발 방지: (1) _instructing 락으로 이미 도는 워커는 건너뛴다.
+        (2) 팀장은 제외해 '팀장과만 소통' 모델을 지킨다. (3) 깨워진 워커는 보드에
+        작업이 없으면 '받은 작업 없음'만 보고하고 즉시 종료하므로, 실질 가동은 보드에
+        새 작업이 있을 때뿐이다."""
+        if not self._autorun_on or not self._snap:
+            return
+        console = self.query_one(WorkerConsole)
+        woken = 0
+        now = time.time()
+        for w in self._snap.workers:
+            if w.is_orchestrator:        # 팀장 제외 — 당신이 지시할 때만
+                continue
+            if w.name in self._instructing:  # 이미 가동 중 — 중복 방지
+                continue
+            last = self._autorun_last_wake.get(w.name)
+            if last is not None and now - last < self._autorun_cooldown_seconds:
+                continue
+            prompt = preset_prompt("tasks", worker=w.name, team=w.team)
+            console.add_prompt(w.name, prompt)
+            self._instructing.add(w.name)
+            self._autorun_last_wake[w.name] = now
+            console.set_active(w.name, True)
+            self._instruct_worker(w.name, w.team, prompt)
+            woken += 1
+        if woken:
+            self._toast(True, f"상시 구동: 워커 {woken}명 보드 확인 가동")
 
     def action_reset_session(self) -> None:
         """선택 워커의 headless 대화를 새로 시작(다음 지시는 새 세션)."""

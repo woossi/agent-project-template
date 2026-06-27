@@ -17,9 +17,18 @@ __pycache__/
 
 # Team runtime: inbox messages and per-agent/per-team work context (keep dirs, ignore contents)
 .project/inbox/*/
+teams/*/.claude/inbox/*.json
+teams/*/.claude/inbox/**/*.json
+teams/.orchestrator/inbox/*.json
+teams/.orchestrator/inbox/**/*.json
+teams/*/.claude/inbox/.claimed/
+teams/*/.claude/inbox/.consumed/
+teams/.orchestrator/inbox/.claimed/
+teams/.orchestrator/inbox/.consumed/
 agents/*/.context/
 teams/*/*/.context/
 teams/*/.context/
+outputs/
 
 # Team promotion runtime (candidates recomputed; decisions are instance state)
 .project/promotions/

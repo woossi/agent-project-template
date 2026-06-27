@@ -10,9 +10,9 @@
 
 ## 계약
 
-- 읽는 입력: `team-setup.json`(파일 `--input` 또는 stdin). 필수 `team`, `members`. 선택 `reminders_list`, `roles`, `authoring_owner`(기본 `members[0]`), `min_distinct_agents`(기본 2).
-- 만드는 출력: `.project/team.json`, `.project/policies/team-promotion.json`, `.project/policies/team-derivation.json`, `.project/{goals,inbox}/.gitkeep`, 그리고 guard가 읽는 `.claude/policies/agent-workspace.json`(형제 격리 `agents` 맵을 로스터에서 재생성, 작업 경계 `defaults`는 기존 값 보존). 정규화 입력을 `team-setup.json`으로 저장(끄려면 `--no-save-input`). stdout JSON 요약.
-- 쓰면 안 되는 위치: 개별 에이전트 자산을 직접 만들지 않는다(그건 `create-team-agent`/`--create-agents`가 한다). 런타임(`.project/inbox` 내용 등)은 만들지 않는다.
+- 읽는 입력: `team-setup.json`(파일 `--input` 또는 stdin). 필수 `team`, `members`. 선택 `reminders_list`, `roles`, `authoring_owner`(기본 `members[0]`, 비멤버 `orchestrator` 허용), `min_distinct_agents`(기본 2), `subteams`.
+- 만드는 출력: `.project/team.json`, `.project/policies/team-promotion.json`, `.project/policies/team-derivation.json`, `.project/goals/.gitkeep`, `.project/inbox/.archive/.gitkeep`, `teams/.orchestrator/inbox/.gitkeep`, `teams/<팀>/.claude/inbox/.gitkeep`, 그리고 guard가 읽는 `.claude/policies/agent-workspace.json`(형제 격리 `agents` 맵을 로스터에서 재생성). 정규화 입력을 `team-setup.json`으로 저장(끄려면 `--no-save-input`). stdout JSON 요약.
+- 쓰면 안 되는 위치: 개별 에이전트 자산을 직접 만들지 않는다(그건 `create-team-agent`/`--create-agents`가 한다). 런타임 mailbox 메시지 내용은 만들지 않는다.
 
 ## 입력
 
@@ -54,23 +54,23 @@
   "agents_created": [] } }
 ```
 
-> 멤버를 바꾼 뒤에는 반드시 `init`을 다시 돌려 `agent-workspace.json`의 형제 격리를 로스터와 일치시킨다. 이 `agents` 맵은 손으로 유지하면 stale해져 격리가 조용히 깨진다(실제로 발생했던 버그). 작업 경계(`defaults.allow`)는 기존 파일에서 보존되므로 재생성해도 경로를 잃지 않는다.
+> 멤버를 바꾼 뒤에는 반드시 `init`을 다시 돌려 `agent-workspace.json`의 형제 격리를 로스터와 일치시킨다. 이 `agents` 맵은 손으로 유지하면 stale해져 격리가 조용히 깨진다(실제로 발생했던 버그). 팀 외부 작업 경계는 각 subteam의 `allow_paths`에서 재생성된다.
 
 ## 내부 자원
 
-- `scripts/team_init.py` — `init`(파일/stdin 입력→정의 작성, `--create-agents`, `--save-input`/`--no-save-input`, `--team-root`). 정책은 탐지기가 읽는 스키마로 생성하고, `min_distinct_agents`·`authoring_owner`를 전파. `build_agent_workspace_policy`로 guard의 형제 격리 정책을 로스터에서 재생성하되 기존 `defaults`(작업 경계)를 읽어 보존. atomic 쓰기.
+- `scripts/team_init.py` — `init`(파일/stdin 입력→정의 작성, `--create-agents`, `--save-input`/`--no-save-input`, `--team-root`)과 `add-subteam`. 정책은 탐지기가 읽는 스키마로 생성하고, `min_distinct_agents`·`authoring_owner`를 전파. `build_agent_workspace_policy`로 guard의 형제 격리·팀 외부경로 차단·팀 mailbox `deny_read` 정책을 로스터에서 재생성한다. atomic 쓰기.
 - `scripts/tests/test_team_init.py` — CI 안전 테스트: 검증(team/members/owner/min), 정책 전파, 파일·디렉토리 작성, `--create-agents`(스텁), CLI 저장, 형제 격리 재생성·작업 경계 보존.
 
 ## 품질 점검
 
-- `python3 -m pytest .claude/skills/team-init/scripts/tests/ -q` 통과.
+- `python3 -m unittest discover -s .claude/skills/team-init/scripts/tests -p 'test_*.py'` 통과.
 - 생성된 `.project/policies/team-*.json`은 `detect_team_promotions.py`/`detect_team_derivations.py`가 읽는 키를 갖는다.
-- `authoring_owner`는 반드시 `members`에 속한다(아니면 거부).
+- `authoring_owner`는 `members`에 속하거나 예약 총괄 정체성 `orchestrator`여야 한다.
 
 ## 자주 발생하는 실패 사례
 
 - **`needs a non-empty 'team' name` / `needs 'members'`** → 필수 필드 누락. team·members를 채운다.
-- **`authoring_owner ... must be one of members`** → owner를 멤버 중에서 지정한다.
+- **`authoring_owner ... must be one of members ... or 'orchestrator'`** → owner를 멤버 중에서 지정하거나 총괄 `orchestrator`로 둔다.
 - **`--create-agents`인데 스캐폴딩 안 됨** → `create-team-agent` 스킬이 있어야 하며, `--team-root`가 repo 루트여야 한다.
 
 <!-- component-contract:start -->

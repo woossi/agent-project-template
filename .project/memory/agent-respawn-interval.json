@@ -1,0 +1,19 @@
+{
+  "id": "agent-respawn-interval",
+  "title": "전 peer 에이전트 재기동 간격 = 10분 (워커·팀장·orchestrator)",
+  "scope": "회사(프로젝트) 전체 운영 규약. 전 정체성에 적용.",
+  "decision": "개별 워커(생산자)·팀장(lead)·회사 orchestrator를 포함한 모든 peer 에이전트의 주기적 재기동(self-wake) 간격을 10분으로 한다. 각 정체성은 자기 세션에서 10분 주기로 깨어나 자기 채널을 점검·진행한다 — 워커는 팀 보드의 자기 섹션을 read해 작업하고 post로 보고, 팀장은 팀 메일박스를 read·claim·분배·ack, orchestrator는 전 팀 메일박스·보드를 read해 조율한다.",
+  "decided_by": "user",
+  "decided_ts": "2026-06-28",
+  "rationale": "사용자 결정(권한순서 1순위, 2026-06-28): '개별 워커가 재기동되는 시간이 10분이고, 팀장도 10분입니다'. orchestrator 단일 폴링이 아니라 각 peer의 자율 재기동 간격임을 명확히 함.",
+  "implementation": [
+    "각 peer는 자기 세션에서 10분 주기 self-wake를 건다(durable cron 또는 /loop 10m). 사양: 분(minute) 마크 0/30 회피 권장(off-minute 지터), 예 cron '*/10 * * * *'는 정시정렬이므로 약간 어긋난 분 권장 또는 ScheduleWakeup delaySeconds≈600(±지터).",
+    "공유 자산(.claude/settings.json 등)은 root symlink로 전 peer 공유되나, 재기동 루프는 settings.json 키가 아니라 세션 런타임 동작(cron/loop)이라 거기 박을 수 없다. 따라서 이 규약을 회사 메모리에 단일출처로 두고 각 정체성이 부팅 시 자기 세션에 적용한다.",
+    "cron 루프는 7일 후 자동 만료될 수 있으므로(런타임 제약) 만료 시 각 peer가 재등록한다.",
+    "orchestrator 본인 세션에는 이 결정과 동시에 10분 재기동을 실제 등록함(durable)."
+  ],
+  "constraints": [
+    "재기동은 점검·조율·진행을 위한 것이며, 워커는 자기 폴더/팀 보드 자기 섹션만 본다(엄격 격리 유지).",
+    "재기동 간격 변경은 사용자 결정 사항이다."
+  ]
+}

@@ -20,6 +20,7 @@
         "/Users/ujunbin/knowledge/**"
       ],
       "deny_read": [
+        "teams/.orchestrator/inbox/**",
         "teams/analysis/.claude/inbox/**",
         "teams/review/.claude/inbox/**",
         "teams/scout/.claude/inbox/**",
@@ -53,6 +54,7 @@
         "/Users/ujunbin/research/UMC/**"
       ],
       "deny_read": [
+        "teams/.orchestrator/inbox/**",
         "teams/analysis/.claude/inbox/**",
         "teams/data/.claude/inbox/**",
         "teams/review/.claude/inbox/**",
@@ -87,6 +89,7 @@
         "/Users/ujunbin/knowledge/**"
       ],
       "deny_read": [
+        "teams/.orchestrator/inbox/**",
         "teams/analysis/.claude/inbox/**",
         "teams/data/.claude/inbox/**",
         "teams/review/.claude/inbox/**",
@@ -120,6 +123,7 @@
         "/Users/ujunbin/knowledge/**"
       ],
       "deny_read": [
+        "teams/.orchestrator/inbox/**",
         "teams/analysis/.claude/inbox/**",
         "teams/data/.claude/inbox/**",
         "teams/review/.claude/inbox/**",
@@ -152,6 +156,7 @@
         "/Users/ujunbin/knowledge/**"
       ],
       "deny_read": [
+        "teams/.orchestrator/inbox/**",
         "teams/analysis/.claude/inbox/**",
         "teams/data/.claude/inbox/**",
         "teams/scout/.claude/inbox/**",
@@ -185,6 +190,7 @@
         "/Users/ujunbin/knowledge/**"
       ],
       "deny_read": [
+        "teams/.orchestrator/inbox/**",
         "teams/analysis/.claude/inbox/**",
         "teams/data/.claude/inbox/**",
         "teams/scout/.claude/inbox/**",
@@ -218,6 +224,7 @@
         "/Users/ujunbin/knowledge/**"
       ],
       "deny_read": [
+        "teams/.orchestrator/inbox/**",
         "teams/analysis/.claude/inbox/**",
         "teams/review/.claude/inbox/**",
         "teams/scout/.claude/inbox/**",
@@ -251,6 +258,7 @@
         "/Users/ujunbin/knowledge/**"
       ],
       "deny_read": [
+        "teams/.orchestrator/inbox/**",
         "teams/analysis/.claude/inbox/**",
         "teams/review/.claude/inbox/**",
         "teams/scout/.claude/inbox/**",
@@ -285,6 +293,7 @@
         "/Users/ujunbin/knowledge/**"
       ],
       "deny_read": [
+        "teams/.orchestrator/inbox/**",
         "teams/data/.claude/inbox/**",
         "teams/review/.claude/inbox/**",
         "teams/scout/.claude/inbox/**",
@@ -317,6 +326,7 @@
         "/Users/ujunbin/knowledge/**"
       ],
       "deny_read": [
+        "teams/.orchestrator/inbox/**",
         "teams/analysis/.claude/inbox/**",
         "teams/review/.claude/inbox/**",
         "teams/scout/.claude/inbox/**",
@@ -351,6 +361,7 @@
         "/Users/ujunbin/knowledge/**"
       ],
       "deny_read": [
+        "teams/.orchestrator/inbox/**",
         "teams/analysis/.claude/inbox/**",
         "teams/data/.claude/inbox/**",
         "teams/review/.claude/inbox/**",
@@ -383,6 +394,7 @@
         "/Users/ujunbin/research/UMC/**"
       ],
       "deny_read": [
+        "teams/.orchestrator/inbox/**",
         "teams/analysis/.claude/inbox/**",
         "teams/data/.claude/inbox/**",
         "teams/review/.claude/inbox/**",
@@ -416,6 +428,7 @@
         "/Users/ujunbin/knowledge/**"
       ],
       "deny_read": [
+        "teams/.orchestrator/inbox/**",
         "teams/analysis/.claude/inbox/**",
         "teams/data/.claude/inbox/**",
         "teams/scout/.claude/inbox/**",
@@ -450,6 +463,7 @@
         "/Users/ujunbin/knowledge/**"
       ],
       "deny_read": [
+        "teams/.orchestrator/inbox/**",
         "teams/data/.claude/inbox/**",
         "teams/review/.claude/inbox/**",
         "teams/scout/.claude/inbox/**",
@@ -460,6 +474,30 @@
         "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
         "/Users/ujunbin/.claude/projects/-Users-ujunbin-team-umc/**",
         "/Users/ujunbin/project/umc/**"
+      ]
+    },
+    "orchestrator": {
+      "deny": [
+        "teams/data/data-curator/**",
+        "teams/scout/paper-scout/**",
+        "teams/write/manuscript-writer/**",
+        "teams/write/manuscript-steward/**",
+        "teams/review/stats-validator/**",
+        "teams/review/quality-reviewer/**",
+        "teams/data/data-engineer/**",
+        "teams/data/inference-runner/**",
+        "teams/analysis/causal-analyst/**",
+        "teams/data/data-lead/**",
+        "teams/write/write-lead/**",
+        "teams/scout/scout-lead/**",
+        "teams/review/review-lead/**",
+        "teams/analysis/analysis-lead/**"
+      ],
+      "deny_read": [],
+      "allow": [
+        ".",
+        "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
+        "/Users/ujunbin/.claude/projects/-Users-ujunbin-team-umc/**"
       ]
     }
   },

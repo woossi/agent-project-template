@@ -39,7 +39,84 @@ def resolve_store(explicit: str | None) -> Path:
     return Path(explicit or os.environ.get("CLAUDE_PROJECT_STORE") or ".project").expanduser()
 
 
-def resolve_identity(explicit: str | None) -> str:
+def _repo_root_for_store(store: Path) -> Path | None:
+    resolved = store.expanduser().resolve()
+    if resolved.name == ".project" and (resolved / "team.json").is_file():
+        return resolved.parent
+    for base in (resolved, *resolved.parents):
+        if (base / ".project" / "team.json").is_file():
+            return base
+    return None
+
+
+def _load_subteams(root: Path) -> dict[str, list[str]]:
+    try:
+        data = json.loads((root / ".project" / "team.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    out: dict[str, list[str]] = {}
+    if isinstance(data, dict):
+        for st in data.get("subteams") or []:
+            if isinstance(st, dict) and isinstance(st.get("name"), str):
+                out[st["name"]] = [m for m in (st.get("members") or []) if isinstance(m, str)]
+    return out
+
+
+CWD_FAILCLOSED = "__cwd_failclosed__"
+
+
+def _worker_at(root: Path, candidate: Path) -> str | None:
+    try:
+        rel = candidate.relative_to(root)
+    except ValueError:
+        return None
+    parts = rel.parts
+    if len(parts) < 3 or parts[0] != "teams":
+        return None
+    team, worker = parts[1], parts[2]
+    return worker if worker in _load_subteams(root).get(team, []) else None
+
+
+def _identity_from_cwd(root: Path) -> str | None:
+    pwd_env = os.environ.get("PWD")
+    log_raw = Path(pwd_env) if pwd_env else Path.cwd()
+    phys_raw = Path.cwd()
+    log_raw = log_raw if log_raw.is_absolute() else (root / log_raw)
+    phys_raw = phys_raw if phys_raw.is_absolute() else (root / phys_raw)
+    logical = Path(os.path.normpath(str(log_raw)))
+    physical = phys_raw.resolve()
+    root_res = root.resolve()
+
+    inside = False
+    for base in (root, root_res):
+        try:
+            rel = logical.relative_to(base)
+            if rel.parts and rel.parts[0] == "teams":
+                inside = True
+                break
+        except ValueError:
+            continue
+    if not inside:
+        try:
+            rel = physical.relative_to(root_res)
+            inside = bool(rel.parts) and rel.parts[0] == "teams"
+        except ValueError:
+            inside = False
+    if not inside:
+        return None
+
+    log_w = _worker_at(root, logical) or _worker_at(root_res, logical)
+    phys_w = _worker_at(root_res, physical) or _worker_at(root, physical)
+    if log_w and phys_w and log_w == phys_w:
+        return log_w
+    return CWD_FAILCLOSED
+
+
+def resolve_identity(explicit: str | None, root: Path | None = None) -> str:
+    if root is not None:
+        cwd_id = _identity_from_cwd(root)
+        if cwd_id is not None:
+            return cwd_id
     return explicit or os.environ.get("CLAUDE_AGENT_NAME") or "user"
 
 
@@ -105,7 +182,33 @@ def register_term(store: Path, *, term: str, ko: str, definition: str, use_when:
     return fields
 
 
+def _is_shared_memory(store: Path) -> bool:
+    """기록 대상 메모리가 공유 메모리인지 판정한다.
+
+    공유: .project/memory · teams/<팀>/.claude/memory.
+    비공유(통과): teams/<팀>/<워커>/.claude/memory 등 워커 개인 메모리.
+    """
+    mdir = (store / "memory").resolve()
+    parts = mdir.parts
+    # .project/memory
+    for i, seg in enumerate(parts[:-1]):
+        if seg == ".project" and parts[i + 1] == "memory":
+            return True
+    # teams/<팀>/.claude/memory  (teams/<팀>/<워커>/.claude/memory 는 비공유)
+    if "teams" in parts:
+        ti = parts.index("teams")
+        # 팀 공유: teams / <팀> / .claude / memory  → 'teams' 뒤로 정확히 3 세그먼트
+        tail = parts[ti + 1:]
+        if len(tail) == 3 and tail[1] == ".claude" and tail[2] == "memory":
+            return True
+    return False
+
+
 def record_memory(store: Path, *, key: str, fact: str, source: str = "", by: str = "user", clock=time.time_ns) -> dict[str, Any]:
+    # 공유 메모리(.project/memory · teams/<팀>/.claude/memory) 기록은 owner 게이트.
+    # 워커 개인 메모리(teams/<팀>/<워커>/.claude/memory)는 통과(계층별 게이트).
+    if _is_shared_memory(store):
+        _require_owner(store, by)
     key = key.strip()
     fact = fact.strip()
     if not key or not fact:
@@ -174,7 +277,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     store = resolve_store(args.store)
-    by = resolve_identity(args.by)
+    by = resolve_identity(args.by, _repo_root_for_store(store))
     try:
         if args.op == "register-term":
             result = register_term(store, term=args.term, ko=args.ko, definition=args.definition, use_when=args.use_when, by=by)

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>team-umc · 거버넌스 관제탑</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="header">
+    <h1>team-umc <span class="sub">· 거버넌스 관제탑</span></h1>
+    <div class="status">
+      <span id="poll-label">◷ 10s</span>
+      <span class="live-dot" id="live-dot" title="백엔드 연결 상태"></span>
+      <button class="refresh-btn" id="refresh-rem" title="미리알림 강제 새로고침">↻ 미리알림</button>
+    </div>
+  </header>
+
+  <!-- 자동화 제어판: 10분 재기동을 UI에서 켜고/끄고/주기 조정 -->
+  <section class="section">
+    <h2>자동화 (주기 재기동)</h2>
+    <div class="automation-panel" id="automation-panel">
+      <div class="auto-row">
+        <label class="switch">
+          <input type="checkbox" id="auto-enabled">
+          <span class="slider"></span>
+        </label>
+        <span class="auto-state" id="auto-state">불러오는 중…</span>
+        <span class="auto-spacer"></span>
+        <label class="auto-inline">주기
+          <input type="number" id="auto-interval" min="1" max="120" value="10"> 분
+        </label>
+        <label class="auto-inline" title="켜면 실제 claude를 헤드리스로 깨웁니다. 끄면 깨울 대상만 기록(안전).">
+          <input type="checkbox" id="auto-dryrun" checked> dry-run(미실행)
+        </label>
+        <button class="btn-primary" id="auto-save">적용</button>
+      </div>
+      <div class="auto-targets" id="auto-targets"></div>
+      <div class="auto-meta" id="auto-meta"></div>
+      <details class="auto-log-wrap">
+        <summary>최근 발화 로그</summary>
+        <div class="auto-log" id="auto-log"></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 미리알림 백로그 요약 -->
+  <section class="section">
+    <h2>미리알림 백로그</h2>
+    <div class="reminders-strip" id="reminders-strip"></div>
+  </section>
+
+  <!-- 팀 카드 그리드: 팀장의 팀 단위 자원·에이전트·스킬 -->
+  <section class="section">
+    <h2>팀 단위 자원 (팀장)</h2>
+    <div class="team-grid" id="team-grid"></div>
+  </section>
+
+  <!-- 팀장급 결정 타임라인 -->
+  <section class="section">
+    <h2>팀장 결정 피드</h2>
+    <div class="feed" id="decision-feed" aria-live="polite" aria-atomic="false"></div>
+  </section>
+
+  <!-- 스킬/에이전트 변화 소식 -->
+  <section class="section">
+    <h2>스킬 · 에이전트 소식</h2>
+    <div class="news-list" id="news-list" aria-live="polite" aria-atomic="false"></div>
+  </section>
+
+  <!-- 결정 디테일 + 미리알림 체크백 -->
+  <div class="detail-overlay" id="detail-overlay"></div>
+  <aside class="detail-panel" id="detail-panel" role="dialog" aria-modal="true" aria-label="결정 상세">
+    <button class="dp-close" id="dp-close" aria-label="닫기">×</button>
+    <h3 id="dp-title"></h3>
+    <div class="dp-meta" id="dp-meta"></div>
+    <div class="dp-body" id="dp-body"></div>
+    <div class="dp-checkback" id="dp-checkback">
+      <strong style="font-size:13px;">미리알림 체크백</strong>
+      <p style="font-size:12px;color:var(--text-secondary);margin:6px 0 12px;">
+        이 결정을 umc 백로그에 기록합니다. <em>실데이터를 변경하므로 확인이 필요합니다.</em>
+      </p>
+      <label>대상 목록</label>
+      <select id="cb-list"></select>
+      <label>대상 작업</label>
+      <select id="cb-task"><option value="">— 목록을 먼저 고르세요 —</option></select>
+      <label>진행 노트</label>
+      <textarea id="cb-note" placeholder="기록할 진행상태·결정 내용"></textarea>
+      <div class="row">
+        <input type="checkbox" id="cb-complete" style="width:auto;margin:0;">
+        <label for="cb-complete" style="margin:0;">완료로 표시(complete)</label>
+      </div>
+      <button class="btn-primary" id="cb-submit">백로그에 기록</button>
+      <div id="cb-result"></div>
+    </div>
+  </aside>
+
+  <script src="/app.js"></script>
+</body>
+</html>

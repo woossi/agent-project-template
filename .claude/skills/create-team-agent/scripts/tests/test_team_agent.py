@@ -266,6 +266,17 @@ def build_governed_team_root(root: Path) -> None:
             "team_skills": ["create-team-agent", "set-team-goal", "team-derive-author"],
         }
     }), encoding="utf-8")
+    (root / "team-setup.json").write_text(json.dumps({
+        "team": "research-umc",
+        "members": ["curator", "lead-w", "plain-w"],
+        "roles": {"curator": "data lead", "lead-w": "write lead", "plain-w": "writer"},
+        "authoring_owner": "curator",
+        "reminders_list": "umc",
+        "subteams": [
+            {"name": "data", "members": ["curator"], "orchestrator": "curator"},
+            {"name": "write", "members": ["lead-w", "plain-w"], "orchestrator": "lead-w"},
+        ],
+    }), encoding="utf-8")
 
 
 class GovernanceTierTests(unittest.TestCase):
@@ -317,6 +328,17 @@ class GovernanceTierTests(unittest.TestCase):
         write_members = next(s["members"] for s in tj["subteams"] if s["name"] == "write")
         self.assertIn("new-w", write_members)
         self.assertIn("new-w", tj["members"])
+
+    def test_subteam_create_updates_team_setup_and_workspace_policy(self):
+        res = ta.create_agent(self.root, "new-w", subteam="write", requester="lead-w")
+        self.assertTrue(res["subteam_added"])
+        setup = json.loads((self.root / "team-setup.json").read_text(encoding="utf-8"))
+        self.assertIn("new-w", setup["members"])
+        write_members = next(s["members"] for s in setup["subteams"] if s["name"] == "write")
+        self.assertIn("new-w", write_members)
+        pol = json.loads((self.root / ".claude/policies/agent-workspace.json").read_text(encoding="utf-8"))
+        self.assertIn("new-w", pol["agents"])
+        self.assertIn("teams/write/new-w/**", pol["agents"]["plain-w"]["deny"])
 
     def test_lead_cannot_create_in_other_team(self):
         with self.assertRaises(ta.AgentError):

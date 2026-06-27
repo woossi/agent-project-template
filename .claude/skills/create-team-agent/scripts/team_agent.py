@@ -82,11 +82,25 @@ GOVERNANCE_COMPANY = frozenset({"team-init", "agent-clone-setup"})
 GOVERNANCE_TEAM = frozenset({"create-team-agent", "set-team-goal", "team-derive-author"})
 GOVERNANCE_SHARED = GOVERNANCE_COMPANY | GOVERNANCE_TEAM  # full set (any-governance test)
 
-# LEAD-ONLY operational skills — NOT governance (they don't re-define the team), but only a
-# team lead operates them: the quality ledger that drives the (가)+(나) autonomous-assignment
-# loop lives in the lead's private folder, so a non-lead can't usefully run it. Linked to
-# leads + the company owner, withheld from plain workers (same tier set as TEAM governance).
-LEAD_ONLY = frozenset({"team-quality-ledger"})
+# LEAD-ONLY skills — NOT governance (they don't re-define the team), but reserved to the
+# team lead. Two senses, merged into one frozenset and grouped by comment:
+#   - OPERATIONAL: the quality ledger that drives the (가)+(나) autonomous-assignment loop
+#     lives in the lead's private folder, so a non-lead can't usefully run it.
+#   - RECORDING / COORDINATION (user decision 2026-06-27, mailbox + recording gating):
+#       team-inbox       — direct mailbox access (read/claim/ack) is lead-only; workers report
+#                          via post only, so the skill is withheld from plain workers.
+#       write-task       — the tasks board is written by the lead alone (B안: team single board).
+#       write-skill      — skill authoring is mediated by the lead.
+#       write-subagent   — subagent authoring is mediated by the lead.
+#       register-term    — shared-term recording is the lead's alone.
+# Linked to leads + the company owner, withheld from plain workers (same tier set as TEAM
+# governance). Plain workers keep only non-recording report/coordination skills
+# (give-feedback, process-feedback, reminders-team-bridge).
+LEAD_ONLY = frozenset({
+    "team-quality-ledger",                       # operational
+    "team-inbox", "write-task", "write-skill",   # recording / coordination
+    "write-subagent", "register-term",
+})
 
 # Skills whose target is scoped to a single subteam — guarded so a team lead can only act
 # on its OWN team (see _require_own_team in the CLI). team-init/agent-clone-setup are
@@ -388,6 +402,73 @@ def _register_in_roster(team_root: Path, name: str, *, subteam: str | None = Non
     return {"roster_added": roster_added, "subteam_added": subteam_added}
 
 
+def _load_team_init_module():
+    scripts = Path(__file__).resolve().parents[2] / "team-init" / "scripts"
+    if str(scripts) not in sys.path:
+        sys.path.insert(0, str(scripts))
+    import team_init  # noqa: E402
+
+    return team_init
+
+
+def _sync_team_setup_and_policy(
+    team_root: Path,
+    name: str,
+    *,
+    role: str | None = None,
+    subteam: str | None = None,
+) -> bool:
+    """Keep ``team-setup.json`` as the source of truth when a lead creates a worker.
+
+    Older create-team-agent only edited ``.project/team.json`` and left the canonical
+    setup + derived workspace policy stale until the next manual team-init. If the setup
+    file exists, update it and immediately re-run team-init's deterministic regeneration.
+    """
+    setup_path = team_root / "team-setup.json"
+    if not setup_path.exists():
+        return False
+    try:
+        data = json.loads(setup_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise AgentError(f"cannot update team-setup.json: {exc}") from exc
+    if not isinstance(data, dict):
+        raise AgentError("cannot update team-setup.json: root must be a JSON object")
+
+    members = [m for m in (data.get("members") or []) if isinstance(m, str) and m.strip()]
+    if name not in members:
+        members.append(name)
+    data["members"] = members
+
+    roles = data.get("roles") if isinstance(data.get("roles"), dict) else {}
+    if role:
+        roles[name] = role
+    data["roles"] = roles
+
+    if subteam:
+        subs = data.get("subteams")
+        if not isinstance(subs, list):
+            raise AgentError(f"team-setup.json has no subteams list; cannot add '{name}' to '{subteam}'")
+        found = False
+        for st in subs:
+            if not isinstance(st, dict) or str(st.get("name") or "").strip() != subteam:
+                continue
+            st_members = [m for m in (st.get("members") or []) if isinstance(m, str) and m.strip()]
+            if name not in st_members:
+                st_members.append(name)
+            st["members"] = st_members
+            found = True
+            break
+        if not found:
+            raise AgentError(f"team-setup.json has no subteam '{subteam}'")
+        data["subteams"] = subs
+
+    team_init = _load_team_init_module()
+    setup = team_init.normalize_setup(data)
+    team_init._atomic_write_json(setup_path, team_init.setup_to_input(setup))
+    team_init.init_team(team_root, setup, create_agents=False)
+    return True
+
+
 def _orchestrator_of(team_root: Path, subteam: str) -> str | None:
     """The orchestrator (team lead) of a named subteam, from team.json."""
     data = _load_json_or_none(team_root / ".project" / "team.json")
@@ -459,6 +540,7 @@ def create_agent(team_root: Path, name: str, *, role: str | None = None, force: 
         )
 
     reg = _register_in_roster(team_root, name, subteam=subteam)
+    setup_synced = _sync_team_setup_and_policy(team_root, name, role=role, subteam=subteam)
 
     return {
         "name": name,
@@ -469,6 +551,7 @@ def create_agent(team_root: Path, name: str, *, role: str | None = None, force: 
         "symlinks": symlinks,
         "roster_added": reg["roster_added"],
         "subteam_added": reg["subteam_added"],
+        "team_setup_synced": setup_synced,
     }
 
 

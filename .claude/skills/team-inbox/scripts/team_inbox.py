@@ -76,7 +76,110 @@ def resolve_root(explicit: str | None) -> Path:
     return find_team_root()
 
 
-def resolve_identity(explicit: str | None) -> str:
+# Sentinel: cwd is INSIDE teams/ but does not resolve to a real worker folder
+# (forged sibling folder, or a symlink whose logical/physical targets disagree).
+# Callers must NOT fall back to env/--as here — the identity is fail-closed to this
+# no-privilege name so every role gate (_require_lead, owner checks) rejects it.
+CWD_FAILCLOSED = "__cwd_failclosed__"
+
+
+def _worker_at(root: Path, candidate: Path) -> str | None:
+    """If ``candidate`` (a concrete Path) sits at/under teams/<team>/<worker> for a
+    REAL member, return that worker; else None. Pure path logic, no resolution — the
+    caller controls logical-vs-physical so symlink tricks can be detected."""
+    try:
+        rel = candidate.relative_to(root)
+    except ValueError:
+        return None
+    parts = rel.parts
+    if len(parts) < 3 or parts[0] != "teams":
+        return None
+    team, worker = parts[1], parts[2]
+    members = load_subteams(root).get(team)
+    if members is None or worker not in members:
+        return None
+    return worker
+
+
+def _identity_from_cwd(root: Path, cwd: Path | None = None):
+    """Reverse-derive identity from the execution cwd (forge-resistant anchor).
+
+    Returns a worker name, ``None`` (cwd outside teams/ → legit env fallback), or
+    ``CWD_FAILCLOSED`` (cwd inside teams/ but unresolvable → deny env trust).
+
+    Anti-forgery (two layers):
+      * membership — <team>/<worker> must both be real per team.json, so a forged
+        sibling folder (teams/data/fakelead) does NOT mint an identity; because it
+        is still inside teams/, it fails CLOSED rather than leaking to env.
+      * symlink — cwd is examined BOTH logically (no symlink following) and
+        physically (resolved). A worker is adopted only when both agree on the same
+        worker; a symlink inside one worker folder pointing at another (the
+        ``ln -s ../data-lead leadlink && cd leadlink`` escalation) yields a
+        logical≠physical mismatch → fail closed.
+
+    NB: never use CLAUDE_PROJECT_DIR — it always points at the repo root in the
+    guard's project_dir() and would erase the real execution directory.
+
+    Logical vs physical sourcing — CRITICAL for the symlink defense: ``os.getcwd()``
+    returns the PHYSICAL path (the kernel resolves a symlink at chdir time), so if we
+    used it for BOTH views the ``logical != physical`` check would collapse and a
+    ``cd symlink`` escalation would slip through. We therefore take the LOGICAL view
+    from the shell's ``$PWD`` (which preserves the symlink path the user cd'd through)
+    and the PHYSICAL view from ``os.getcwd()``. An explicit ``cwd`` arg (tests) is used
+    for both. Both must name the same real worker to adopt it.
+    """
+    if cwd is not None:
+        log_raw = phys_raw = cwd
+    else:
+        # $PWD preserves the symlinked (logical) path; getcwd() is the resolved (physical).
+        pwd_env = os.environ.get("PWD")
+        log_raw = Path(pwd_env) if pwd_env else Path.cwd()
+        phys_raw = Path.cwd()
+    log_raw = log_raw if log_raw.is_absolute() else (root / log_raw)
+    phys_raw = phys_raw if phys_raw.is_absolute() else (root / phys_raw)
+    logical = Path(os.path.normpath(str(log_raw)))
+    physical = phys_raw.resolve()
+    root_res = root.resolve()
+
+    inside = False
+    for base in (root, root_res):
+        try:
+            rel = logical.relative_to(base)
+            if rel.parts and rel.parts[0] == "teams":
+                inside = True
+                break
+        except ValueError:
+            continue
+    if not inside:
+        try:
+            rel = physical.relative_to(root_res)
+            inside = bool(rel.parts) and rel.parts[0] == "teams"
+        except ValueError:
+            inside = False
+    if not inside:
+        return None  # genuinely outside teams/ → env fallback is legitimate
+
+    log_w = _worker_at(root, logical) or _worker_at(root_res, logical)
+    phys_w = _worker_at(root_res, physical) or _worker_at(root, physical)
+    if log_w and phys_w and log_w == phys_w:
+        return log_w
+    return CWD_FAILCLOSED
+
+
+def resolve_identity(explicit: str | None, root: Path | None = None) -> str:
+    """Resolve the acting identity. cwd is the trust anchor: if the execution cwd is a
+    valid worker folder, that worker is authoritative and overrides explicit/--as/env
+    (a forged name is silently demoted to the cwd worker — fail-safe, no work stops).
+    If cwd is inside teams/ but unresolvable (forged/symlinked), identity fails closed to
+    CWD_FAILCLOSED so role gates reject it (never trust env in that case).
+
+    When cwd is OUTSIDE any worker folder (orchestrator at root, tests pointing --root at
+    a temp tree), behavior is 100% unchanged: explicit or $CLAUDE_AGENT_NAME.
+    """
+    if root is not None:
+        cwd_id = _identity_from_cwd(root)
+        if cwd_id is not None:  # worker name OR CWD_FAILCLOSED — both override env
+            return cwd_id
     name = explicit or os.environ.get("CLAUDE_AGENT_NAME")
     if not name:
         raise InboxError("no agent identity: pass --from/--as or export CLAUDE_AGENT_NAME")
@@ -125,6 +228,66 @@ def team_of(root: Path, agent: str) -> str | None:
         if agent in members:
             return name
     return None
+
+
+def team_lead(root: Path, team: str) -> str | None:
+    """The orchestrator (팀장/lead) of a subteam, or None.
+
+    Reads the ``orchestrator`` key of the matching subteam entry in team.json.
+    """
+    for st in _team_json(root).get("subteams") or []:
+        if isinstance(st, dict) and st.get("name") == team:
+            lead = st.get("orchestrator")
+            return lead if isinstance(lead, str) else None
+    return None
+
+
+def company_owner(root: Path) -> str | None:
+    """The company total orchestrator name (governance owner), from
+    team-promotion.json governance.company_owner (fallback authoring_owner).
+
+    team_init sets this to the company orchestrator; that identity may read/claim/ack
+    any team mailbox (총괄은 모든 팀 메일박스 read 가능)."""
+    f = root / ".project" / "policies" / "team-promotion.json"
+    if not f.exists():
+        return None
+    try:
+        data = json.loads(f.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    gov = data.get("governance") if isinstance(data, dict) else None
+    if not isinstance(gov, dict):
+        return None
+    owner = gov.get("company_owner") or gov.get("authoring_owner")
+    return owner if isinstance(owner, str) else None
+
+
+def _require_lead(root: Path, team: str, identity: str | None, op: str) -> None:
+    """Role gate for read/claim/ack: only the team's lead (orchestrator) may consume a
+    team mailbox. Workers receive assignments via the team task board, not the mailbox.
+
+    Always allowed: the company owner (총괄은 모든 팀 메일박스 read 가능). The virtual
+    ORCHESTRATOR mailbox is a real mailbox, not a public one: only the company owner
+    may consume it. ``post`` is NOT gated — workers still drop off reports.
+    """
+    if team == ORCHESTRATOR:
+        owner = company_owner(root) or ORCHESTRATOR
+        if identity and identity == owner:
+            return
+        raise InboxError(
+            f"orchestrator mailbox는 총괄({owner})만 read/claim/ack할 수 있습니다 "
+            f"(you are '{identity or ''}')."
+        )
+    owner = company_owner(root)
+    if identity and owner and identity == owner:
+        return
+    lead = team_lead(root, team)
+    if identity and lead and identity == lead:
+        return
+    raise InboxError(
+        f"워커는 메일박스를 직접 read/claim/ack할 수 없습니다 — 팀장({lead})만 가능. "
+        f"작업은 팀 보드로 받으세요."
+    )
 
 
 def is_team(root: Path, name: str) -> bool:
@@ -187,6 +350,8 @@ def claim(root: Path, team: str, msgid: str, claimer: str) -> dict[str, Any]:
     The race point is a single ``os.replace``. The winner renames the message into
     ``.claimed/<claimer>__<msgid>.json``; losers hit FileNotFoundError (source gone).
     """
+    claimer = resolve_identity(claimer, root)
+    _require_lead(root, team, claimer, "claim")
     box = mailbox_dir(root, team)
     src = box / f"{msgid}.json"
     cdir = box / CLAIMED_DIRNAME
@@ -216,9 +381,11 @@ def claim(root: Path, team: str, msgid: str, claimer: str) -> dict[str, Any]:
 
 # ---------------- read ----------------
 
-def read_team(root: Path, team: str, *, include_claimed: bool = False,
+def read_team(root: Path, team: str, *, actor: str | None = None, include_claimed: bool = False,
               include_consumed: bool = False) -> list[dict[str, Any]]:
     """Read a team mailbox: unclaimed (root), claimed (.claimed/), consumed (.consumed/)."""
+    identity = resolve_identity(actor, root)
+    _require_lead(root, team, identity, "read")
     box = mailbox_dir(root, team)
     out: list[dict[str, Any]] = []
     if not box.exists():
@@ -253,6 +420,8 @@ def ack(root: Path, team: str, msgid: str, *, agent: str) -> dict[str, Any]:
     Source is the claimed file ``inbox/.claimed/<agent>__<msgid>.json`` — a worker
     consumes what it claimed.
     """
+    agent = resolve_identity(agent, root)
+    _require_lead(root, team, agent, "ack")
     box = mailbox_dir(root, team)
     src = box / CLAIMED_DIRNAME / f"{_safe(agent)}__{msgid}.json"
     consumed_dir = box / CONSUMED_DIRNAME
@@ -337,21 +506,25 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.op == "post":
             result = post(
-                root, resolve_identity(args.sender), to_team=args.to_team,
+                root, resolve_identity(args.sender, root), to_team=args.to_team,
                 subject=args.subject, body=args.body, reply_to=args.reply_to,
                 quality_gate=_parse_json_arg(args.quality_gate, "quality-gate"),
                 verdict=_parse_json_arg(args.verdict, "verdict"),
                 work_ref=args.work_ref,
             )
         elif args.op == "read":
-            team = _default_team(root, args.team, args.agent)
-            result = read_team(root, team, include_claimed=args.all, include_consumed=args.all)
+            # cwd-anchored identity: a worker forging CLAUDE_AGENT_NAME/--as is demoted to
+            # its real cwd worker, so _require_lead evaluates the authentic identity.
+            cwd_id = _identity_from_cwd(root)
+            identity = cwd_id or args.agent or os.environ.get("CLAUDE_AGENT_NAME")
+            team = _default_team(root, args.team, identity)
+            result = read_team(root, team, actor=identity, include_claimed=args.all, include_consumed=args.all)
         elif args.op == "claim":
-            claimer = resolve_identity(args.claimer)
+            claimer = resolve_identity(args.claimer, root)
             team = _default_team(root, args.team, claimer)
             result = claim(root, team, args.id, claimer)
         elif args.op == "ack":
-            agent = resolve_identity(args.agent)
+            agent = resolve_identity(args.agent, root)
             team = _default_team(root, args.team, agent)
             result = ack(root, team, args.id, agent=agent)
         else:  # pragma: no cover - argparse guards

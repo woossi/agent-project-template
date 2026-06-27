@@ -36,11 +36,12 @@ Team-wide decisions and goals live in the team store (.project/memory, .project/
 ### iCloud 스트리밍 적재 교훈 (생활이동)
 - **스트리밍 수집 패턴**: 일자별 다운로드→추출→parquet→iCloud 적재→ZIP/CSV 즉시삭제(피크 로컬~190MB)로 118GB 원천을 로컬 28GB 제약에서 처리.
 - **brctl evict 제약(실측)**: 업로드 완료 후에만 evict 가능(-2008). 업로드가 수집속도를 못 따라가면 로컬 점유가 계속 증가 → "업로드 추격 evict 워처"는 업로드 병목으로 효과 제한적. iCloud 디스크절약은 즉시 실현 안 되고 백그라운드 업로드 며칠 후 실현.
+- **⚠️ iCloud 미업로드 판명(2026-06-28 실측)**: 적재 대상 디렉토리가 iCloud 동기화 존에 미등록(`brctl status` → `Client zone not found`, bird CPU 0%). 즉 evict 워처 로그의 "업로드완료/로컬점유0MB"는 **거짓 판정**이었고, 518일분 14.12GB가 전부 **로컬에만** 물질화(.icloud placeholder 0개). 적재 파티션은 `date=`가 아니라 **`year_month=<YM>/part-<YYYYMMDD>.parquet`**. → iCloud 디스크절약은 미실현. 단, 디스크 가용이 13GB→29GB로 회복돼 로컬만으로 완주 가능(남은 244일 +6.7GB, 완료후 가용 ~22GB).
 
 ### 역할 경계 (확정)
 - data-engineer = 원천 데이터 압축 저장·스키마·쿼리 인프라 계층 **소유**. 분석결과·그림·데이터 레지스트리·팀 컨텍스트 큐레이션은 data-curator 소유(de가 만든 압축 DB를 dc가 소비). 집필(원고)은 manuscript-writer/steward 소관 — **academic-writing 스킬은 de 역할과 무관**.
 
 ### Open
 - 인구수 컬럼 float32 다운캐스트 무손실성 검증(추가 압축 여지) — 보류.
-- 생활이동 수집 일시중단(518/762일, 디스크 여유), 업로드·evict 대기 후 재개. 완료 후 finalize_migration.py 검증·_schema.json, dc에 _data_registry.md 등재정보 제공.
-- 당근마켓텍스트: danggeun-scraper ToS 보류로 대기, 단독진행 금지.
+- **생활이동 수집 재개(2026-06-28)**: 디스크 13GB→29GB 회복 확인 → 518/762일에서 재개(PID `.context/db-infra/logs/.migration_pid`, 로그 `migration_resume_*.log`). 518일 skip→519일(202506-02)~ 신규. 소스 정상 스모크 PASS. 백그라운드 ~50분 예상. 완료 후 finalize_migration.py 검증·_schema.json, dc에 _data_registry.md 등재정보 제공. ⚠️ iCloud 미업로드라 로컬 17.5GB 영구 점유 — 클라우드 백업 원하면 존 등록 별도 필요(사용자 결정 사안).
+- 당근마켓텍스트: danggeun-scraper ToS 보류로 대기, 단독진행 금지. (팀보드 P0/W1은 "당근 압축DB화"로 표기되나 ToS 보류와 충돌 — data-lead 확인 필요.)

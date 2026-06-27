@@ -177,7 +177,10 @@ def build_team_json(setup: dict[str, Any]) -> dict[str, Any]:
         "members": setup["members"],
         "roles": setup["roles"],
         "goals_dir": ".project/goals",
-        "inbox": ".project/inbox",
+        "inbox_model": "team-only",
+        "team_inbox_glob": "teams/<team>/.claude/inbox",
+        "orchestrator_inbox": "teams/.orchestrator/inbox",
+        "legacy_inbox_archive": ".project/inbox/.archive",
     }
     # Subteams are the logical company -> team -> worker layer. Only emit the key
     # when present so a flat team's team.json stays byte-identical to before.
@@ -312,6 +315,7 @@ def _other_team_inbox_globs(setup: dict[str, Any], name: str) -> list[str]:
         if not tname or tname == my_team:
             continue
         globs.append(f"teams/{tname}/.claude/inbox/**")
+    globs.append("teams/.orchestrator/inbox/**")
     return sorted(globs)
 
 
@@ -349,6 +353,27 @@ def build_agent_workspace_policy(setup: dict[str, Any], existing: dict[str, Any]
         }
         for name in members
     }
+    # The company governance owner (``authoring_owner``) may be a NON-member virtual
+    # identity — the reserved "orchestrator" total — which never appears in ``members`` and
+    # so is skipped by the comprehension above. Without this its workspace entry was added by
+    # hand and wiped on every regen (drift). Inject it from the same roster axis so it is a
+    # single source of truth. A member owner already has its entry from the loop, so only
+    # inject when the owner is NOT a member.
+    owner = setup.get("authoring_owner")
+    if isinstance(owner, str) and owner and owner not in members:
+        agents[owner] = {
+            # deny = every worker's REAL folder (full roster). This blocks each worker's
+            # private folder while leaving every team's shared ``.claude`` (mailboxes, tasks,
+            # memory) readable — they fall outside the worker-folder patterns. The company
+            # total is a read-only coordinator: no external work paths in ``allow``.
+            "deny": [f"{_worker_path(setup, m)}/**" for m in members],
+            # deny_read = [] — the company total may READ every team mailbox (the exact
+            # opposite of a worker, which is read-blocked on other teams' inboxes).
+            "deny_read": [],
+            # allow = BASELINE_ALLOW only: no team external work boundaries, so it never
+            # writes a worker's deliverables directly (read-only orchestration).
+            "allow": list(BASELINE_ALLOW),
+        }
     base = existing if isinstance(existing, dict) else {}
     base_defaults = base.get("defaults") if isinstance(base.get("defaults"), dict) else {}
     defaults = {
@@ -404,11 +429,22 @@ def init_team(team_root: Path, setup: dict[str, Any], *, create_agents: bool = F
         build_agent_workspace_policy(setup, _load_json_or_none(workspace_policy_path)),
     )
 
-    for keep in ("goals/.gitkeep", "inbox/.gitkeep"):
+    for keep in ("goals/.gitkeep", "inbox/.archive/.gitkeep"):
         p = store / keep
         p.parent.mkdir(parents=True, exist_ok=True)
         if not p.exists():
             p.write_text("", encoding="utf-8")
+    orch_keep = team_root / "teams" / ".orchestrator" / "inbox" / ".gitkeep"
+    orch_keep.parent.mkdir(parents=True, exist_ok=True)
+    if not orch_keep.exists():
+        orch_keep.write_text("", encoding="utf-8")
+    for st in setup.get("subteams") or []:
+        if not isinstance(st, dict) or not st.get("name"):
+            continue
+        team_keep = team_root / "teams" / str(st["name"]) / ".claude" / "inbox" / ".gitkeep"
+        team_keep.parent.mkdir(parents=True, exist_ok=True)
+        if not team_keep.exists():
+            team_keep.write_text("", encoding="utf-8")
 
     agents = _create_members(team_root, setup) if create_agents else []
     return {

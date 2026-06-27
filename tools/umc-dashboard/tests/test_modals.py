@@ -98,14 +98,26 @@ def test_no_legacy_on_button_pressed():
     assert not hasattr(m.InstructModal, "on_button_pressed")
 
 
-def test_preset_prompt_inbox_is_team_scoped():
-    # 팀 일괄 구동과 InstructModal 버튼이 공유하는 단일출처 preset.
+def test_preset_prompt_inbox_is_lead_facing():
+    # 'inbox' preset은 팀장 전용 — claim해서 팀 보드로 분배·ack(워커는 메일박스 권한 없음).
     from widgets.modals import preset_prompt
-    p = preset_prompt("inbox", worker="data-engineer", team="data")
+    p = preset_prompt("inbox", worker="data-lead", team="data")
+    assert "팀장으로서" in p
     assert "read --team data" in p
-    assert "claim --team data --as data-engineer" in p
+    assert "claim --team data --as data-lead" in p
     assert "ack --team data" in p
-    assert "개인 inbox는 폐지" in p  # 팀 전용 모델 명시
+    assert "teams/data/.claude/tasks/tasks.md" in p  # 팀 보드 분배
+    assert "write-task" in p
+
+
+def test_preset_prompt_tasks_is_worker_facing():
+    # 'tasks' preset은 워커 전용 — 팀 보드 read·수행·보고, 메일박스 금지.
+    from widgets.modals import preset_prompt
+    p = preset_prompt("tasks", worker="data-engineer", team="data")
+    assert "teams/data/.claude/tasks/tasks.md" in p
+    assert "메일박스는 보지 마라" in p
+    assert "post --to-team data" in p  # 팀장에게 보고
+    assert "data-engineer" in p
 
 
 def test_preset_prompt_reminders():

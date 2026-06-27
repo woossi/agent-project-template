@@ -19,13 +19,8 @@ automatically managed.
 | give-feedback | `give-feedback/` | Open `give-feedback/SKILL.md` only when the request clearly matches the `give-feedback` workflow. |
 | journal-submission-checklist | `journal-submission-checklist/` | Open `journal-submission-checklist/SKILL.md` only when the request clearly matches the `journal-submission-checklist` workflow. |
 | process-feedback | `process-feedback/` | Open `process-feedback/SKILL.md` only when the request clearly matches the `process-feedback` workflow. |
-| register-term | `register-term/` | Open `register-term/SKILL.md` only when the request clearly matches the `register-term` workflow. |
 | reminders-team-bridge | `reminders-team-bridge/` | Open `reminders-team-bridge/SKILL.md` only when the request clearly matches the `reminders-team-bridge` workflow. |
 | scholarly-evidence-search | `scholarly-evidence-search/` | Open `scholarly-evidence-search/SKILL.md` only when the request clearly matches the `scholarly-evidence-search` workflow. |
-| team-inbox | `team-inbox/` | Open `team-inbox/SKILL.md` only when the request clearly matches the `team-inbox` workflow. |
-| write-skill | `write-skill/` | Open `write-skill/SKILL.md` only when the request clearly matches the `write-skill` workflow. |
-| write-subagent | `write-subagent/` | Open `write-subagent/SKILL.md` only when the request clearly matches the `write-subagent` workflow. |
-| write-task | `write-task/` | Open `write-task/SKILL.md` only when the request clearly matches the `write-task` workflow. |
 
 ---
 

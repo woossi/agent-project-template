@@ -67,7 +67,7 @@ DEFAULTS: dict[str, Any] = {
         "skip_if_agent_exists": True,
         "max_candidates": 20,
     },
-    "governance": {"mode": "owner-authors", "authoring_owner": "data-curator"},
+    "governance": {"mode": "owner-authors", "company_owner": "orchestrator", "authoring_owner": "orchestrator"},
 }
 
 MAX_SKILLS_PER_OCCURRENCE = 6
@@ -126,6 +126,81 @@ def load_policy(team_root: Path) -> dict[str, Any]:
     except (OSError, json.JSONDecodeError):
         raw = {}
     return _merge(DEFAULTS, raw)
+
+
+def governance_owner(policy: dict[str, Any]) -> str:
+    gov = policy.get("governance")
+    if isinstance(gov, dict):
+        owner = gov.get("company_owner") or gov.get("authoring_owner")
+        if isinstance(owner, str) and owner.strip():
+            return owner.strip()
+    return ORCHESTRATOR
+
+
+def _subteam_members(team_root: Path) -> dict[str, list[str]]:
+    try:
+        data = json.loads((team_root / ".project" / "team.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    out: dict[str, list[str]] = {}
+    if isinstance(data, dict):
+        for st in data.get("subteams") or []:
+            if isinstance(st, dict) and isinstance(st.get("name"), str):
+                out[st["name"]] = [m for m in (st.get("members") or []) if isinstance(m, str)]
+    return out
+
+
+def _worker_at(team_root: Path, candidate: Path) -> str | None:
+    try:
+        rel = candidate.relative_to(team_root)
+    except ValueError:
+        return None
+    parts = rel.parts
+    if len(parts) < 3 or parts[0] != "teams":
+        return None
+    team, worker = parts[1], parts[2]
+    return worker if worker in _subteam_members(team_root).get(team, []) else None
+
+
+def _identity_from_cwd(team_root: Path) -> str | None:
+    pwd_env = os.environ.get("PWD")
+    logical_raw = Path(pwd_env) if pwd_env else Path.cwd()
+    physical_raw = Path.cwd()
+    logical_raw = logical_raw if logical_raw.is_absolute() else (team_root / logical_raw)
+    physical_raw = physical_raw if physical_raw.is_absolute() else (team_root / physical_raw)
+    logical = Path(os.path.normpath(str(logical_raw)))
+    physical = physical_raw.resolve()
+    root_res = team_root.resolve()
+
+    inside = False
+    for base in (team_root, root_res):
+        try:
+            rel = logical.relative_to(base)
+            if rel.parts and rel.parts[0] == "teams":
+                inside = True
+                break
+        except ValueError:
+            continue
+    if not inside:
+        try:
+            rel = physical.relative_to(root_res)
+            inside = bool(rel.parts) and rel.parts[0] == "teams"
+        except ValueError:
+            inside = False
+    if not inside:
+        return None
+    log_w = _worker_at(team_root, logical) or _worker_at(root_res, logical)
+    phys_w = _worker_at(root_res, physical) or _worker_at(team_root, physical)
+    if log_w and phys_w and log_w == phys_w:
+        return log_w
+    return "__cwd_failclosed__"
+
+
+def resolve_actor(team_root: Path, explicit: str | None) -> str:
+    cwd_id = _identity_from_cwd(team_root)
+    if cwd_id is not None:
+        return cwd_id
+    return explicit or os.environ.get("CLAUDE_AGENT_NAME") or "team"
 
 
 # ---------------- shared readers (self-contained copies) ----------------
@@ -937,7 +1012,11 @@ def run_resolve(argv: list[str]) -> int:
         print(f"no team root (.project/) found from {start}; cannot resolve", file=sys.stderr)
         return 1
     policy = load_policy(team_root)
-    by = args.by or os.environ.get("CLAUDE_AGENT_NAME") or "team"
+    by = resolve_actor(team_root, args.by)
+    owner = governance_owner(policy)
+    if by != owner:
+        print(f"only the governance owner '{owner}' may resolve team promotions (you are '{by}')", file=sys.stderr)
+        return 1
     record = {
         "kind": args.kind,
         "key": args.key,

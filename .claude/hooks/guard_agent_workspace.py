@@ -13,13 +13,13 @@ from pathlib import Path
 from typing import Any
 
 
-PATH_TOOLS = {"Read", "Edit", "Write", "MultiEdit"}
+PATH_TOOLS = {"Read", "Edit", "Write", "MultiEdit", "Grep", "Glob", "NotebookRead", "NotebookEdit"}
 # Read vs write split (2026-06-27): drop-off slots (other teams' inbox) are write-OK but
 # read-blocked, so the guard must know which a tool does. NotebookRead reads; NotebookEdit
 # writes. Anything in PATH_TOOLS not listed as READ is treated as a writer (fail-safe: an
 # unknown path tool is assumed to write, getting only the lenient plain-deny check — but it
 # is still subject to the full deny list, so this never weakens isolation of deny paths).
-READ_PATH_TOOLS = {"Read", "NotebookRead"}
+READ_PATH_TOOLS = {"Read", "Grep", "Glob", "NotebookRead"}
 DIRECT_PATH_KEYS = ("file_path", "path", "notebook_path")
 
 
@@ -68,7 +68,145 @@ def load_policy(path: Path | None, explicit: bool) -> dict[str, Any] | None:
     return policy
 
 
-def active_agent_name(payload: dict[str, Any]) -> str:
+def _load_subteam_members(root: Path) -> dict[str, list[str]] | None:
+    """Parse .project/team.json subteams into {team_name: [member, ...]}.
+
+    Single source of truth for which (team, worker) folder pairs are real. Returns
+    None on any failure (missing file, bad JSON, unexpected shape) so the caller
+    fail-safely abandons cwd-anchored identity and falls back to env/payload.
+    """
+    team_json = root / ".project" / "team.json"
+    try:
+        data = json.loads(team_json.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    subteams = data.get("subteams")
+    if not isinstance(subteams, list):
+        return None
+    out: dict[str, list[str]] = {}
+    for entry in subteams:
+        if not isinstance(entry, dict):
+            continue
+        name = entry.get("name")
+        members = entry.get("members")
+        if isinstance(name, str) and name and isinstance(members, list):
+            out[name] = [m for m in members if isinstance(m, str) and m]
+    return out or None
+
+
+# Sentinel: cwd is INSIDE teams/ but does not resolve to a registered worker
+# folder (forged sibling folder, symlink mismatch, …). The caller must NOT fall
+# back to the spoofable env identity in this case — it is fail-closed to a
+# no-privilege identity so a worker cannot escape its sandbox by manufacturing an
+# ambiguous cwd. Distinct from None (cwd outside teams/ → legit env fallback).
+_CWD_FAILCLOSED = "\x00cwd-failclosed"
+
+
+def _rel_worker(root: Path, cwd: Path) -> str | None:
+    """If ``cwd`` (already a concrete Path) sits at/under teams/<team>/<worker>
+    for a REAL member, return that worker; else None. No I/O beyond the caller's
+    resolution choice — used twice (logical + physical) to detect symlink tricks."""
+    try:
+        rel = cwd.relative_to(root)
+    except ValueError:
+        return None
+    parts = rel.parts
+    if len(parts) < 3 or parts[0] != "teams":
+        return None
+    team, worker = parts[1], parts[2]
+    members = _load_subteam_members(root)
+    if members is None:
+        return None
+    if team in members and worker in members[team]:
+        return worker
+    return None
+
+
+def _identity_from_cwd(root: Path, raw_cwd: str | None) -> str | None:
+    """Derive identity from the real execution directory (cwd), not env.
+
+    The worker runs claude from its own folder teams/<team>/<worker>/ (or a
+    subdirectory). cwd is a hard-to-forge anchor, so when cwd lands inside a
+    *registered* worker folder we adopt that worker as canonical and ignore any
+    env/--as claim.
+
+    Three outcomes:
+      * a worker name  — cwd is a real worker folder; adopt it (ignore env).
+      * None           — cwd is OUTSIDE teams/ entirely (root, orchestrator,
+                         tests); caller keeps the env fallback.
+      * _CWD_FAILCLOSED — cwd is INSIDE teams/ but does not map to a registered
+                         worker (forged sibling folder like teams/data/fakelead,
+                         or a symlink whose logical and physical targets disagree).
+                         Caller must NOT trust env here — fail closed.
+
+    Anti-forgery:
+      * member check — <team>/<worker> must both be real per team.json, so a
+        manufactured sibling folder name cannot mint an identity (it fails closed
+        rather than falling through to env).
+      * symlink check — we resolve cwd BOTH logically (no symlink following,
+        os.path.normpath on the absolute path) and physically (Path.resolve,
+        follows symlinks). A worker may only be adopted when BOTH agree on the
+        same worker. A symlink inside one worker folder pointing at another
+        worker yields a logical≠physical mismatch → fail closed (defeats the
+        "ln -s ../data-lead leadlink && cd leadlink" escalation).
+    """
+    if not raw_cwd:
+        return None
+
+    expanded = Path(str(raw_cwd)).expanduser()
+    # Make absolute against root WITHOUT following symlinks for the logical view.
+    abs_cwd = expanded if expanded.is_absolute() else (root / expanded)
+    logical = Path(os.path.normpath(str(abs_cwd)))
+    physical = abs_cwd.resolve(strict=False)
+    root_resolved = root.resolve(strict=False)
+
+    # Is cwd within teams/ at all? Use the logical view (a symlink that escapes
+    # teams/ logically but points back in must not be treated as "outside").
+    inside_teams = False
+    for base in (root, root_resolved):
+        try:
+            rel = logical.relative_to(base)
+            if rel.parts and rel.parts[0] == "teams":
+                inside_teams = True
+                break
+        except ValueError:
+            continue
+    # Also count the physical view landing in teams/ (symlink INTO teams/).
+    if not inside_teams:
+        try:
+            rel = physical.relative_to(root_resolved)
+            inside_teams = bool(rel.parts) and rel.parts[0] == "teams"
+        except ValueError:
+            inside_teams = False
+    if not inside_teams:
+        return None  # genuinely outside teams/ → legit env fallback
+
+    # Inside teams/: require logical AND physical to name the SAME real worker.
+    log_worker = _rel_worker(root, logical) or _rel_worker(root_resolved, logical)
+    phys_worker = _rel_worker(root_resolved, physical) or _rel_worker(root, physical)
+    if log_worker and phys_worker and log_worker == phys_worker:
+        return log_worker
+    # Inside teams/ but ambiguous/forged/symlinked → fail closed (no env trust).
+    return _CWD_FAILCLOSED
+
+
+def active_agent_name(payload: dict[str, Any], root: Path | None = None) -> str:
+    # cwd-anchored identity takes priority over env (anti-forgery). Read the real
+    # execution directory from payload.cwd (NOT project_dir(), which prefers
+    # CLAUDE_PROJECT_DIR = root and would never reveal a worker subfolder).
+    if root is not None:
+        raw_cwd = payload.get("cwd") or os.getcwd()
+        cwd_identity = _identity_from_cwd(root, raw_cwd)
+        if cwd_identity == _CWD_FAILCLOSED:
+            # cwd is inside teams/ but unresolvable to a real worker — deny env
+            # trust. Return a no-privilege identity so no policy entry matches and
+            # the strict fail-closed (unregistered-agent) path applies.
+            return _CWD_FAILCLOSED
+        if cwd_identity:
+            return cwd_identity
+
     for key in ("CLAUDE_AGENT_NAME", "CLAUDE_SUBAGENT_NAME"):
         value = os.environ.get(key)
         if value:
@@ -279,15 +417,15 @@ def bash_path_tokens(command: str) -> list[str]:
 def check_bash_path_targets(command: str, root: Path, config: dict[str, Any]) -> int:
     """Block a Bash command whose path-like arguments touch a DENIED path.
 
-    Deny-only, mirroring ``check_path_policy``'s deny side onto Bash. ``config["deny"]``
-    carries both the N^2 peer worker folders AND each team's OTHER-team external work
-    dirs (team_init expands them), so a worker cannot ``cat`` a sibling's folder or
-    another team's external path. Unrelated absolute paths (``/tmp``, ``/usr``, ...) are
-    deliberately NOT blocked — only what policy explicitly denies — so normal shell work
-    is untouched. Best-effort: static token extraction can't see shell variables, globs,
-    or command substitution (see ``bash_path_tokens``); OS sandboxing is the hard backstop.
+    Deny-only, mirroring ``check_path_policy``'s read-deny side onto Bash. Bash can read
+    as easily as it can write (``cat``/``rg``/``ls``), so it must honor both plain ``deny``
+    and ``deny_read``. This intentionally means direct shell writes into a drop-off inbox
+    path are blocked; cross-team delivery should go through ``team_inbox.py post`` so no
+    mailbox path is exposed as a shell token. Best-effort: static token extraction can't
+    see shell variables, globs, or command substitution (see ``bash_path_tokens``); OS
+    sandboxing is the hard backstop.
     """
-    deny = config["deny"]
+    deny = config["deny"] + config.get("deny_read", [])
     if not deny:
         return 0
     for tok in bash_path_tokens(command):
@@ -349,7 +487,7 @@ def main(argv: list[str] | None = None) -> int:
     if not isinstance(tool_input, dict):
         tool_input = {}
 
-    config = merged_config(policy, active_agent_name(payload))
+    config = merged_config(policy, active_agent_name(payload, root))
 
     if tool_name in PATH_TOOLS:
         is_read = tool_name in READ_PATH_TOOLS

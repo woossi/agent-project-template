@@ -37,7 +37,10 @@
     "analysis-lead": "analysis 팀 조율 전담 팀장(orchestrator): 인과추론 분석을 직접 수행하지 않고 팀 운영만 소유한다. 할당·품질원장·자기 팀 거버넌스를 수행한다. 인과추론 설계·식별전략·해석=causal-analyst가 소유한다(팀장은 생산 비소유, 조율만)."
   },
   "goals_dir": ".project/goals",
-  "inbox": ".project/inbox",
+  "inbox_model": "team-only",
+  "team_inbox_glob": "teams/<team>/.claude/inbox",
+  "orchestrator_inbox": "teams/.orchestrator/inbox",
+  "legacy_inbox_archive": ".project/inbox/.archive",
   "subteams": [
     {
       "name": "data",

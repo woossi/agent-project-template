@@ -226,6 +226,36 @@ class DenyReadDropOffTest(GuardAgentWorkspaceTest):
                                   agent_name="ghost-typo")
                 self.assertEqual(r.returncode, 2, f"unregistered {tool} must be blocked")
 
+    def test_bash_read_of_dropoff_blocked(self):
+        # Bash must honor deny_read too. Otherwise `cat other-team/inbox/*.json` bypasses
+        # the Read hook entirely.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            r = self.run_hook(root, self.POLICY, {
+                "hook_event_name": "PreToolUse",
+                "tool_name": "Bash",
+                "tool_input": {"command": "cat teams/write/.claude/inbox/m1.json"},
+            }, agent_name="de")
+            self.assertEqual(r.returncode, 2, r.stderr)
+            self.assertIn("teams/write/.claude/inbox/m1.json", r.stderr)
+
+    def test_search_tools_read_of_dropoff_blocked(self):
+        # Grep/Glob are read surfaces too; they must not be allowed to inspect drop-off mail.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            cases = [
+                ("Grep", {"path": "teams/write/.claude/inbox", "pattern": "secret"}),
+                ("Glob", {"path": "teams/write/.claude/inbox", "pattern": "*.json"}),
+                ("NotebookRead", {"notebook_path": "teams/write/.claude/inbox/m1.ipynb"}),
+            ]
+            for tool, tool_input in cases:
+                r = self.run_hook(root, self.POLICY, {
+                    "hook_event_name": "PreToolUse",
+                    "tool_name": tool,
+                    "tool_input": tool_input,
+                }, agent_name="de")
+                self.assertEqual(r.returncode, 2, f"{tool} should be read-blocked: {r.stderr}")
+
 
 if __name__ == "__main__":
     unittest.main()

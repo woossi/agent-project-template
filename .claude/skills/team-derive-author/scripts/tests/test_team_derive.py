@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import unittest
 from pathlib import Path
@@ -24,6 +25,10 @@ class _Case(unittest.TestCase):
         (self.store / "policies/team-derivation.json").write_text(
             json.dumps({"governance": {"authoring_owner": "orchestrator"}}), encoding="utf-8"
         )
+        (self.store / "team.json").write_text(json.dumps({
+            "members": ["worker-1", "orchestrator"],
+            "subteams": [{"name": "data", "members": ["worker-1"], "orchestrator": "worker-1"}],
+        }), encoding="utf-8")
 
     def tearDown(self):
         self._tmp.cleanup()
@@ -62,13 +67,17 @@ class TermTests(_Case):
 
 class MemoryTests(_Case):
     def test_record_memory_immutable_and_renders(self):
-        r1 = td.record_memory(self.store, key="use-jxa", fact="JXA로 미리알림 읽는다", by="worker-1", clock=lambda: 1)
+        r1 = td.record_memory(self.store, key="use-jxa", fact="JXA로 미리알림 읽는다", by="orchestrator", clock=lambda: 1)
         self.assertTrue((self.store / "memory" / Path(
-            f"{1:020d}__worker-1__use-jxa.json").name).exists())
+            f"{1:020d}__orchestrator__use-jxa.json").name).exists())
         td.render_memory(self.store)
         md = (self.store / "memory.md").read_text(encoding="utf-8")
         self.assertIn("use-jxa", md)
         self.assertIn("JXA로 미리알림 읽는다", md)
+
+    def test_shared_memory_refuses_non_owner(self):
+        with self.assertRaises(td.DeriveAuthorError):
+            td.record_memory(self.store, key="use-jxa", fact="JXA로 미리알림 읽는다", by="worker-1", clock=lambda: 1)
 
     def test_record_memory_needs_key_and_fact(self):
         with self.assertRaises(td.DeriveAuthorError):
@@ -77,8 +86,8 @@ class MemoryTests(_Case):
             td.record_memory(self.store, key="k", fact="")
 
     def test_render_dedups_by_key_last_wins(self):
-        td.record_memory(self.store, key="k", fact="old", by="a", clock=lambda: 1)
-        td.record_memory(self.store, key="k", fact="new", by="b", clock=lambda: 2)
+        td.record_memory(self.store, key="k", fact="old", by="orchestrator", clock=lambda: 1)
+        td.record_memory(self.store, key="k", fact="new", by="orchestrator", clock=lambda: 2)
         td.render_memory(self.store)
         md = (self.store / "memory.md").read_text(encoding="utf-8")
         self.assertIn("new", md)
@@ -99,6 +108,27 @@ class CliTests(_Case):
             "--term", "T", "--ko", "ㅌ", "--definition", "d", "--use-when", "u",
         ])
         self.assertEqual(rc, 1)
+
+    def test_cli_cwd_identity_overrides_spoofed_by(self):
+        worker = self.store.parent / "teams" / "data" / "worker-1"
+        worker.mkdir(parents=True)
+        old_cwd = Path.cwd()
+        old_pwd = os.environ.get("PWD")
+        try:
+            os.chdir(worker)
+            os.environ["PWD"] = str(worker)
+            rc = td.main([
+                "--store", str(self.store), "--by", "orchestrator", "register-term",
+                "--term", "T", "--ko", "ㅌ", "--definition", "d", "--use-when", "u",
+            ])
+        finally:
+            os.chdir(old_cwd)
+            if old_pwd is None:
+                os.environ.pop("PWD", None)
+            else:
+                os.environ["PWD"] = old_pwd
+        self.assertEqual(rc, 1)
+        self.assertFalse((self.store / "word.json").exists())
 
 
 if __name__ == "__main__":

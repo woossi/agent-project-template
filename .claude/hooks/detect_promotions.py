@@ -64,7 +64,10 @@ def _find_repo_root(start: Path) -> Path:
     ``start``.
     """
     for base in (start, *start.parents):
-        if (base / ".project" / "team.json").is_file() or (base / "AGENTS.md").is_file():
+        if (base / ".project" / "team.json").is_file():
+            return base
+    for base in (start, *start.parents):
+        if (base / "AGENTS.md").is_file():
             return base
     return start
 
@@ -73,19 +76,18 @@ def project_dir(payload: dict[str, Any]) -> Path:
     """Resolve the per-agent ledger/promotion anchor.
 
     The ledger and promotion state are per-agent private. Anchor to the repo
-    root, then descend into ``agents/<CLAUDE_AGENT_NAME>/`` when an identity is
+    root, then descend into the registered ``CLAUDE_AGENT_NAME`` worker folder when an identity is
     set, so every peer's candidates/decisions stay separated regardless of where
-    the hook fires. ``CLAUDE_PROJECT_DIR`` remains a hard override when set.
+    the hook fires. ``CLAUDE_PROJECT_DIR`` supplies the shared repo root, not the
+    per-agent ledger destination.
 
     This must match ``task_ledger.project_dir`` exactly: the ledger writer and
     the promotion reader have to agree on the same ``.context`` directory, or
     candidates are written where the detector never reads them.
     """
     explicit = os.environ.get("CLAUDE_PROJECT_DIR")
-    if explicit:
-        return Path(explicit).expanduser().resolve()
     start = Path(str(payload.get("cwd") or os.getcwd())).expanduser().resolve()
-    root = _find_repo_root(start)
+    root = Path(explicit).expanduser().resolve() if explicit else _find_repo_root(start)
     agent = os.environ.get("CLAUDE_AGENT_NAME") or ""
     if agent:
         agent_root = _agent_root(root, agent)
@@ -202,7 +204,8 @@ def skill_candidates(
         if not signature:
             continue
         group = groups.setdefault(
-            signature, {"count": 0, "sessions": set(), "objectives": [], "skills": set()}
+            signature,
+            {"count": 0, "sessions": set(), "objectives": [], "skills": set(), "retros": []},
         )
         group["count"] += 1
         group["sessions"].add(str(task.get("session") or ""))
@@ -212,6 +215,12 @@ def skill_candidates(
         for skill in task.get("skills") or []:
             if isinstance(skill, str) and skill:
                 group["skills"].add(skill)
+        # A non-empty retro means the worker judged a better result was possible.
+        # task_ledger already normalizes "none"/"개선없음" sentinels to "", so any
+        # surviving text is a real improvement note.
+        retro = str(task.get("retro") or "").strip()
+        if retro and retro not in group["retros"]:
+            group["retros"].append(retro)
 
     min_recurrence = int(rules.get("min_recurrence", 3))
     min_sessions = int(rules.get("min_distinct_sessions", 2))
@@ -224,20 +233,36 @@ def skill_candidates(
             continue
         if signature in decided:
             continue
-        if group["count"] < min_recurrence or len(group["sessions"]) < min_sessions:
-            continue
-        candidates.append(
-            {
-                "kind": "skill",
-                "key": signature,
-                "signature": signature,
-                "recurrence": group["count"],
-                "distinct_sessions": len(group["sessions"]),
-                "objectives": group["objectives"][:3],
-                "related_skills": sorted(group["skills"]),
-            }
+        has_retro = bool(group["retros"])
+        meets_recurrence = (
+            group["count"] >= min_recurrence and len(group["sessions"]) >= min_sessions
         )
-    candidates.sort(key=lambda c: (-c["recurrence"], c["key"]))
+        # Two independent triggers per the user model (worker-skill rule 4):
+        # (a) the task recurred enough, or (b) a mandatory post-task retro reported
+        # that a better result was possible. Either alone qualifies the signature.
+        if not meets_recurrence and not has_retro:
+            continue
+        # In both cases the *author* is the team lead: workers report retros via
+        # `post`, leads judge and author/amend the worker-only skill. The reason is
+        # informational so the lead knows which trigger fired.
+        reason = "recurrence" if meets_recurrence else "retro-improvement"
+        candidate: dict[str, Any] = {
+            "kind": "skill",
+            "key": signature,
+            "signature": signature,
+            "recurrence": group["count"],
+            "distinct_sessions": len(group["sessions"]),
+            "objectives": group["objectives"][:3],
+            "related_skills": sorted(group["skills"]),
+            "reason": reason,
+            "author": "team-lead",
+        }
+        if has_retro:
+            candidate["retro_improvement"] = True
+            candidate["retros"] = group["retros"][:3]
+        candidates.append(candidate)
+    # Recurrence-met first, then retro-only; within each by recurrence count.
+    candidates.sort(key=lambda c: (0 if c["reason"] == "recurrence" else 1, -c["recurrence"], c["key"]))
     return candidates[: int(rules.get("max_candidates", 20))]
 
 
@@ -349,10 +374,21 @@ def format_surface(candidates: dict[str, Any]) -> str:
     lines: list[str] = []
     for cand in candidates.get("skill", []):
         objectives = "; ".join(cand.get("objectives", [])) or "(no objective recorded)"
-        lines.append(
-            f"- [skill] signature '{cand['signature']}' recurred {cand['recurrence']}x "
-            f"across {cand['distinct_sessions']} sessions: {objectives}"
-        )
+        if cand.get("retro_improvement") and cand.get("reason") == "retro-improvement":
+            retros = "; ".join(cand.get("retros", [])) or "(no note)"
+            lines.append(
+                f"- [skill] signature '{cand['signature']}' flagged by post-task retro "
+                f"(better result was possible) -> worker-only skill improvement, "
+                f"authored by team lead: {retros}"
+            )
+        else:
+            retro_note = ""
+            if cand.get("retro_improvement"):
+                retro_note = " [also has retro improvement note]"
+            lines.append(
+                f"- [skill] signature '{cand['signature']}' recurred {cand['recurrence']}x "
+                f"across {cand['distinct_sessions']} sessions: {objectives}{retro_note}"
+            )
     for cand in candidates.get("agent", []):
         package = ", ".join(cand.get("skills", []))
         lines.append(
@@ -364,8 +400,10 @@ def format_surface(candidates: dict[str, Any]) -> str:
     header = (
         "Promotion conditions were met. Act on each candidate, then run "
         "`.claude/hooks/detect_promotions.py resolve` to clear it:\n"
-        "- skill candidate -> author with the `write-skill` skill (one covering name).\n"
-        "- agent candidate -> author with the `write-subagent` skill (independent context).\n"
+        "- skill candidate -> the TEAM LEAD authors with the `write-skill` skill (one covering "
+        "name). `write-skill`/`write-subagent`/`write-task` are lead-only; a worker reports its "
+        "retro via `post --to-team`, and the lead judges and authors/amends the worker-only skill.\n"
+        "- agent candidate -> the TEAM LEAD authors with the `write-subagent` skill (independent context).\n"
         "- not worth promoting -> resolve with `--decision decline --reason ...`.\n"
     )
     return header + "\n".join(lines)

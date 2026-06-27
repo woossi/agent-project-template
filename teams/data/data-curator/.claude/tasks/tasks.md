@@ -1,7 +1,41 @@
 # 작업
 
 ## 상태
-대기 (받은편지함 unread 0. PDF매칭 교정 전수실측 완료, paper-scout/orchestrator 회신함)
+완료 (2026-06-28 — phase00 모델 식별을 dc가 작업경계 내 코드 직접 실측으로 확정. data-lead 조율 aa3a6c9b의 전제 'dc 직접 실측 불가'는 실측으로 뒤집힘 → §A/§G 주석 병존 해소·확정 서술 전환. data-lead 보고 발신.)
+
+## 최신 진행 (2026-06-28 vandeursen2015vandijk 서지오류 — 1차 증거조사, 증거표 미도착 상태 선제 수행)
+- [★경계 확정] data-curator deny에 `/Users/ujunbin/research/UMC/**` 명시 → **refs.bib는 dc 경계 밖**(직접 교정 불가). 2026-06-27 화이트리스트 재설계로 research/UMC=write 소관. dc 역할=증거조사 입력만, 교정 실행=mw/review.
+- [완료·정본확정] 공개 출처 4종 정합(T&F·ACM·UTwente·저자사이트): vandeursen2015vandijk 정본 = van Deursen & van Dijk (2015) "Toward a Multifaceted Model of Internet Access for Understanding Digital Divides", The Information Society 31(5) 379–391, **DOI 10.1080/01972243.2015.1069770**. citekey 명명규약(저자·연도)은 정본과 정합.
+- [완료·실측] Zotero(~/Zotero/zotero.sqlite, 읽기전용): DB정상(creators 3951·items 2290)인데 **van Deursen/van Dijk 저자 0건** → 정본이 Zotero 부재(refs.bib Zotero 비경유 또는 다른항목 오매핑 가능성, 어느쪽인지는 refs.bib 실물=경계밖 대조 필요).
+- [미해소·인계] refs.bib 현재 제목/DOI/DOI실물제목 = 경계밖이라 dc 미확인. scout-lead 증거표가 이 3칸 채우면 §1 정본 대조로 교정안 확정. 권고 bibtex 잠정안 작성.
+- [완료·추가 2026-06-28 2nd] **본문 인용맥락 판별을 dc 경계 내에서 확정**(직전 'mw 소관' 넘긴 칸 해소): project/umc/docs/umc_report_ko.md(경계 내) van Deursen&van Dijk 2015 인용 3곳(L93·L241) 전부 §1 정본(Multifaceted Model) 논지와 정합 → 본문 의도=정본 확정, 다른 van Deursen 저작 가능성 배제. ★구분단서: 같은 보고서 L167 'Van Deursen & Helsper 2015'(공저자 Helsper≠van Dijk) 별개 인용 존재 → refs.bib에 van Dijk본·Helsper본 별개 유지(혼동·병합 금지). 증거문서 §5 추가.
+- 산출: .context/vandeursen-bib-evidence-2026-06-28.md (정본표·Zotero실측·미해소칸·권고안·§5 인용맥락 확정·구분주의).
+
+## 최신 완료 (2026-06-28 §G 해시 전수 직접 재해싱 — phase00 후속 잔여분 종결)
+- [완료·핵심] §G 표 5개 해시 전수 dc 직접 재해싱 일치 확정(이전 'phase00 1건만 검증·나머지 전사값' 해소): phase00 67b4c4f6…✓ / phase03 8ec34da4…✓ / phase01 1eb90fe0…✓ / 코드북v7 2cf232e7…✓(커밋 fff4127 시점 umc_classifier.md 정규화방식 재계산 일치) / 커밋 fff4127=현 HEAD✓. → de 전달값=dc 실측값 전수일치. mw 박제 시 추가 재해싱 불요.
+- [완료·신규포착] 코드북 v8 해시 = `d42dc85815f0f99aedb0ab593981e97ab45f66941737cfaa320dfff0db61e396`. 워킹트리 umc_classifier.md 이미 v8 갱신(prompt_version umc_classifier_v8_20260627·codebook_version v8·--check OK) = inference-runner W4(60c3f713) 반영분. ★잠정 단서로만 부록 기록, v8 정본 등재는 W4 산출통지+v8 run.json(A-1 후)과 함께. 현 본문은 v7만 박제 유지.
+- [학습] 코드북 해시는 단순 파일해시 아님 — record_codebook_hash.py 정규화(codebook_sha256 줄 placeholder 환원 후 sha256). 재현 시 이 방식 필수.
+
+## 최신 완료 (2026-06-28 phase00 모델 실측 — v7→v8 정본 사전정리 후속, 대기항목 처리)
+- [완료·핵심] phase00 모델 식별 불일치('gpt-4o-mini' vs 'Claude Sonnet') = **코드 직접 실측으로 확정 종결**. `/Users/ujunbin/project/umc/analysis/text-preprocessing/src/phase00_sample_for_claude.py`(작업경계 내·Read 가능)에 **API 호출 코드 0건**(openai/anthropic import·chat.completions·messages.create 전무) → 보존 정본 키워드 발견 경로=**Claude Sonnet 수동**(프롬프트 자동생성→Claude Code 수동 전달→merge 병합, keywords.yaml 헤더 'LLM 분석 자동생성'). 'gpt-4o-mini'(MASTERPLAN 서술)는 코드 미보존 보조 워크플로우로 강등. 두 진술=충돌 아닌 다른 경로(이전 가설 b 확정).
+- [완료] phase00 sha256 직접 재해싱 = `67b4c4f6719ffba5e3b16ec1a3158a98773538f983288ba5df0515299da4fc15` → §G 표(67b4c4f6…)와 **일치 검증**(de 전달값=실측값, line132 미검증 항목 해소).
+- [완료·신규 긍정사실] phase00 층화표집 시드 **고정** 발견: `random_state=round_num×42`(round1→42 …), 구별표집·셔플 동일 시드(phase00:113,129,139,141,490) → 표집 단계 재현가능. §F의 stage3 223 표집 유실과는 다른 층위(코드 고정 vs 산출 유실)임을 부록에 명기.
+- [완료] REPRODUCIBILITY-APPENDIX.md 갱신: §A 표 단계0(Claude Sonnet 수동·시드 명기)·각주¹(불일치 해소 확정)·각주¹ᵃ(표집 시드 신규)·§G 식별주석·검증주석·§3.2.4 정합문 = 전부 확정 서술로 전환. mw 부록 확정서술 차단 해제.
+- [★경계 정정 필요·보고]: data-lead 조율 aa3a6c9b는 'phase00 코드 트리=de 워크스페이스라 dc 직접 실측 불가'를 전제했으나, 실제 `/Users/ujunbin/project/umc`는 dc 작업경계 내(memory.md 명기)라 직접 Read·해싱 성공. **전제가 실측으로 반증됨** → de 회신 대기 불필요·게이팅 해제. data-lead에 보고.
+
+## 이전 (2026-06-27 data-lead 조율 aa3a6c9b — 전제 반증으로 해소)
+
+## 최신 완료 (2026-06-27 data-lead 조율 수용 — aa3a6c9b)
+- [수용] data-lead가 내가 넘긴 미해소 2건을 조율: ①phase00 모델 식별 실측은 data-engineer 소관 지시(코드 트리=de 워크스페이스, dc 직접 실측 불가 확정) ②review팀 독립대조 전달은 phase00 식별확정까지 data-lead가 게이팅 보류.
+- [내 후속 액션·대기] data-engineer phase00(67b4c4f6) 실측 회신 → data-lead가 dc에 연결 → 내가 §A(gpt-4o-mini)/§G(Sonnet) 주석 병존 해소(단일 모델 확정). 그 전까지 마스터 §A 각주¹+§G 주석 병존 보존(현 상태 정합, 변경 없음).
+- [정합 확인] write측(write-lead b98946f8)도 mw에 phase00 확정서술 보류 전파 완료 — 흐름 일관. v8·시드=inference-runner A-1 후 동일.
+
+## 최신 완료 (2026-06-27 §7.4 내재화 — data-engineer R1 보조분 합류, ac79acf4)
+- [완료·핵심] REPRODUCIBILITY-APPENDIX.md §G 신설: data-engineer 전달 해시·커밋 박제(외부저장소 의존 제거 완결). 코드북 v7 sha256(2cf232e7…)=registry §7.1·v8 슬롯 정합 / phase03(8ec34da4)·phase00(67b4c4f6)·phase01(1eb90fe0) 코드 sha256 / 커밋 fff4127 / SOURCE_SCHEMA v7 131,793행·20컬럼.
+- [정합확인] §3.2.4/§7.1: phase03 v7 수동(model_id 미기록)=재현불가 근본원인 / phase01=문자열매칭(LLM 아님) / phase00=Claude Sonnet 사전 — 내 §B·registry §7.1 진단과 일치.
+- [★미해소·추적] phase00 모델 식별 불일치: 내 §A=gpt-4o-mini(외부·미보존) vs data-engineer=Claude Sonnet. mw 부록 확정 전 phase00 코드(67b4c4f6) 실측으로 확정 필요. §A 각주¹+§G 주석 병존 보존.
+- [인계대기] v8 model_id·시드 run.json·§7.2 안정성 v8 행 = inference-runner A-1(e6085772) 산출 후. keywords.yaml(1,228)=CSV 큐레이션 부록화 권장.
+- [경계] 코드 트리=data-engineer 워크스페이스 소관이라 직접 재해싱 안 함(전달값 전사). mw 박제 시 1회 교차실측 권장.
 
 ## 최신 완료 (2026-06-27 PDF 매칭 오류 교정 — paper-scout 통지건)
 - [완료·핵심] 전수 실측 결과 ★영구 산출물 오매칭 0건. paper-scout 적발 6~7건은 fulltext-grounder 자동매칭 런타임 오류이고 Zotero·refs.bib·엑셀엔 미반영(이미 정본 정합).

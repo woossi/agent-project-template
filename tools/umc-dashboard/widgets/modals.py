@@ -129,17 +129,20 @@ def preset_prompt(key: str, *, worker: str, team: str) -> str:
     팀 전용 메일박스(claim 모델) + 미리알림 두 채널."""
     team = team or "?"
     rlist = f"umc-{team}"
+    if key == "tasks":
+        return (
+            f"네 팀 보드(teams/{team}/.claude/tasks/tasks.md)에서 너('{worker}')에게 부여된 "
+            f"작업 섹션을 read한다(메일박스는 보지 마라 — 너는 메일박스 권한이 없다). "
+            f"부여된 작업을 수행한 뒤 결과를 팀장에게 `post --to-team {team}`으로 보고하라. "
+            f"진행상황을 한국어로 짧게 보고."
+        )
     if key == "inbox":
         return (
-            f"팀 받은편지함을 확인할 차례다. `team-inbox` 스킬의 team_inbox.py로 "
-            f"네 팀('{team}') 메일박스의 미claim 메시지를 `read --team {team}` 한다. "
-            f"제목·본문을 보고 네 담당이면 `claim --team {team} --as {worker} --id <msgid>`로 "
-            f"원자적으로 가져온 뒤(경합 시 1명만 성공) 처리하고, 끝나면 "
-            f"`ack --team {team} --id <msgid>` 한다. 네 담당이 아니거나 이미 claim된 건 손대지 마라. "
-            f"처리 결과는 발신 팀에게 `post --to-team <발신팀> --reply-to <msgid>`로 회신하고, "
-            f"무엇을 claim·처리·회신했는지 한국어로 짧게 보고해라. "
-            f"미claim 메시지가 없으면 '받은 작업 없음'이라고만 보고해라. "
-            f"(개인 inbox는 폐지됐다 — 모든 메시지는 팀 메일박스로만 온다.)"
+            f"팀장으로서 네 팀('{team}') 메일박스를 `team-inbox` 스킬의 team_inbox.py로 "
+            f"`read --team {team}`·`claim --team {team} --as {worker} --id <msgid>` 해 들어온 작업을 "
+            f"분류하고, 각 작업을 팀 보드(teams/{team}/.claude/tasks/tasks.md)의 적절한 워커 "
+            f"섹션으로 배분(write-task)한 뒤, 처리완료는 `ack --team {team} --id <msgid>` 하라. "
+            f"한국어로 보고."
         )
     if key == "reminders":
         return (

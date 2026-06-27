@@ -36,8 +36,10 @@ description: Use when creating or updating the current task packet under .claude
 3. 상태는 `대기`, `진행 중`, `막힘`, `완료` 중 하나로 적는다.
 4. 모르는 내용은 추측하지 말고 `필요한 결정`이나 `위험`에 둔다.
 5. 사용할 스킬과 서브에이전트가 있으면 이름과 입력 경계를 적는다.
-6. 작업 단위를 끝내면 `python3 .claude/hooks/task_ledger.py record-task --signature <작업 종류 슬러그> --objective <한 줄 목표> --skills <쓴 스킬> --paths <주요 경로>`로 시그니처를 원장에 남긴다. 원시 실행은 훅이 자동 기록하지만, 반복 작업 묶음을 스킬로 승격하려면 시그니처가 필요하다.
-7. `detect_promotions.py`가 승격 후보를 띄우면 `write-skill`/`write-subagent`로 저작하고 `detect_promotions.py resolve`로 닫는다.
+6. 작업 단위를 끝내면 `python3 .claude/hooks/task_ledger.py record-task --signature <작업 종류 슬러그> --objective <한 줄 목표> --skills <쓴 스킬> --paths <주요 경로> --retro <한 줄 회고>`로 시그니처를 원장에 남긴다. 원시 실행은 훅이 자동 기록하지만, 반복 작업 묶음을 스킬로 승격하려면 시그니처가 필요하다.
+   - **필수 회고(`--retro`)**: 작업 종료 시 *무조건* `--retro`를 포함한다. "더 나은 결과가 가능했는가 / 개선점"을 한 줄로 적고, 개선점이 없으면 명시적으로 `--retro none`(또는 `--retro 개선없음`)으로 남긴다. 빈 회고를 넣지 않는다.
+   - 회고에 실제 개선점이 있으면(=`none`이 아니면) `detect_promotions.py`가 해당 시그니처를 **워커 전용 스킬 개선 후보**(`reason: retro-improvement`)로 띄운다. 단 후보의 저작 주체는 워커가 아니라 **팀장(lead)**이다(아래 거버넌스 참조).
+7. **거버넌스(2026-06-27)**: `write-task`·`write-skill`·`write-subagent`는 **팀장(lead) 전용**으로 회수됐다. 따라서 워커의 회고는 '워커가 직접 스킬을 저작'이 아니라 다음 흐름이다 — ① 워커가 `--retro`로 회고를 원장에 남기고, ② 회고를 `post --to-team <팀>`으로 팀장에게 **보고**하면, ③ **팀장이 판단해** 워커 전용 스킬을 `write-skill`로 저작/수정하고 `detect_promotions.py resolve`로 후보를 닫는다. `detect_promotions.py`가 띄우는 후보(`author: team-lead`)도 이 주체를 명시한다.
 8. 계약 연계 섹션은 `.claude/hooks/sync_component_contracts.py`가 관리하게 둔다.
 9. 완료 기준이 검증 가능한지 확인한다.
 

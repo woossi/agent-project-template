@@ -28,9 +28,13 @@ class _Case(unittest.TestCase):
         (self.root / ".project" / "team.json").write_text(json.dumps({
             "members": ["dc", "de", "ir", "mw", "ms"],
             "subteams": [
-                {"name": "data", "members": ["dc", "de", "ir"]},
-                {"name": "write", "members": ["mw", "ms"]},
+                {"name": "data", "members": ["dc", "de", "ir"], "orchestrator": "dc"},
+                {"name": "write", "members": ["mw", "ms"], "orchestrator": "mw"},
             ],
+        }), encoding="utf-8")
+        (self.root / ".project" / "policies").mkdir(parents=True, exist_ok=True)
+        (self.root / ".project" / "policies" / "team-promotion.json").write_text(json.dumps({
+            "governance": {"company_owner": "orchestrator", "authoring_owner": "orchestrator"}
         }), encoding="utf-8")
 
     def tearDown(self):
@@ -98,7 +102,7 @@ class PostTests(_Case):
     def test_quality_fields_attach(self):
         gate = {"axes": ["A", "E"], "kind": "manuscript"}
         ti.post(self.root, "ms", to_team="write", subject="작업", body="b", quality_gate=gate)
-        msg = ti.read_team(self.root, "write")[0]
+        msg = ti.read_team(self.root, "write", actor="mw")[0]
         self.assertEqual(msg["quality_gate"], gate)
         self.assertIsNone(msg["verdict"])
 
@@ -108,7 +112,7 @@ class PostTests(_Case):
             r = ti.post(self.root, "mw", to_team="data", subject=str(i), body="b",
                         msgid_factory=lambda s, i=i: ti.new_msgid(s, clock=lambda: i + 1, rand=lambda: "z"))
             ids.append(r["id"])
-        got = [m["id"] for m in ti.read_team(self.root, "data")]
+        got = [m["id"] for m in ti.read_team(self.root, "data", actor="dc")]
         self.assertEqual(got, ids)
 
 
@@ -116,17 +120,17 @@ class ClaimAckTests(_Case):
     def test_claim_is_exclusive(self):
         mid = ti.post(self.root, "mw", to_team="data", subject="s", body="b")["id"]
         r1 = ti.claim(self.root, "data", mid, "dc")
-        r2 = ti.claim(self.root, "data", mid, "de")
+        r2 = ti.claim(self.root, "data", mid, "orchestrator")
         self.assertTrue(r1["claimed"])
         self.assertFalse(r2["claimed"])
         self.assertEqual(r2["claimed_by"], "dc")
 
     def test_read_team_states(self):
         mid = ti.post(self.root, "mw", to_team="data", subject="s", body="b")["id"]
-        self.assertEqual(len(ti.read_team(self.root, "data")), 1)  # unclaimed
+        self.assertEqual(len(ti.read_team(self.root, "data", actor="dc")), 1)  # unclaimed
         ti.claim(self.root, "data", mid, "dc")
-        self.assertEqual(len(ti.read_team(self.root, "data")), 0)  # no longer unclaimed
-        claimed = ti.read_team(self.root, "data", include_claimed=True)
+        self.assertEqual(len(ti.read_team(self.root, "data", actor="dc")), 0)  # no longer unclaimed
+        claimed = ti.read_team(self.root, "data", actor="dc", include_claimed=True)
         self.assertEqual(len(claimed), 1)
         self.assertEqual(claimed[0]["_state"], "claimed")
 
@@ -135,7 +139,7 @@ class ClaimAckTests(_Case):
         ti.claim(self.root, "data", mid, "dc")
         out = ti.ack(self.root, "data", mid, agent="dc")
         self.assertTrue(out["acked"])
-        consumed = ti.read_team(self.root, "data", include_consumed=True)
+        consumed = ti.read_team(self.root, "data", actor="dc", include_consumed=True)
         self.assertEqual(len(consumed), 1)
         self.assertEqual(consumed[0]["_state"], "consumed")
 
@@ -145,11 +149,27 @@ class ClaimAckTests(_Case):
 
     def test_claim_then_ack_full_cycle(self):
         mid = ti.post(self.root, "ms", to_team="data", subject="task", body="b")["id"]
-        self.assertTrue(ti.claim(self.root, "data", mid, "de")["claimed"])
-        self.assertTrue(ti.ack(self.root, "data", mid, agent="de")["acked"])
+        self.assertTrue(ti.claim(self.root, "data", mid, "dc")["claimed"])
+        self.assertTrue(ti.ack(self.root, "data", mid, agent="dc")["acked"])
         # gone from unclaimed + claimed, present in consumed
-        self.assertEqual(ti.read_team(self.root, "data"), [])
-        self.assertEqual(len(ti.read_team(self.root, "data", include_consumed=True)), 1)
+        self.assertEqual(ti.read_team(self.root, "data", actor="dc"), [])
+        self.assertEqual(len(ti.read_team(self.root, "data", actor="dc", include_consumed=True)), 1)
+
+    def test_direct_api_requires_lead_or_company_owner(self):
+        mid = ti.post(self.root, "mw", to_team="data", subject="s", body="b")["id"]
+        with self.assertRaises(ti.InboxError):
+            ti.read_team(self.root, "data", actor="de")
+        with self.assertRaises(ti.InboxError):
+            ti.claim(self.root, "data", mid, "de")
+        self.assertTrue(ti.claim(self.root, "data", mid, "orchestrator")["claimed"])
+        with self.assertRaises(ti.InboxError):
+            ti.ack(self.root, "data", mid, agent="de")
+
+    def test_orchestrator_mailbox_not_open_to_everyone(self):
+        ti.post(self.root, "ms", to_team="orchestrator", subject="보고", body="b")
+        with self.assertRaises(ti.InboxError):
+            ti.read_team(self.root, "orchestrator", actor="de")
+        self.assertEqual(len(ti.read_team(self.root, "orchestrator", actor="orchestrator")), 1)
 
 
 class IdentityTests(_Case):
@@ -180,19 +200,25 @@ class CliTests(_Case):
         rc = ti.main(self._argv("post", "--from", "mw", "--to-team", "data",
                                 "--subject", "s", "--body", "b"))
         self.assertEqual(rc, 0)
-        self.assertEqual(len(ti.read_team(self.root, "data")), 1)
+        self.assertEqual(len(ti.read_team(self.root, "data", actor="dc")), 1)
 
     def test_cli_read_defaults_to_own_team(self):
+        # Lead-only mailbox (2026-06-27): the team lead (dc) may read; a plain worker
+        # (de) is rejected by the _require_lead role gate. (cwd is outside any worker
+        # folder here — --root points at a temp tree — so identity comes from --as.)
         ti.post(self.root, "mw", to_team="data", subject="s", body="b")
-        rc = ti.main(self._argv("read", "--as", "de"))  # de is in data
-        self.assertEqual(rc, 0)
+        self.assertEqual(ti.main(self._argv("read", "--as", "dc")), 0)   # lead → ok
+        self.assertEqual(ti.main(self._argv("read", "--as", "de")), 1)   # worker → denied
 
     def test_cli_claim_and_ack(self):
+        # Only the team lead (dc) may claim/ack; a worker claim is denied.
         mid = ti.post(self.root, "mw", to_team="data", subject="s", body="b")["id"]
+        self.assertEqual(
+            ti.main(self._argv("claim", "--team", "data", "--as", "de", "--id", mid)), 1)  # worker denied
         rc1 = ti.main(self._argv("claim", "--team", "data", "--as", "dc", "--id", mid))
         rc2 = ti.main(self._argv("ack", "--team", "data", "--as", "dc", "--id", mid))
         self.assertEqual((rc1, rc2), (0, 0))
-        self.assertEqual(len(ti.read_team(self.root, "data", include_consumed=True)), 1)
+        self.assertEqual(len(ti.read_team(self.root, "data", actor="dc", include_consumed=True)), 1)
 
     def test_cli_bad_verdict_json_rejected(self):
         rc = ti.main(self._argv("post", "--from", "mw", "--to-team", "data",

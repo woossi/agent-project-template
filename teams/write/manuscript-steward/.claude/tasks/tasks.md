@@ -27,6 +27,12 @@
 - 그림 일관성 인계대기(orchestrator f1b80585): image2_v2.png 고아 1건 + registry '정본 10' vs 본문(includegraphics 10+TikZ 1) 불일치. R1/R2 격리=steward 조율. **지금 착수 지시 아님**(학위논문 우선).
 
 ## 다음
-- sv에 z_shift +1.73/1.69 분열 독립검증 의뢰(정본 §9-1 확정용).
-- writer에 정본 위치·인용규율 통지(이미 "mc 조회" 포인터로 전환됨).
-- glossary-B 안정화 후 register-term으로 .project/word.json 파생.
+- ~~sv에 z_shift +1.73/1.69 분열 독립검증 의뢰~~ ✅종결: write-lead 결정 주정본 1.68 확정(§9-1 종결, 본문 3곳 통일 실측).
+- ~~writer에 정본 위치·인용규율 통지~~ ✅완료("mc 조회" 포인터 전환).
+- glossary-B 안정화 후 register-term으로 .project/word.json 파생 → **승인 대기(에스컬레이션)**.
+  - ✅완결: register-term validator symlink 복구(내 워커 .claude/skills/register-term 누락→복구, write-lead 패턴과 동일 상대경로). guard_word_json 훅 차단(매 Bash 오류) 해소, validator --check exit=0 확인.
+  - ⛔선행조건 2건(단독 완결 불가): ①용어 12개(staging A 10+B 2) definition/use_when 사용자·orchestrator 승인. ②.project/word.json 생성·소유 합의(현재 미존재, owner=orchestrator). → write-lead 통해 에스컬레이션.
+  - staging 준비완료: `.context/term-handoff-staging.md`(4필드 매핑 12개), glossary-B-draft.md(T1확정·T2/T4해소).
+
+## 정합 재실측 (2026-06-27/28, 정본 단일출처 감시)
+- numeric-canon-B 전수 정합: 본문↔정본 표류 0건. §9-2(수집시점) ch4:34 단일→ch4:34+model:169 2곳·값일치(표류위험 완화), 정본 갱신 반영. 상세=numeric-canon-B §10 이력.

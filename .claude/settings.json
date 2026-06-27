@@ -36,7 +36,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Read|Edit|Write|MultiEdit|Bash",
+        "matcher": "Read|Edit|Write|MultiEdit|Grep|Glob|NotebookRead|NotebookEdit|Bash",
         "hooks": [
           {
             "type": "command",
@@ -104,7 +104,7 @@
         ]
       },
       {
-        "matcher": "Read|Edit|Write|MultiEdit|Bash",
+        "matcher": "Read|Edit|Write|MultiEdit|Grep|Glob|NotebookRead|NotebookEdit|Bash",
         "hooks": [
           {
             "type": "command",

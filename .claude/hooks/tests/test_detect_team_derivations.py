@@ -28,7 +28,9 @@ class _Case(unittest.TestCase):
         self._tmp = TemporaryDirectory()
         self.root = Path(self._tmp.name)
         (self.root / ".project/policies").mkdir(parents=True)
-        (self.root / ".project/policies/team-derivation.json").write_text(json.dumps(dtd.DEFAULTS), encoding="utf-8")
+        policy = dict(dtd.DEFAULTS)
+        policy["governance"] = {"mode": "owner-authors", "authoring_owner": "orchestrator"}
+        (self.root / ".project/policies/team-derivation.json").write_text(json.dumps(policy), encoding="utf-8")
 
     def tearDown(self):
         self._tmp.cleanup()
@@ -116,9 +118,19 @@ class DecisionTests(_Case):
         files = list((self.root / ".project/derivations/decisions").glob("term__LISA__*.json"))
         self.assertEqual(len(files), 1)
 
+    def test_non_owner_cannot_resolve(self):
+        self.signals("worker-1", [{"kind": "term", "key": "LISA"}])
+        self.signals("worker-2", [{"kind": "term", "key": "LISA"}])
+        rc = dtd.run_resolve([
+            "--kind", "term", "--key", "LISA", "--decision", "decline",
+            "--by", "worker-1", "--project-root", str(self.root),
+        ])
+        self.assertEqual(rc, 1)
+        self.assertFalse((self.root / ".project/derivations/decisions").exists())
+
     def test_slug_colliding_keys_both_persist(self):
-        dtd.run_resolve(["--kind", "memory", "--key", "a b", "--decision", "decline", "--project-root", str(self.root)])
-        dtd.run_resolve(["--kind", "memory", "--key", "a-b", "--decision", "promote", "--project-root", str(self.root)])
+        dtd.run_resolve(["--kind", "memory", "--key", "a b", "--decision", "decline", "--by", "orchestrator", "--project-root", str(self.root)])
+        dtd.run_resolve(["--kind", "memory", "--key", "a-b", "--decision", "promote", "--by", "orchestrator", "--project-root", str(self.root)])
         ddir = self.root / ".project/derivations/decisions"
         self.assertEqual(len(list(ddir.glob("memory__*.json"))), 2)
         decided = dtd.load_team_decisions(ddir)
@@ -167,7 +179,7 @@ class CaseFoldTests(_Case):
         self.signals("worker-1", [{"kind": "term", "key": "LISA"}])
         self.signals("worker-2", [{"kind": "term", "key": "LISA"}])
         self.assertEqual(len(self.evaluate()["term"]), 1)
-        dtd.run_resolve(["--kind", "term", "--key", "lisa", "--decision", "decline", "--project-root", str(self.root)])
+        dtd.run_resolve(["--kind", "term", "--key", "lisa", "--decision", "decline", "--by", "orchestrator", "--project-root", str(self.root)])
         self.assertEqual(self.evaluate()["term"], [])  # lowercase resolve closes "LISA" candidate
 
 

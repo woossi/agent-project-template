@@ -29,8 +29,14 @@ class _Case(unittest.TestCase):
         (self.root / ".claude/skills").mkdir(parents=True)
         (self.root / ".claude/agents").mkdir(parents=True)
         # default policy
+        policy = dict(dtp.DEFAULTS)
+        policy["governance"] = {
+            "mode": "tiered",
+            "company_owner": "orchestrator",
+            "authoring_owner": "orchestrator",
+        }
         (self.root / ".project/policies/team-promotion.json").write_text(
-            json.dumps(dtp.DEFAULTS), encoding="utf-8"
+            json.dumps(policy), encoding="utf-8"
         )
 
     def tearDown(self):
@@ -187,6 +193,15 @@ class DecisionTests(_Case):
         self.assertEqual(rec["by"], "orchestrator")
         self.assertIn("ts_ns", rec)
 
+    def test_non_owner_cannot_resolve(self):
+        seed_intra_team_skill(self)
+        rc = dtp.run_resolve([
+            "--kind", "team_skill", "--key", "data", "--decision", "decline",
+            "--reason", "not reusable", "--by", "worker-1", "--project-root", str(self.root),
+        ])
+        self.assertEqual(rc, 1)
+        self.assertFalse((self.root / ".project/promotions/decisions").exists())
+
 
 class RootAndShardTests(_Case):
     def test_find_team_root_from_agent_subdir(self):
@@ -228,11 +243,11 @@ class DecisionCollisionTests(_Case):
         # Two distinct keys whose _safe() slug collides ('+' and '_' both -> '_').
         r1 = dtp.run_resolve([
             "--kind", "team_agent", "--key", "a+b+c", "--decision", "decline",
-            "--reason", "x", "--project-root", str(self.root),
+            "--reason", "x", "--by", "orchestrator", "--project-root", str(self.root),
         ])
         r2 = dtp.run_resolve([
             "--kind", "team_agent", "--key", "a_b+c", "--decision", "promote",
-            "--reason", "y", "--project-root", str(self.root),
+            "--reason", "y", "--by", "orchestrator", "--project-root", str(self.root),
         ])
         self.assertEqual((r1, r2), (0, 0))
         ddir = self.root / ".project/promotions/decisions"
@@ -243,8 +258,8 @@ class DecisionCollisionTests(_Case):
         self.assertEqual(decided["team_agent"]["a_b+c"]["decision"], "promote")
 
     def test_same_key_twice_overwrites_last_writer_wins(self):
-        dtp.run_resolve(["--kind", "team_skill", "--key", "k", "--decision", "decline", "--project-root", str(self.root)])
-        dtp.run_resolve(["--kind", "team_skill", "--key", "k", "--decision", "promote", "--project-root", str(self.root)])
+        dtp.run_resolve(["--kind", "team_skill", "--key", "k", "--decision", "decline", "--by", "orchestrator", "--project-root", str(self.root)])
+        dtp.run_resolve(["--kind", "team_skill", "--key", "k", "--decision", "promote", "--by", "orchestrator", "--project-root", str(self.root)])
         ddir = self.root / ".project/promotions/decisions"
         self.assertEqual(len(list(ddir.glob("team_skill__*.json"))), 1)  # same key -> one file
         self.assertEqual(dtp.load_team_decisions(ddir)["team_skill"]["k"]["decision"], "promote")
@@ -252,7 +267,7 @@ class DecisionCollisionTests(_Case):
     def test_promote_also_stops_surfacing(self):
         seed_intra_team_skill(self)
         self.assertEqual(len(self.evaluate()["team_skill"]), 1)
-        dtp.run_resolve(["--kind", "team_skill", "--key", "data", "--decision", "promote", "--project-root", str(self.root)])
+        dtp.run_resolve(["--kind", "team_skill", "--key", "data", "--decision", "promote", "--by", "orchestrator", "--project-root", str(self.root)])
         self.assertEqual(self.evaluate()["team_skill"], [])
 
 

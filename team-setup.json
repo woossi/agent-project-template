@@ -38,7 +38,12 @@
   "subteams": [
     {
       "name": "data",
-      "members": ["data-engineer", "data-curator", "inference-runner", "data-lead"],
+      "members": [
+        "data-engineer",
+        "data-curator",
+        "inference-runner",
+        "data-lead"
+      ],
       "orchestrator": "data-lead",
       "reminders_list": "umc-data",
       "allow_paths": [
@@ -48,31 +53,55 @@
     },
     {
       "name": "write",
-      "members": ["manuscript-writer", "manuscript-steward", "write-lead"],
+      "members": [
+        "manuscript-writer",
+        "manuscript-steward",
+        "write-lead"
+      ],
       "orchestrator": "write-lead",
       "reminders_list": "umc-write",
-      "allow_paths": ["/Users/ujunbin/research/UMC/**"]
+      "allow_paths": [
+        "/Users/ujunbin/research/UMC/**"
+      ]
     },
     {
       "name": "scout",
-      "members": ["paper-scout", "scout-lead"],
+      "members": [
+        "paper-scout",
+        "scout-lead"
+      ],
       "orchestrator": "scout-lead",
       "reminders_list": "umc-scout",
-      "allow_paths": ["/Users/ujunbin/article/**", "/Users/ujunbin/knowledge/**"]
+      "allow_paths": [
+        "/Users/ujunbin/article/**",
+        "/Users/ujunbin/knowledge/**"
+      ]
     },
     {
       "name": "review",
-      "members": ["stats-validator", "quality-reviewer", "review-lead"],
+      "members": [
+        "stats-validator",
+        "quality-reviewer",
+        "review-lead"
+      ],
       "orchestrator": "review-lead",
       "reminders_list": "umc-review",
-      "allow_paths": ["/Users/ujunbin/research/UMC/**", "/Users/ujunbin/project/umc/**"]
+      "allow_paths": [
+        "/Users/ujunbin/research/UMC/**",
+        "/Users/ujunbin/project/umc/**"
+      ]
     },
     {
       "name": "analysis",
-      "members": ["causal-analyst", "analysis-lead"],
+      "members": [
+        "causal-analyst",
+        "analysis-lead"
+      ],
       "orchestrator": "analysis-lead",
       "reminders_list": "umc-analysis",
-      "allow_paths": ["/Users/ujunbin/project/umc/**"]
+      "allow_paths": [
+        "/Users/ujunbin/project/umc/**"
+      ]
     }
   ]
 }

@@ -57,6 +57,10 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(tj["members"], ["orchestrator", "worker-1"])
         self.assertEqual(tj["roles"]["orchestrator"], "lead")
         self.assertEqual(tj["goals_dir"], ".project/goals")
+        self.assertEqual(tj["inbox_model"], "team-only")
+        self.assertEqual(tj["team_inbox_glob"], "teams/<team>/.claude/inbox")
+        self.assertEqual(tj["orchestrator_inbox"], "teams/.orchestrator/inbox")
+        self.assertEqual(tj["legacy_inbox_archive"], ".project/inbox/.archive")
 
     def test_min_distinct_agents_propagates(self):
         s = ti.normalize_setup(setup(min_distinct_agents=3))
@@ -91,6 +95,20 @@ class BuildTests(unittest.TestCase):
         self.assertNotIn("/abs/umc/**", pol["defaults"]["allow"])  # stale global boundary dropped
         self.assertEqual(sorted(pol["agents"]), ["a", "b"])  # agents map regenerated
 
+    def test_workspace_policy_read_blocks_orchestrator_mailbox_for_workers(self):
+        s = ti.normalize_setup(setup(
+            members=["data-lead", "data-engineer", "write-lead"],
+            authoring_owner="orchestrator",
+            subteams=[
+                {"name": "data", "members": ["data-lead", "data-engineer"], "orchestrator": "data-lead"},
+                {"name": "write", "members": ["write-lead"], "orchestrator": "write-lead"},
+            ],
+        ))
+        pol = ti.build_agent_workspace_policy(s)
+        for worker in ("data-lead", "data-engineer", "write-lead"):
+            self.assertIn("teams/.orchestrator/inbox/**", pol["agents"][worker]["deny_read"])
+        self.assertEqual(pol["agents"]["orchestrator"]["deny_read"], [])
+
 
 class InitTests(unittest.TestCase):
     def setUp(self):
@@ -107,7 +125,8 @@ class InitTests(unittest.TestCase):
         self.assertTrue((self.root / ".project/policies/team-promotion.json").exists())
         self.assertTrue((self.root / ".project/policies/team-derivation.json").exists())
         self.assertTrue((self.root / ".project/goals/.gitkeep").exists())
-        self.assertTrue((self.root / ".project/inbox/.gitkeep").exists())
+        self.assertTrue((self.root / ".project/inbox/.archive/.gitkeep").exists())
+        self.assertTrue((self.root / "teams/.orchestrator/inbox/.gitkeep").exists())
         # the guard's sibling-isolation policy is regenerated too (no manual drift)
         self.assertTrue((self.root / ".claude/policies/agent-workspace.json").exists())
         # written team.json is valid and bound
@@ -119,6 +138,11 @@ class InitTests(unittest.TestCase):
         # AND the old global boundary in defaults.allow is dropped — defaults.allow becomes the
         # team-agnostic BASELINE. (Real work boundaries now come from subteam allow_paths into
         # each worker's allow; this flat setup has none, so baseline only.)
+        # ORCH-SINGLE-SOURCE: when authoring_owner is the NON-member company total
+        # "orchestrator", its workspace entry is now ALWAYS regenerated (single source of
+        # truth in build_agent_workspace_policy), not hand-added — so the key is PRESERVED
+        # across regen, never wiped. deny = every worker folder, deny_read = [] (reads all
+        # team mailboxes), allow = BASELINE only (read-only coordinator, no external work).
         wp = self.root / ".claude/policies/agent-workspace.json"
         wp.parent.mkdir(parents=True, exist_ok=True)
         wp.write_text(json.dumps({
@@ -126,9 +150,15 @@ class InitTests(unittest.TestCase):
             "defaults": {"allow": [".", "/Users/x/project/umc/**"], "deny": [], "bash": {"allow": [], "deny": []}},
             "agents": {"orchestrator": {"deny": ["agents/worker-1/**"]}},  # stale names
         }), encoding="utf-8")
-        ti.init_team(self.root, ti.normalize_setup(setup(members=["data-curator", "paper-scout"])))
+        ti.init_team(self.root, ti.normalize_setup(
+            setup(members=["data-curator", "paper-scout"], authoring_owner="orchestrator")))
         pol = json.loads(wp.read_text(encoding="utf-8"))
-        self.assertEqual(sorted(pol["agents"]), ["data-curator", "paper-scout"])  # stale keys gone
+        # owner=orchestrator is a non-member: its key is regenerated alongside the workers
+        self.assertEqual(sorted(pol["agents"]), ["data-curator", "orchestrator", "paper-scout"])
+        orch = pol["agents"]["orchestrator"]
+        self.assertEqual(orch["deny"], ["agents/data-curator/**", "agents/paper-scout/**"])  # every worker folder
+        self.assertEqual(orch["deny_read"], [])  # reads all team mailboxes
+        self.assertEqual(orch["allow"], ti.BASELINE_ALLOW)  # read-only coordinator
         self.assertEqual(pol["defaults"]["allow"], ti.BASELINE_ALLOW)  # regenerated to baseline
         self.assertNotIn("/Users/x/project/umc/**", pol["defaults"]["allow"])  # stale global boundary dropped
 
