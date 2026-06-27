@@ -5,10 +5,10 @@
 
 진실원천은 .project/ store. 쓰기는 전부 검증된 CLI(adapters)·tmux(launcher) 위임.
 
-조작 키:
-  워커(사이드바 선택 후):  l 구동 · f 포커스 · m 메시지 · i 인터럽트
+조작 키 (전원 headless — tmux 별창 없음):
+  워커(사이드바 선택 후):  c 지시(headless) · x 세션리셋
   미리알림:  a 작업추가
-  inbox:     p 메시지 발행
+  inbox:     p 팀 메일박스 발행
   후보:      P 승격 · D 거절
   공통:      r 새로고침 · q 종료
 """
@@ -32,7 +32,7 @@ from session_pool import SessionPool
 from worker_session import WorkerEvent
 from widgets import (AgentGrid, BacklogBoard, InboxTimeline, CandidateQueue,
                      WorkerConsole, ResourceStrip)
-from widgets.modals import (SendMessageModal, PostInboxModal, AddTaskModal,
+from widgets.modals import (PostInboxModal, AddTaskModal,
                             ConfirmModal, InstructModal)
 
 # 빠른 갱신(파일 store + tmux)만 자동으로 3초마다 돈다. Apple Reminders 조회는
@@ -65,12 +65,8 @@ class Dashboard(App):
         Binding("q", "quit", "종료"),
         Binding("r", "refresh", "새로고침"),
         Binding("R", "pull_reminders", "미리알림당기기"),
-        Binding("c", "instruct", "지시(headless)"),
+        Binding("c", "instruct", "지시"),
         Binding("x", "reset_session", "세션리셋"),
-        Binding("l", "launch", "tmux구동"),
-        Binding("f", "focus_worker", "포커스"),
-        Binding("m", "message", "tmux메시지"),
-        Binding("i", "interrupt", "인터럽트"),
         Binding("a", "add_task", "작업추가"),
         Binding("p", "post_inbox", "발행"),
         Binding("P", "promote", "승격"),
@@ -217,49 +213,9 @@ class Dashboard(App):
         self.notify(msg, severity="information" if ok else "error",
                     timeout=4)
 
-    # ---------------- worker ops (stage 2: tmux) ----------------
-
-    def action_launch(self) -> None:
-        sel = self._selected_worker()
-        if not sel:
-            self._toast(False, "워커를 먼저 선택하세요(사이드바)")
-            return
-        worker, team = sel
-        r = self.launcher.launch(worker, team)
-        self._toast(r.ok, f"구동: {worker} → {r.window}" if r.ok else f"구동 실패: {r.error}")
-        self.refresh_data()
-
-    def action_focus_worker(self) -> None:
-        sel = self._selected_worker()
-        if not sel:
-            return
-        worker, _ = sel
-        r = self.launcher.focus(worker)
-        if not r.ok:
-            self._toast(False, f"포커스 실패: {r.error}")
-
-    def action_interrupt(self) -> None:
-        sel = self._selected_worker()
-        if not sel:
-            return
-        worker, _ = sel
-        r = self.launcher.interrupt(worker)
-        self._toast(r.ok, f"인터럽트: {worker}" if r.ok else f"실패: {r.error}")
-
-    def action_message(self) -> None:
-        sel = self._selected_worker()
-        if not sel:
-            self._toast(False, "워커를 먼저 선택하세요")
-            return
-        worker, _ = sel
-
-        def submit(payload: dict) -> None:
-            r = self.launcher.send_message(worker, payload["text"])
-            self._toast(r.ok, f"메시지 전송: {worker}" if r.ok else f"실패: {r.error}")
-
-        self.push_screen(SendMessageModal(worker, submit))
-
     # ---------------- headless 워커 지시 (subprocess: claude --print) ----------------
+    # (tmux 별창 구동 l/f/m/i는 2026-06-27 headless 통일로 제거 — 모든 워커는 대시보드
+    #  안에서 headless로 구동·응답 수신한다. TmuxLauncher 코드는 남겨 두되 UI 경로 없음.)
 
     def action_instruct(self) -> None:
         """선택 워커에게 headless 지시. tmux 없이 직접 구동·응답 수신."""

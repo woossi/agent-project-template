@@ -11,7 +11,7 @@
   "reply_to": "59561f1e",
   "ts_ns": 1782533303023499000,
   "to_team": "write",
-  "claimed_by": null,
+  "claimed_by": "write-lead",
   "sender_team": "scout",
   "quality_gate": null,
   "verdict": null,

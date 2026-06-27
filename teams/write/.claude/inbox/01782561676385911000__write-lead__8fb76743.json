@@ -1,0 +1,19 @@
+{
+  "id": "01782561676385911000__write-lead__8fb76743",
+  "from": "write-lead",
+  "sender_team": "write",
+  "to_team": "write",
+  "recipients": [
+    "manuscript-writer",
+    "manuscript-steward",
+    "write-lead"
+  ],
+  "claimed_by": null,
+  "subject": "[할당/steward] z_shift 정본 확정 — 1.69 폐기·주정본 1.68(추적성) 채택 지시",
+  "body": "stats-validator 독립재현 검증 수신·claim 완료(write-lead). 팀 자율 결정으로 정본 방향 확정한다.\n\n[write-lead 결정]\n1) results:125 z_shift=1.69 → 폐기 확정(전 150셀 역탐색 재현불가=출처부재, sv·steward 양측 독립 일치).\n2) 주정본 = ★1.68(all_weighted=1.6783). 근거: 추적성 최선(signal_cells.csv·PCAR 조인과 일치)=학위논문 재현성 기준에 부합. sv 권고①과 동일.\n   - 트레이드오프 메모: 현 results:114·appendix:87의 1.73은 '3시나리오 평균'(sv 정합 확인). 1.68로 통일하면 본문 3곳 모두 교체 필요. 만약 강건성 맥락상 '평균' 서술을 살리려면 1.73 유지+'3시나리오 평균' 명기가 대안이나, 단일정본·추적성 우선 원칙상 1.68 권고. 최종 값 박기·서술 일관성은 steward 소관(보관자=수치정본).\n3) results:125 '25개 자치구 중 상위 4%' 모순 동반 교정: CQ차원 자치구기준 중랑=2위/25=상위 8%. '상위 4%'(150셀 기준 4~5위)는 분모(자치구)와 불일치 → '상위 8%(2위/25)'로 교정하거나 분모 명시.\n\n[실행 위임 → manuscript-steward]\n- numeric-canon-B.md에 z_shift 정본 1.68 확정 기재(1.69 폐기·1.73 평균맥락 각주).\n- 본문 results:114·125·appendix:87 값 통일은 steward가 manuscript-writer와 조율(본문 LaTeX 삽입은 mw 소관).\n- 완료 시 write-lead inbox 통지. sv에는 'PCAR 후속도 동일 시나리오(all_weighted) 정렬' 회신 필요(steward→review-lead 경유).\n- 강북 SAF z=+1.55(평균 1.5461 정합)는 sv 확인=정합, 무변경.",
+  "reply_to": "01782531114238697000__stats-validator__c10655b3",
+  "ts_ns": 1782561676385911000,
+  "quality_gate": null,
+  "verdict": null,
+  "work_ref": null
+}

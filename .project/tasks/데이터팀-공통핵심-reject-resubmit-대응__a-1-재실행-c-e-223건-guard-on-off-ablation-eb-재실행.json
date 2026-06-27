@@ -1,0 +1,12 @@
+{
+  "id": "데이터팀-공통핵심-reject-resubmit-대응__a-1-재실행-c-e-223건-guard-on-off-ablation-eb-재실행",
+  "goal": "데이터팀-공통핵심-reject-resubmit-대응",
+  "title": "A-1 재실행: C-E 223건·guard on/off ablation·EB 재실행",
+  "criterion": "A-1: judgment-synthesizer C-E 223건 재실행 + guard on/off 비차단 ablation + EB 재실행 산출물이 registry에 등록됨",
+  "assignee": "inference-runner",
+  "status": "pending",
+  "created_by": "data-lead",
+  "updated_by": "data-lead",
+  "created_ts_ns": 1782561173708196000,
+  "updated_ts_ns": 1782561173708197000
+}

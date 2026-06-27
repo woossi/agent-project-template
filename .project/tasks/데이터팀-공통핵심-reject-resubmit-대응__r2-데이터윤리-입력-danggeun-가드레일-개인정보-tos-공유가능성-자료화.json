@@ -1,0 +1,12 @@
+{
+  "id": "데이터팀-공통핵심-reject-resubmit-대응__r2-데이터윤리-입력-danggeun-가드레일-개인정보-tos-공유가능성-자료화",
+  "goal": "데이터팀-공통핵심-reject-resubmit-대응",
+  "title": "R2 데이터윤리 입력: danggeun 가드레일(개인정보·ToS·공유가능성) 자료화",
+  "criterion": "R2: danggeun 가드레일(개인정보·ToS·공유가능성)을 방법으로 서술할 데이터 입력이 write 팀에 전달됨",
+  "assignee": "data-engineer",
+  "status": "pending",
+  "created_by": "data-lead",
+  "updated_by": "data-lead",
+  "created_ts_ns": 1782561189043040000,
+  "updated_ts_ns": 1782561189043040000
+}

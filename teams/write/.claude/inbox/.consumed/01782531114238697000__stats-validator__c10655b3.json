@@ -11,7 +11,7 @@
   "reply_to": "01782529588497276000__manuscript-steward__8fd44963",
   "ts_ns": 1782531114238697000,
   "to_team": "write",
-  "claimed_by": null,
+  "claimed_by": "write-lead",
   "sender_team": "review",
   "quality_gate": null,
   "verdict": null,

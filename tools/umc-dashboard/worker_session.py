@@ -8,8 +8,13 @@
 핵심:
 - 워커별 cwd = teams/<팀>/<워커>/, 정체성 = env CLAUDE_AGENT_NAME=<워커>.
 - 첫 턴은 session_id를 캡처하고, 이후 턴은 --resume <id>로 같은 대화를 잇는다.
-- 권한: 워크스페이스 가드 훅이 경계를 막으므로 그 안에서는 도구를 자동 승인
-  (--permission-mode acceptEdits). headless라 프롬프트가 뜰 수 없기 때문.
+- 권한: --permission-mode bypassPermissions. headless라 승인 프롬프트를 띄울 수
+  없으므로 claude 내장 권한(ask)을 끈다. 이래도 안전한 이유 — 진짜 방어선은
+  settings.json의 PreToolUse 가드 훅(guard_agent_workspace)이고, 이 훅은
+  permission-mode와 무관하게 항상 실행되어 워크스페이스 격리(타팀 폴더/메일박스
+  read 차단, deny_read 드롭오프 등)를 강제한다. (acceptEdits는 tasks.md 같은 일부
+  경로를 여전히 ask로 떨궈 headless 워커가 영구 대기하던 문제가 있었다 — bypass로
+  교정하고, 격리는 훅이 책임진다. ``--bare``만 훅을 끄므로 절대 쓰지 않는다.)
 - trust: cwd가 ~/.claude.json에서 trust되지 않으면 .claude/settings.json의
   permissions.allow가 무시된다. ensure_trusted()로 1회 보장한다.
 
@@ -113,7 +118,7 @@ class WorkerSession:
     """한 워커의 headless claude 세션. 턴마다 자식 프로세스를 띄우고 resume로 잇는다."""
 
     def __init__(self, worker: str, team: str, root: Path | None = None,
-                 *, claude_cmd: str = "claude", permission_mode: str = "acceptEdits"):
+                 *, claude_cmd: str = "claude", permission_mode: str = "bypassPermissions"):
         self.worker = worker
         self.team = team
         self.root = root or repo_root()

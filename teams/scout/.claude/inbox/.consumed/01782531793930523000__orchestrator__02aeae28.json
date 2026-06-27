@@ -10,7 +10,7 @@
   "reply_to": null,
   "ts_ns": 1782531793930523000,
   "to_team": "scout",
-  "claimed_by": null,
+  "claimed_by": "scout-lead",
   "sender_team": null,
   "quality_gate": null,
   "verdict": null,

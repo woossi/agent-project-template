@@ -1,0 +1,24 @@
+{
+  "id": "데이터팀-공통핵심-reject-resubmit-대응",
+  "title": "데이터팀 공통핵심 (Reject&Resubmit 대응)",
+  "objective": "2차 Reject&Resubmit의 공통핵심(A-1 멀티에이전트 검증·R1 재현성·R2 데이터윤리)을 어느 저널이든 필수인 데이터 산출물로 확보한다",
+  "scope": "데이터 팀(umc-data) 한정. 회사 목표 umc-논문화/umc-학위논문의 하위 실행 목표.",
+  "deliverable": "A-1 재실행 산출물(C-E 223건 재실행·guard on/off ablation·EB 재실행)+R1 재현성 명세(전 모델버전·시드·프롬프트 전문·코드·산출 안정성)+R2 데이터윤리 입력(danggeun 가드레일을 방법으로 서술할 자료)",
+  "success_criteria": [
+    "A-1: judgment-synthesizer C-E 223건 재실행 + guard on/off 비차단 ablation + EB 재실행 산출물이 registry에 등록됨",
+    "R1: 전 모델버전·시드·프롬프트 전문·코드가 명세되고 외부저장소 의존 없이 산출 안정성이 확인됨",
+    "R2: danggeun 가드레일(개인정보·ToS·공유가능성)을 방법으로 서술할 데이터 입력이 write 팀에 전달됨"
+  ],
+  "verification": [
+    "stats-validator의 독립 수치 대조·인간코딩 IRR 통과 + registry 등록 확인",
+    "원고만으로 재현 가능 기준(현재 원고만으로 심사) 충족 확인"
+  ],
+  "constraints": [
+    "근거 없이 만들지 않음. 검증 안 된 주장은 불확실 표시. 생산자≠조율자(팀장은 직접 생산 안 함)."
+  ],
+  "status": "active",
+  "created_by": "data-lead",
+  "updated_by": "data-lead",
+  "created_ts_ns": 1782561166553364000,
+  "updated_ts_ns": 1782561166553364000
+}

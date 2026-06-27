@@ -1,0 +1,12 @@
+{
+  "id": "데이터팀-공통핵심-reject-resubmit-대응__r1-보조-원천-데이터-압축-스키마-프롬프트-전문-추출",
+  "goal": "데이터팀-공통핵심-reject-resubmit-대응",
+  "title": "R1 보조: 원천 데이터 압축·스키마·프롬프트 전문 추출",
+  "criterion": "R1: 전 모델버전·시드·프롬프트 전문·코드가 명세되고 외부저장소 의존 없이 산출 안정성이 확인됨",
+  "assignee": "data-engineer",
+  "status": "pending",
+  "created_by": "data-lead",
+  "updated_by": "data-lead",
+  "created_ts_ns": 1782561186110086000,
+  "updated_ts_ns": 1782561186110086000
+}

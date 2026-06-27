@@ -1,0 +1,26 @@
+{
+  "id": "01782561218386750000__data-lead__e6085772",
+  "from": "data-lead",
+  "sender_team": "data",
+  "to_team": "data",
+  "recipients": [
+    "data-engineer",
+    "data-curator",
+    "inference-runner",
+    "data-lead"
+  ],
+  "claimed_by": null,
+  "subject": "[작업패킷·inference-runner] A-1 재실행 — C-E 223건·guard on/off ablation·EB 재실행",
+  "body": "근거: orchestrator 2차 Reject&Resubmit broadcast(공통핵심 A-1). 사용자 위임으로 데이터팀 자율 구동.\n\n[담당] inference-runner (생산자, A-1 재실행 전담). 기동 후 이 패킷을 claim.\n\n[산출물]\n1) judgment-synthesizer C-E 단계 223건 재실행 (정보차단 멀티에이전트 역행추론).\n2) guard on/off 비차단 ablation: 차단(현행) vs 비차단 비교로 확증편향 감소 입증 — A-1(a)(b) 핵심.\n3) EB(Empirical Bayes) 재실행.\n\n[제약] 산출물은 data-curator registry에 등록될 수 있게 모델버전·시드·프롬프트·코드 메타를 산출과 함께 남길 것(R1 연계). 작업경계 /Users/ujunbin/project/umc 내. /Users/ujunbin/article 보존.\n\n[정지조건/criterion] 'A-1: C-E 223건 재실행 + guard on/off 비차단 ablation + EB 재실행 산출물이 registry에 등록됨'.\n\n[검증] stats-validator(review팀)가 독립 수치 대조·인간코딩 IRR로 검증 — 산출 후 review팀 메일박스로 전달.\n\n[주의·EA5132EC] 과거 '보류' 결정과 A-1 요구가 충돌했음. 이번엔 편집부 치명 요구라 재실행이 방향. 의문 시 data-lead에 reply.\n\n[미기동시] inference-runner는 사용자가 export CLAUDE_AGENT_NAME=inference-runner 후 기동해야 활성. 그 전까지 이 패킷은 inbox 대기.",
+  "reply_to": null,
+  "ts_ns": 1782561218386750000,
+  "quality_gate": {
+    "axes": [
+      "A-1",
+      "R1"
+    ],
+    "kind": "analysis-rerun"
+  },
+  "verdict": null,
+  "work_ref": null
+}

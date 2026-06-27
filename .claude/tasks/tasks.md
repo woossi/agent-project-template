@@ -7,6 +7,15 @@ team-umc 팀의 현재 작업 패킷입니다. 가장 작은 작업 단위이며
 
 상태: 진행 중 (orchestrator — 학위논문(B판) 전환 추적)
 
+★★ 워커 구동 headless 통일 + 승인 멈춤 해소 (2026-06-27)
+- ★사용자 증상: 대시보드에서 "패널과 별개로 각각 tmux 화면에서 구동해야 하는 게 이상" + "워커가 기동 안 함". 진단 결과 (1)두 구동모델 공존(tmux 별창 l/f/m/i vs 대시보드 내 headless c) (2)headless 워커가 tasks.md Write에서 "민감파일 승인대기"로 영구 멈춤(acceptEdits가 일부 경로를 ask로 떨굼, headless는 프롬프트 못 띄움).
+- ★사용자 결정: headless로 통일 + 지금 뜬 tmux 워커도 정리.
+- ★승인 멈춤 해소: worker_session permission_mode acceptEdits→bypassPermissions. 안전근거 — 진짜 방어선은 settings.json PreToolUse 가드훅(guard_agent_workspace)이고 permission-mode와 독립 실행(실증: bypass여도 타팀 메일박스 Read 차단·Write 통과·자기팀 Read 통과). claude 내장 ask만 끄고 격리는 훅이 유지. --bare만 훅을 끄므로 절대 미사용. 실측: data-lead가 .context/ping.txt Write 즉시 통과(ok, 승인대기 없음).
+- ★headless 통일: app.py에서 tmux 키바인딩(l 구동·f 포커스·m 메시지·i 인터럽트)+4 액션 제거, SendMessageModal import 제거, docstring·footer 갱신. TmuxLauncher 코드는 보존(UI 경로만 제거, 되돌리기 쉽게). 남은 워커키 = c 지시(headless)·x 세션리셋.
+- ★기존 tmux 워커 정리: 윈도우 3(write-lead idle)·4(scout-lead 작업중, 사용자 손실 인지 후 결정) 종료. 윈도우 1(총괄)·2(대시보드)만 유지. 전원 headless 일원화.
+- ★검증: 대시보드 34 + 백엔드(team-inbox·guard) 38 통과·R2 PASS·app import OK. bypassPermissions+guard 독립성 실증.
+- 남은(범위밖): trust 누락 워커(write-lead 등)는 send() 첫 호출 시 ensure_trusted로 자동 보장. 대시보드 TUI 실클릭은 사용자 확인 권장.
+
 ★★ 팀 전용 메일박스 재설계 — 개인 inbox 폐지 (2026-06-27)
 - ★사용자 요청: "개인 인박스를 팀 수준으로 재분리하고, 개인→개인 직할 메시지 자체를 없애라." 발단: 대시보드에서 "워커가 기동 안 함" 증상 진단 → 근본원인 2개(store 기본값 .team 잔재로 빈 store 조회 / preset이 팀 메일박스만 보는데 메일박스 빈 상태) + 설계 결함(inbox만 중앙집중, 메모리·스킬·tasks는 계층적).
 - ★사용자 결정: (1)팀 전용 단일 채널(post --to-team만, 개인주소·broadcast·read --as 폐지) (2)팀 메일박스를 teams/<팀>/.claude/inbox/로 계층화 (3)guard에 read/write 구분 추가→타팀 메일박스 write-OK/read-차단(deny_read) (4)마이그레이션=소비 아카이브+미claim 팀 이전 (5)회사 owner data-lead→orchestrator.

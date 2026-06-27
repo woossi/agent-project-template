@@ -10,7 +10,7 @@
   "reply_to": "01782530954803870000__paper-scout__a461b339",
   "ts_ns": 1782531817103456000,
   "to_team": "scout",
-  "claimed_by": null,
+  "claimed_by": "scout-lead",
   "sender_team": "write",
   "quality_gate": null,
   "verdict": null,

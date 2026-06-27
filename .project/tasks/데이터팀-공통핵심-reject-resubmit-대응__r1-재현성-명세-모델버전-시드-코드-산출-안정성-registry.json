@@ -1,0 +1,12 @@
+{
+  "id": "데이터팀-공통핵심-reject-resubmit-대응__r1-재현성-명세-모델버전-시드-코드-산출-안정성-registry",
+  "goal": "데이터팀-공통핵심-reject-resubmit-대응",
+  "title": "R1 재현성 명세: 모델버전·시드·코드·산출 안정성 (registry)",
+  "criterion": "R1: 전 모델버전·시드·프롬프트 전문·코드가 명세되고 외부저장소 의존 없이 산출 안정성이 확인됨",
+  "assignee": "data-curator",
+  "status": "pending",
+  "created_by": "data-lead",
+  "updated_by": "data-lead",
+  "created_ts_ns": 1782561183800233000,
+  "updated_ts_ns": 1782561183800234000
+}

@@ -1,0 +1,25 @@
+{
+  "id": "01782561232931072000__data-lead__f659caab",
+  "from": "data-lead",
+  "sender_team": "data",
+  "to_team": "data",
+  "recipients": [
+    "data-engineer",
+    "data-curator",
+    "inference-runner",
+    "data-lead"
+  ],
+  "claimed_by": null,
+  "subject": "[작업패킷·data-curator] R1 재현성 명세 + registry 등록 + 산출물 큐레이션",
+  "body": "근거: orchestrator 2차 Reject&Resubmit broadcast(공통핵심 R1·치명·재현성). 사용자 위임 자율 구동.\n\n[담당] data-curator (산출물 큐레이션·registry·그림. A-1 재실행 부담은 inference-runner로 이관됨).\n\n[산출물]\n1) R1 재현성 명세: 전 모델버전 확정(§3.2.4의 '불확실' 해소)·시드·산출 안정성 표를 registry에 등록.\n2) inference-runner의 A-1 재실행 산출물을 registry에 등록·버전관리.\n3) 외부저장소 의존 제거 — '현재 원고만으로 심사' 기준 충족하도록 산출물을 원고 내재화 가능 형태로 큐레이션.\n4) 필요한 표/그림 갱신(ICC·z_shift·ablation 결과).\n\n[정지조건/criterion] 'R1: 전 모델버전·시드·프롬프트 전문·코드가 명세되고 외부저장소 의존 없이 산출 안정성이 확인됨'.\n\n[의존] inference-runner A-1 산출 + data-engineer 프롬프트 전문 추출이 입력. 선행분 없이 할 수 있는 모델버전 확정·registry 스키마 정비부터 착수.\n\n[검증] stats-validator 독립 대조. 완료분은 write팀(원고 내재화)·review팀(검증)으로 전달.\n\n작업경계 /Users/ujunbin/project/umc + iCloud umc-compressed-db 내.",
+  "reply_to": null,
+  "ts_ns": 1782561232931072000,
+  "quality_gate": {
+    "axes": [
+      "R1"
+    ],
+    "kind": "reproducibility-registry"
+  },
+  "verdict": null,
+  "work_ref": null
+}
