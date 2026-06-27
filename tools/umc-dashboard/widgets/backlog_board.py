@@ -36,6 +36,9 @@ class BacklogBoard(VerticalScroll):
         lines.append(f"[b]미리알림 백로그[/b] [dim]({list_name})[/dim]")
         if not ok:
             lines.append(f"  [red]미리알림 읽기 실패: {error or '권한(TCC) 확인'}[/red]")
+        elif not tasks and error:
+            # 미조회/당기는 중 등 ok이지만 보여줄 작업이 없는 안내 상태.
+            lines.append(f"  [dim]{error}[/dim]")
         elif not tasks:
             lines.append("  [dim]열린 작업 없음[/dim]")
         else:

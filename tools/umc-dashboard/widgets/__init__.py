@@ -3,5 +3,6 @@ from .agent_grid import AgentGrid
 from .backlog_board import BacklogBoard
 from .inbox_timeline import InboxTimeline
 from .candidate_queue import CandidateQueue
+from .worker_console import WorkerConsole
 
-__all__ = ["AgentGrid", "BacklogBoard", "InboxTimeline", "CandidateQueue"]
+__all__ = ["AgentGrid", "BacklogBoard", "InboxTimeline", "CandidateQueue", "WorkerConsole"]

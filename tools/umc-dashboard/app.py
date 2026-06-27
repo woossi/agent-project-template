@@ -19,6 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from textual import work
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
@@ -27,9 +28,15 @@ from textual.widgets import Footer, Header
 import store
 from adapters import TeamCli
 from launcher import TmuxLauncher
-from widgets import AgentGrid, BacklogBoard, InboxTimeline, CandidateQueue
-from widgets.modals import SendMessageModal, PostInboxModal, AddTaskModal, ConfirmModal
+from session_pool import SessionPool
+from worker_session import WorkerEvent
+from widgets import AgentGrid, BacklogBoard, InboxTimeline, CandidateQueue, WorkerConsole
+from widgets.modals import (SendMessageModal, PostInboxModal, AddTaskModal,
+                            ConfirmModal, InstructModal)
 
+# 빠른 갱신(파일 store + tmux)만 자동으로 3초마다 돈다. Apple Reminders 조회는
+# osascript로 수십 초까지 걸려 UI를 얼리므로 자동 폴링에서 제외하고, 'R' 키로
+# 명시 요청할 때만 백그라운드 스레드에서 당겨온다(낙관적 추가는 그 사이 즉시 반영).
 REFRESH_SECONDS = 3.0
 
 
@@ -38,10 +45,12 @@ class Dashboard(App):
     Screen { layout: horizontal; }
     #sidebar { width: 36; border-right: solid $accent; }
     #main { width: 1fr; }
-    #top { height: 1fr; }
-    #bottom { height: 1fr; border-top: solid $accent; }
+    #top { height: 30%; }
+    #mid { height: 40%; border-top: solid $accent; }
+    #bottom { height: 30%; border-top: solid $accent; }
     .panel-title { background: $boost; color: $text; text-style: bold; padding: 0 1; }
     AgentGrid { height: 1fr; border: none; }
+    WorkerConsole { width: 1fr; }
     InboxTimeline { width: 1fr; }
     CandidateQueue { width: 1fr; }
     """
@@ -49,9 +58,12 @@ class Dashboard(App):
     BINDINGS = [
         Binding("q", "quit", "종료"),
         Binding("r", "refresh", "새로고침"),
-        Binding("l", "launch", "구동"),
+        Binding("R", "pull_reminders", "미리알림당기기"),
+        Binding("c", "instruct", "지시(headless)"),
+        Binding("x", "reset_session", "세션리셋"),
+        Binding("l", "launch", "tmux구동"),
         Binding("f", "focus_worker", "포커스"),
-        Binding("m", "message", "메시지"),
+        Binding("m", "message", "tmux메시지"),
         Binding("i", "interrupt", "인터럽트"),
         Binding("a", "add_task", "작업추가"),
         Binding("p", "post_inbox", "발행"),
@@ -64,8 +76,17 @@ class Dashboard(App):
         self.root = store.repo_root()
         self.cli = TeamCli(self.root)
         self.launcher = TmuxLauncher(self.root)
+        self.pool = SessionPool(self.root)  # headless 워커 세션(멀티턴)
         self.reminders_list = self._reminders_list_name()
         self._snap: store.Snapshot | None = None
+        # Reminders 조회는 비싸므로(osascript 수십 초) 마지막 결과를 캐시한다.
+        # 자동 갱신(refresh_data)은 이 캐시만 그리고, 'R' 키로만 실제로 다시 당긴다.
+        self._tasks: list[dict] = []
+        self._tasks_ok: bool = True
+        self._tasks_error: str = ""
+        self._tasks_pulled: bool = False  # 아직 한 번도 안 당김
+        self._pulling: bool = False       # 백그라운드 당기기 진행 중(중복 방지)
+        self._instructing: str = ""       # headless 지시 처리 중인 워커(중복 방지)
 
     def _reminders_list_name(self) -> str:
         data = store._load_json(self.root / ".team" / "team.json") or {}
@@ -79,6 +100,8 @@ class Dashboard(App):
             with Vertical(id="main"):
                 with Vertical(id="top"):
                     yield BacklogBoard(id="backlog")
+                with Vertical(id="mid"):
+                    yield WorkerConsole(id="console")
                 with Vertical(id="bottom"):
                     with Horizontal():
                         yield InboxTimeline(id="inbox")
@@ -93,22 +116,68 @@ class Dashboard(App):
     # ---------------- refresh ----------------
 
     def refresh_data(self) -> None:
+        """빠른 갱신만: 파일 store + tmux. Reminders는 건드리지 않고 캐시만 그린다."""
         snap = store.read_snapshot(self.root)
         self._snap = snap
-        running = self.launcher.running_workers()
+        # ● 배지 = tmux 창이 떠 있거나(대화형) headless 세션이 살아있는(멀티턴) 워커.
+        running = self.launcher.running_workers() | self.pool.active_workers()
         self.query_one(AgentGrid).update_snapshot(snap, running=running)
         self.query_one(InboxTimeline).update_snapshot(snap)
         self.query_one(CandidateQueue).update_snapshot(snap)
-        res = self.cli.reminders_pull(self.reminders_list)
-        tasks = res.data if res.ok and isinstance(res.data, list) else []
-        self.query_one(BacklogBoard).update_data(
-            self.reminders_list, tasks, snap.goals, ok=res.ok, error=res.error)
+        self._render_backlog()
         tmux_ok, tmux_why = self.launcher.available()
         tmux_s = f"tmux {len(running)}개 실행" if tmux_ok else f"tmux:{tmux_why}"
-        self.sub_title = f"{self.root.name} · 미리알림:{self.reminders_list} · inbox {len(snap.inbox)} · {tmux_s}"
+        self.sub_title = (f"{self.root.name} · 미리알림:{self.reminders_list} · "
+                          f"inbox {len(snap.inbox)} · {tmux_s}")
+
+    def _render_backlog(self) -> None:
+        """캐시된 Reminders 작업으로 백로그를 그린다(네트워크/osascript 호출 없음)."""
+        goals = self._snap.goals if self._snap else []
+        if self._pulling:
+            board_error = "미리알림 당기는 중…"
+        elif not self._tasks_pulled:
+            board_error = "R 키로 미리알림을 당기세요(아직 미조회)"
+        else:
+            board_error = self._tasks_error
+        self.query_one(BacklogBoard).update_data(
+            self.reminders_list, self._tasks, goals,
+            ok=self._tasks_ok, error=board_error)
 
     def action_refresh(self) -> None:
         self.refresh_data()
+
+    def on_agent_grid_worker_selected(self, ev: "AgentGrid.WorkerSelected") -> None:
+        """사이드바에서 워커를 고르면 콘솔 표시 대상을 그 워커로."""
+        self.query_one(WorkerConsole).focus_worker(ev.worker)
+
+    # ---------------- reminders pull (느림 — 명시 요청 시에만, 백그라운드) ----------------
+
+    def action_pull_reminders(self) -> None:
+        if self._pulling:
+            self._toast(False, "이미 미리알림을 당기는 중입니다")
+            return
+        self._pulling = True
+        self._render_backlog()  # "당기는 중…" 표시
+        self._toast(True, "미리알림 당기는 중… (수십 초 걸릴 수 있음)")
+        self._pull_reminders_worker()
+
+    def _apply_pull(self, ok: bool, tasks: list, error: str) -> None:
+        """워커 스레드 결과를 메인 스레드에서 반영."""
+        self._pulling = False
+        self._tasks_pulled = True
+        self._tasks_ok = ok
+        self._tasks_error = error
+        if ok:
+            self._tasks = tasks
+        self._render_backlog()
+        self._toast(ok, f"미리알림 {len(tasks)}건 반영" if ok else f"당기기 실패: {error}")
+
+    @work(thread=True, exclusive=True, group="reminders")
+    def _pull_reminders_worker(self) -> None:
+        """별도 스레드에서 osascript 호출(수십 초). UI 이벤트 루프는 안 막힌다."""
+        res = self.cli.reminders_pull(self.reminders_list)
+        tasks = res.data if res.ok and isinstance(res.data, list) else []
+        self.call_from_thread(self._apply_pull, res.ok, tasks, res.error)
 
     # ---------------- helpers ----------------
 
@@ -164,6 +233,62 @@ class Dashboard(App):
 
         self.push_screen(SendMessageModal(worker, submit))
 
+    # ---------------- headless 워커 지시 (subprocess: claude --print) ----------------
+
+    def action_instruct(self) -> None:
+        """선택 워커에게 headless 지시. tmux 없이 직접 구동·응답 수신."""
+        sel = self._selected_worker()
+        if not sel:
+            self._toast(False, "워커를 먼저 선택하세요(사이드바)")
+            return
+        worker, team = sel
+        if self._instructing:
+            self._toast(False, f"{self._instructing} 지시 처리 중 — 끝나면 다시")
+            return
+        resuming = self.pool.has_session(worker)
+        console = self.query_one(WorkerConsole)
+        console.focus_worker(worker)
+
+        def submit(payload: dict) -> None:
+            prompt = payload["prompt"]
+            console.add_prompt(worker, prompt)
+            self._instructing = worker
+            self._instruct_worker(worker, team, prompt)
+
+        self.push_screen(InstructModal(worker, submit, resuming=resuming))
+
+    def action_reset_session(self) -> None:
+        """선택 워커의 headless 대화를 새로 시작(다음 지시는 새 세션)."""
+        sel = self._selected_worker()
+        if not sel:
+            return
+        worker, _ = sel
+        self.pool.reset(worker)
+        self.query_one(WorkerConsole).add_status(f"{worker} 세션 리셋 — 다음 지시는 새 대화")
+        self._toast(True, f"{worker} 세션 리셋")
+
+    def _on_worker_event(self, ev: WorkerEvent) -> None:
+        """워커 스레드에서 도착한 이벤트를 콘솔에 그린다(메인 스레드)."""
+        self.query_one(WorkerConsole).append_event(ev)
+
+    def _on_turn_done(self, worker: str, ok: bool, error: str) -> None:
+        self._instructing = ""
+        console = self.query_one(WorkerConsole)
+        if ok:
+            console.add_status(f"{worker} 턴 완료")
+        else:
+            console.add_status(f"{worker} 실패: {error}", ok=False)
+        self._toast(ok, f"{worker} 응답 완료" if ok else f"{worker} 실패: {error}")
+        self.refresh_data()  # active 세션 배지 갱신
+
+    @work(thread=True, group="instruct")
+    def _instruct_worker(self, worker: str, team: str, prompt: str) -> None:
+        """별도 스레드에서 headless claude를 구동(블로킹). UI는 안 막힌다."""
+        def emit(ev: WorkerEvent) -> None:
+            self.call_from_thread(self._on_worker_event, ev)
+        r = self.pool.send(worker, team, prompt, on_event=emit)
+        self.call_from_thread(self._on_turn_done, worker, r.ok, r.error)
+
     # ---------------- inbox (stage 1: CLI) ----------------
 
     def action_post_inbox(self) -> None:
@@ -189,6 +314,11 @@ class Dashboard(App):
         def submit(payload: dict) -> None:
             r = self.cli.reminders_add(self.reminders_list, payload["title"],
                                        priority=payload.get("priority"))
+            if r.ok and self._tasks_pulled:
+                # 낙관적 반영: R로 다시 당기기 전까지 새 작업을 캐시에 끼워 넣어 즉시 보이게.
+                self._tasks.append({"name": payload["title"],
+                                    "priority": payload.get("priority") or 0,
+                                    "completed": False})
             self._toast(r.ok, f"작업 추가: {payload['title'][:30]}" if r.ok else f"실패: {r.error}")
             self.refresh_data()
 

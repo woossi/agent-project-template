@@ -81,6 +81,28 @@ class SendMessageModal(_BaseModal):
         return {"text": text} if text else None
 
 
+class InstructModal(_BaseModal):
+    """headless 워커에게 보낼 작업 지시 입력 (새 대화 or resume)."""
+
+    def __init__(self, worker: str, on_submit, *, resuming: bool = False):
+        super().__init__(on_submit)
+        self.worker = worker
+        self.resuming = resuming
+
+    def compose(self) -> ComposeResult:
+        with Vertical(id="box"):
+            mode = "이어서 지시(resume)" if self.resuming else "새 대화로 지시"
+            yield Label(f"[b]{self.worker}[/b] — {mode}")
+            yield TextArea(id="prompt")
+            with Horizontal(id="buttons"):
+                yield Button("취소", id="cancel")
+                yield Button("지시", id="ok", variant="primary")
+
+    def _collect(self) -> dict | None:
+        text = self.query_one("#prompt", TextArea).text.strip()
+        return {"prompt": text} if text else None
+
+
 class PostInboxModal(_BaseModal):
     """inbox 메시지 발행 — 수신자·제목·본문."""
 
