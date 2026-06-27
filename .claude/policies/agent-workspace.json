@@ -2,90 +2,90 @@
   "agents": {
     "data-curator": {
       "deny": [
-        "agents/paper-scout/**",
-        "agents/manuscript-writer/**",
-        "agents/manuscript-steward/**",
-        "agents/stats-validator/**",
-        "agents/quality-reviewer/**",
-        "agents/data-engineer/**",
-        "agents/inference-runner/**"
+        "teams/scout/paper-scout/**",
+        "teams/write/manuscript-writer/**",
+        "teams/write/manuscript-steward/**",
+        "teams/review/stats-validator/**",
+        "teams/review/quality-reviewer/**",
+        "teams/data/data-engineer/**",
+        "teams/data/inference-runner/**"
       ]
     },
     "paper-scout": {
       "deny": [
-        "agents/data-curator/**",
-        "agents/manuscript-writer/**",
-        "agents/manuscript-steward/**",
-        "agents/stats-validator/**",
-        "agents/quality-reviewer/**",
-        "agents/data-engineer/**",
-        "agents/inference-runner/**"
+        "teams/data/data-curator/**",
+        "teams/write/manuscript-writer/**",
+        "teams/write/manuscript-steward/**",
+        "teams/review/stats-validator/**",
+        "teams/review/quality-reviewer/**",
+        "teams/data/data-engineer/**",
+        "teams/data/inference-runner/**"
       ]
     },
     "manuscript-writer": {
       "deny": [
-        "agents/data-curator/**",
-        "agents/paper-scout/**",
-        "agents/manuscript-steward/**",
-        "agents/stats-validator/**",
-        "agents/quality-reviewer/**",
-        "agents/data-engineer/**",
-        "agents/inference-runner/**"
+        "teams/data/data-curator/**",
+        "teams/scout/paper-scout/**",
+        "teams/write/manuscript-steward/**",
+        "teams/review/stats-validator/**",
+        "teams/review/quality-reviewer/**",
+        "teams/data/data-engineer/**",
+        "teams/data/inference-runner/**"
       ]
     },
     "manuscript-steward": {
       "deny": [
-        "agents/data-curator/**",
-        "agents/paper-scout/**",
-        "agents/manuscript-writer/**",
-        "agents/stats-validator/**",
-        "agents/quality-reviewer/**",
-        "agents/data-engineer/**",
-        "agents/inference-runner/**"
+        "teams/data/data-curator/**",
+        "teams/scout/paper-scout/**",
+        "teams/write/manuscript-writer/**",
+        "teams/review/stats-validator/**",
+        "teams/review/quality-reviewer/**",
+        "teams/data/data-engineer/**",
+        "teams/data/inference-runner/**"
       ]
     },
     "stats-validator": {
       "deny": [
-        "agents/data-curator/**",
-        "agents/paper-scout/**",
-        "agents/manuscript-writer/**",
-        "agents/manuscript-steward/**",
-        "agents/quality-reviewer/**",
-        "agents/data-engineer/**",
-        "agents/inference-runner/**"
+        "teams/data/data-curator/**",
+        "teams/scout/paper-scout/**",
+        "teams/write/manuscript-writer/**",
+        "teams/write/manuscript-steward/**",
+        "teams/review/quality-reviewer/**",
+        "teams/data/data-engineer/**",
+        "teams/data/inference-runner/**"
       ]
     },
     "quality-reviewer": {
       "deny": [
-        "agents/data-curator/**",
-        "agents/paper-scout/**",
-        "agents/manuscript-writer/**",
-        "agents/manuscript-steward/**",
-        "agents/stats-validator/**",
-        "agents/data-engineer/**",
-        "agents/inference-runner/**"
+        "teams/data/data-curator/**",
+        "teams/scout/paper-scout/**",
+        "teams/write/manuscript-writer/**",
+        "teams/write/manuscript-steward/**",
+        "teams/review/stats-validator/**",
+        "teams/data/data-engineer/**",
+        "teams/data/inference-runner/**"
       ]
     },
     "data-engineer": {
       "deny": [
-        "agents/data-curator/**",
-        "agents/paper-scout/**",
-        "agents/manuscript-writer/**",
-        "agents/manuscript-steward/**",
-        "agents/stats-validator/**",
-        "agents/quality-reviewer/**",
-        "agents/inference-runner/**"
+        "teams/data/data-curator/**",
+        "teams/scout/paper-scout/**",
+        "teams/write/manuscript-writer/**",
+        "teams/write/manuscript-steward/**",
+        "teams/review/stats-validator/**",
+        "teams/review/quality-reviewer/**",
+        "teams/data/inference-runner/**"
       ]
     },
     "inference-runner": {
       "deny": [
-        "agents/data-curator/**",
-        "agents/paper-scout/**",
-        "agents/manuscript-writer/**",
-        "agents/manuscript-steward/**",
-        "agents/stats-validator/**",
-        "agents/quality-reviewer/**",
-        "agents/data-engineer/**"
+        "teams/data/data-curator/**",
+        "teams/scout/paper-scout/**",
+        "teams/write/manuscript-writer/**",
+        "teams/write/manuscript-steward/**",
+        "teams/review/stats-validator/**",
+        "teams/review/quality-reviewer/**",
+        "teams/data/data-engineer/**"
       ]
     }
   },
