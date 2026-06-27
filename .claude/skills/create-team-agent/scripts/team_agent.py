@@ -423,13 +423,15 @@ def _prune_stale_skill_symlinks(team_root: Path, agent_claude: Path, *, allowed:
     for child in sorted(agent_skills.iterdir(), key=lambda p: p.name):
         if not child.is_symlink():
             continue  # private real dirs are never pruned
-        # Resolve the link's directory (not the link itself — its target may be dangling)
-        # to the same canonical base as root_skills, so /var vs /private/var (macOS) match.
-        resolved = Path(os.path.normpath(child.parent.resolve() / os.readlink(child)))
-        try:
-            shared_name = resolved.relative_to(root_skills).parts[0]
-        except (ValueError, IndexError):
-            continue  # points somewhere other than root skills; leave it
+        target = os.readlink(child)
+        # A shared per-skill link always points at ``.../.claude/skills/<child.name>``. We
+        # match on the TARGET STRING (not a resolve) so a link broken by a folder move —
+        # whose ``../`` count is now wrong and won't resolve — is still recognized and can
+        # be reclaimed. Links pointing elsewhere (user-made) don't match and are left alone.
+        posix = PurePosixPath(target.replace(os.sep, "/"))
+        if posix.name != child.name or ".claude/skills/" not in target.replace(os.sep, "/"):
+            continue  # not a managed shared-skill link
+        shared_name = child.name
         disallowed = allowed is not None and shared_name not in allowed
         missing = not (root_skills / shared_name).is_dir()
         if disallowed or missing:
