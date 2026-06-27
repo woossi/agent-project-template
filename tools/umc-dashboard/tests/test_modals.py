@@ -82,3 +82,24 @@ def test_base_button_pressed_stops_event():
     _BaseModal.on_button_pressed(p, e)
     assert e.stopped == 1  # 이벤트 전파 차단
     assert submitted == [True]  # ok → submit
+
+
+def test_preset_prompt_inbox_is_team_scoped():
+    # 팀 일괄 구동과 InstructModal 버튼이 공유하는 단일출처 preset.
+    from widgets.modals import preset_prompt
+    p = preset_prompt("inbox", worker="data-engineer", team="data")
+    assert "read --team data" in p
+    assert "claim --team data --as data-engineer" in p
+    assert "ack --team data" in p
+    assert "개인 inbox는 폐지" in p  # 팀 전용 모델 명시
+
+
+def test_preset_prompt_reminders():
+    from widgets.modals import preset_prompt
+    p = preset_prompt("reminders", worker="x", team="scout")
+    assert "umc-scout" in p and "pull" in p
+
+
+def test_preset_prompt_unknown_key_empty():
+    from widgets.modals import preset_prompt
+    assert preset_prompt("nope", worker="x", team="data") == ""

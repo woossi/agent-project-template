@@ -6,7 +6,7 @@
 진실원천은 .project/ store. 쓰기는 전부 검증된 CLI(adapters)·tmux(launcher) 위임.
 
 조작 키 (전원 headless — tmux 별창 없음):
-  워커(사이드바 선택 후):  c 지시(headless) · x 세션리셋
+  워커(사이드바 선택 후):  c 지시 · g 팀일괄구동(팀 전원 깨워 메일박스 claim) · x 세션리셋
   미리알림:  a 작업추가
   inbox:     p 팀 메일박스 발행
   후보:      P 승격 · D 거절
@@ -33,7 +33,7 @@ from worker_session import WorkerEvent
 from widgets import (AgentGrid, BacklogBoard, InboxTimeline, CandidateQueue,
                      WorkerConsole, ResourceStrip)
 from widgets.modals import (PostInboxModal, AddTaskModal,
-                            ConfirmModal, InstructModal)
+                            ConfirmModal, InstructModal, preset_prompt)
 
 # 빠른 갱신(파일 store + tmux)만 자동으로 3초마다 돈다. Apple Reminders 조회는
 # osascript로 수십 초까지 걸려 UI를 얼리므로 자동 폴링에서 제외하고, 'R' 키로
@@ -66,6 +66,7 @@ class Dashboard(App):
         Binding("r", "refresh", "새로고침"),
         Binding("R", "pull_reminders", "미리알림당기기"),
         Binding("c", "instruct", "지시"),
+        Binding("g", "instruct_team", "팀일괄구동"),
         Binding("x", "reset_session", "세션리셋"),
         Binding("a", "add_task", "작업추가"),
         Binding("p", "post_inbox", "발행"),
@@ -240,6 +241,40 @@ class Dashboard(App):
             self._instruct_worker(worker, team, prompt)
 
         self.push_screen(InstructModal(worker, submit, resuming=resuming, team=team))
+
+    def action_instruct_team(self) -> None:
+        """선택 워커가 속한 팀의 모든 워커를 동시에 headless로 깨워, 각자 '팀 메일박스
+        확인·claim·처리' inbox preset을 일괄 지시한다. 리더가 발행한 작업이 메일박스에
+        쌓여만 있고 아무도 안 가져가던 문제(active 0)를 푼다 — 워커들이 자기 담당을 claim."""
+        sel = self._selected_worker()
+        if not sel:
+            self._toast(False, "워커를 먼저 선택하세요(그 워커의 팀 전체를 구동)")
+            return
+        _, team = sel
+        members = self._team_members(team)
+        if not members:
+            self._toast(False, f"팀 '{team}' 멤버를 찾을 수 없음")
+            return
+        console = self.query_one(WorkerConsole)
+        launched, skipped = [], []
+        for w in members:
+            if w in self._instructing:
+                skipped.append(w)
+                continue
+            prompt = preset_prompt("inbox", worker=w, team=team)
+            console.add_prompt(w, prompt)
+            self._instructing.add(w)
+            console.set_active(w, True)
+            self._instruct_worker(w, team, prompt)
+            launched.append(w)
+        msg = f"팀 {team} 일괄구동: {len(launched)}명" + (f" (가동중 {len(skipped)} 건너뜀)" if skipped else "")
+        self._toast(bool(launched), msg)
+
+    def _team_members(self, team: str) -> list[str]:
+        for st in (self._snap.subteams if self._snap else []):
+            if st.name == team:
+                return list(st.members)
+        return []
 
     def action_reset_session(self) -> None:
         """선택 워커의 headless 대화를 새로 시작(다음 지시는 새 세션)."""

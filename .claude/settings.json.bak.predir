@@ -3,8 +3,7 @@
   "autoMemoryEnabled": false,
   "language": "korean",
   "env": {
-    "CLAUDE_AGENT_WORKSPACE_POLICY": ".claude/policies/agent-workspace.json",
-    "CLAUDE_PROJECT_DIR": "/Users/ujunbin/team-umc"
+    "CLAUDE_AGENT_WORKSPACE_POLICY": ".claude/policies/agent-workspace.json"
   },
   "enableAllProjectMcpServers": false,
   "enabledMcpjsonServers": [

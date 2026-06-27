@@ -117,6 +117,33 @@ class SendMessageModal(_BaseModal):
         return {"text": text} if text else None
 
 
+def preset_prompt(key: str, *, worker: str, team: str) -> str:
+    """정형 액션 프롬프트(단일출처). InstructModal 버튼과 app의 팀 일괄 구동이 공유한다.
+    팀 전용 메일박스(claim 모델) + 미리알림 두 채널."""
+    team = team or "?"
+    rlist = f"umc-{team}"
+    if key == "inbox":
+        return (
+            f"팀 받은편지함을 확인할 차례다. `team-inbox` 스킬의 team_inbox.py로 "
+            f"네 팀('{team}') 메일박스의 미claim 메시지를 `read --team {team}` 한다. "
+            f"제목·본문을 보고 네 담당이면 `claim --team {team} --as {worker} --id <msgid>`로 "
+            f"원자적으로 가져온 뒤(경합 시 1명만 성공) 처리하고, 끝나면 "
+            f"`ack --team {team} --id <msgid>` 한다. 네 담당이 아니거나 이미 claim된 건 손대지 마라. "
+            f"처리 결과는 발신 팀에게 `post --to-team <발신팀> --reply-to <msgid>`로 회신하고, "
+            f"무엇을 claim·처리·회신했는지 한국어로 짧게 보고해라. "
+            f"미claim 메시지가 없으면 '받은 작업 없음'이라고만 보고해라. "
+            f"(개인 inbox는 폐지됐다 — 모든 메시지는 팀 메일박스로만 온다.)"
+        )
+    if key == "reminders":
+        return (
+            f"`reminders-team-bridge` 스킬의 reminders_bridge.py로 "
+            f"미리알림 목록 '{rlist}'(= 네 팀 {team}의 백로그)를 pull 해서 "
+            f"열린 작업을 확인하고, 네가 지금 착수할 다음 할 일을 한국어로 보고해라. "
+            f"진행한 작업이 있으면 annotate로 진행 메모를 남기고 끝난 작업은 complete 해라."
+        )
+    return ""
+
+
 class InstructModal(_BaseModal):
     """headless 워커에게 보낼 작업 지시 입력 (새 대화 or resume).
 
@@ -132,30 +159,7 @@ class InstructModal(_BaseModal):
         self.team = team
 
     def _preset(self, key: str) -> str:
-        """정형 액션 프롬프트. 팀 전용 메일박스(claim 모델) + 미리알림 두 채널."""
-        team = self.team or "?"
-        worker = self.worker
-        rlist = f"umc-{team}"
-        if key == "inbox":
-            return (
-                f"팀 받은편지함을 확인할 차례다. `team-inbox` 스킬의 team_inbox.py로 "
-                f"네 팀('{team}') 메일박스의 미claim 메시지를 `read --team {team}` 한다. "
-                f"제목·본문을 보고 네 담당이면 `claim --team {team} --as {worker} --id <msgid>`로 "
-                f"원자적으로 가져온 뒤(경합 시 1명만 성공) 처리하고, 끝나면 "
-                f"`ack --team {team} --id <msgid>` 한다. 네 담당이 아니거나 이미 claim된 건 손대지 마라. "
-                f"처리 결과는 발신 팀에게 `post --to-team <발신팀> --reply-to <msgid>`로 회신하고, "
-                f"무엇을 claim·처리·회신했는지 한국어로 짧게 보고해라. "
-                f"미claim 메시지가 없으면 '받은 작업 없음'이라고만 보고해라. "
-                f"(개인 inbox는 폐지됐다 — 모든 메시지는 팀 메일박스로만 온다.)"
-            )
-        if key == "reminders":
-            return (
-                f"`reminders-team-bridge` 스킬의 reminders_bridge.py로 "
-                f"미리알림 목록 '{rlist}'(= 네 팀 {team}의 백로그)를 pull 해서 "
-                f"열린 작업을 확인하고, 네가 지금 착수할 다음 할 일을 한국어로 보고해라. "
-                f"진행한 작업이 있으면 annotate로 진행 메모를 남기고 끝난 작업은 complete 해라."
-            )
-        return ""
+        return preset_prompt(key, worker=self.worker, team=self.team)
 
     def compose(self) -> ComposeResult:
         with Vertical(id="box"):

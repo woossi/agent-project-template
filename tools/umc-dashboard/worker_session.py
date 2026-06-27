@@ -28,6 +28,7 @@ import json
 import os
 import subprocess
 import sys
+import uuid
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -58,12 +59,24 @@ def ensure_trusted(cwd: Path, *, claude_json: Path | None = None) -> bool:
     key = str(cwd)
     entry = projects.setdefault(key, {})
     if entry.get("hasTrustDialogAccepted") is True:
-        return False
+        return False  # 이미 trust — 파일 미접촉(동시 호출 안전)
     entry["hasTrustDialogAccepted"] = True
-    # 원자적 교체: 반쯤 쓰인 파일이 남지 않게.
-    tmp = p.with_suffix(p.suffix + ".tmp")
-    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2))
-    tmp.replace(p)
+    # 원자적 교체. tmp 파일명을 PID+uuid로 고유화한다 — 여러 워커를 동시에 구동하면
+    # (2026-06-27 동시 지시) 고정 ``.claude.json.tmp``를 동시에 write·replace하다
+    # FileNotFoundError 레이스가 났다. 고유명이면 각 스레드가 자기 tmp를 안전하게 쓴다.
+    # (last-writer-wins: 동시에 서로 다른 워커를 trust 표시하면 한쪽 entry가 덮일 수
+    #  있으나, 다음 호출이 비어 있으면 다시 표시하므로 수렴한다.)
+    tmp = p.with_name(f"{p.name}.{os.getpid()}-{uuid.uuid4().hex}.tmp")
+    try:
+        tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2))
+        os.replace(tmp, p)
+    except OSError:
+        # 다른 스레드가 먼저 끝냈거나 일시적 충돌 — trust는 best-effort라 무시(다음 턴 재시도).
+        try:
+            tmp.unlink()
+        except OSError:
+            pass
+        return False
     return True
 
 

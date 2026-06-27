@@ -7,6 +7,13 @@ team-umc 팀의 현재 작업 패킷입니다. 가장 작은 작업 단위이며
 
 상태: 진행 중 (orchestrator — 학위논문(B판) 전환 추적)
 
+★★ 팀 일괄 구동(g) + 동시구동 레이스 버그 수정 (2026-06-27)
+- ★사용자 진단: "tmux4 패널 작업중인데 개별 워커는 일 안 하고 리더만 일함". 원인 = 자동 워커 구동 메커니즘 부재 — 리더가 c 지시로 작업을 팀 메일박스에 발행만 하고(미claim 누적 data4·write3·scout1·review2), 개별 워커는 누가 c로 깨워야만 claim. active 0/14.
+- ★사용자 결정: 팀 일괄 구동 버튼. 구현: action_instruct_team(키 g) — 선택 워커의 팀 전원을 동시 headless 구동 + '팀 메일박스 확인·claim·처리' inbox preset 일괄 지시. preset_prompt를 modals 모듈함수로 추출(InstructModal 버튼과 단일출처 공유).
+- ★동시 구동이 드러낸 레이스 2건 수정: (1)ensure_trusted가 고정 tmp명(.claude.json.tmp)을 여러 워커가 동시 write·replace하다 FileNotFoundError → PID+uuid 고유 tmp명 + OSError graceful(best-effort 수렴). (2)uuid import 누락(NameError) — 동시성 테스트가 적발, import 추가.
+- ★검증: 대시보드 46 통과(+팀일괄/preset 3)·R2 PASS·WorkerConsole 단독+동시 append+focus전환 렌더 정상("CONCURRENT APPEND+RENDER OK")·ensure_trusted 12스레드 동시호출 에러0·tmp잔재0·CLI로 data팀 4명 전원 read --team 정상(rc0).
+- ★render_strips None 재발 관련: 디스크 코드의 WorkerConsole은 단독·동시 렌더 모두 정상 확인. 사용자가 본 크래시는 ensure_trusted FileNotFoundError로 워커 스레드가 죽으며 연쇄된 것으로 판단 — 최신 코드로 재구동 시 해소 예상(사용자 실구동 확인 필요).
+
 ★★ 동시 지시 + 콘솔 워커별 분리 + render_strips 크래시 수정 (2026-06-27)
 - ★사용자 증상 3개: (1)"한 팀 가동 중 다른 팀 명령 못 내림" (2)"lead가 팀 메일박스 못 읽음" (3)"AttributeError: 'NoneType' object has no attribute 'render_strips'".
 - ★(1) 원인: _instructing이 단일 문자열 락이라 한 워커 가동 중 전 워커 지시 차단. 해결: set으로(워커별 중복만 막고 다른 팀 동시 허용) + @work(exclusive=False)로 워커마다 독립 스레드 동시 실행. SessionPool은 워커별 독립 세션이라 동시 send 안전(실측: 4워커 동시 send 각자 프롬프트만).

@@ -11,7 +11,7 @@
   "reply_to": "01782477050983108000__orchestrator__1267435e",
   "ts_ns": 1782531454412599000,
   "to_team": "review",
-  "claimed_by": null,
+  "claimed_by": "review-lead",
   "sender_team": "review",
   "quality_gate": null,
   "verdict": null,

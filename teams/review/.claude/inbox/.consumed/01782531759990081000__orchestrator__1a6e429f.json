@@ -11,7 +11,7 @@
   "reply_to": null,
   "ts_ns": 1782531759990081000,
   "to_team": "review",
-  "claimed_by": null,
+  "claimed_by": "review-lead",
   "sender_team": null,
   "quality_gate": null,
   "verdict": null,
