@@ -1,26 +1,32 @@
 #!/usr/bin/env python3
-"""Team-tier promotion: surface assets that recur across DISTINCT agents.
+"""Team/project-tier promotion: surface signals along the TIER BOUNDARY axis.
 
-A sibling of ``detect_promotions.py`` that adds a second tier WITHOUT editing the
-per-agent loop. The individual loop asks "did one agent repeat this across sessions"
-(``min_distinct_sessions``); this asks "do several peers independently want the same
-thing" (``min_distinct_agents``). The two axes are orthogonal: one agent repeating a
-signature in three of its own sessions is NOT a team signal.
+A sibling of ``detect_promotions.py`` (the per-WORKER loop, left byte-untouched). Where
+the per-worker loop asks "did one worker repeat a signature across its sessions", this
+hook reads the **inbox handoff structure** (who passes work to whom) and asks tier
+questions. The trigger is the recurrence of a HANDOFF STRUCTURE, not of a task signature.
 
-How it stays conflict-free and non-invasive (per the team-tier plan, all verified):
-- **Read-only roll-up.** It reads every ``agents/*/.context/`` ledger read-only and
-  never writes into any agent's private ledger, so the per-agent loop is untouched.
-- **Distinct-AGENT axis.** Recurrence is keyed on the agent FOLDER name (ground truth
-  per the roster), not the session id (which cannot distinguish agents). The
-  agent-package detector buckets by agent, not by session (the session bucketing of
-  the per-agent ``_occurrences`` would collapse N agents into distinct=1).
-- **Per-record immutable team store.** Candidates are written to a per-runner shard
-  (``.project/promotions/candidates/<runner>.json``) and decisions to one immutable file
-  per ``(kind, key)`` (``.project/promotions/decisions/<kind>__<slug>.json``), both via
-  atomic ``os.replace`` — never a single shared JSON array edited by N writers.
-- **Single-source sync-back.** ``skip_if_*_exists`` scans the team root
-  ``.claude/skills`` / ``.claude/agents`` (the single source symlinked into every
-  agent), so a promoted team asset is skipped for everyone at once.
+Five signals (the boundary axis = subteam membership from ``.project/team.json``):
+- ``team_skill``    — branch ①: an INTRA-team workflow recurs (>= ``min_intra_handoffs``
+                      across >=2 same-team workers) -> author a team skill.
+- ``project_skill`` — an INTER-team flow recurs (>= ``min_inter_handoffs`` between two
+                      teams) -> author a project-tier skill in ``.project/skills``.
+- ``new_worker``    — branch ②, SIGNAL only: a team's intra flow is sparse but one worker
+                      is overloaded (task-log ``worker_load``) -> consider adding a worker.
+- ``rebalance``     — branch ③, SIGNAL only: a sparse team funnels all intra flow through
+                      one worker pair -> review the role boundary between them.
+- ``team_agent``    — DEPRECATED/read-only: team-tier sub-agents are not operated; new
+                      candidates short-circuit to [], but the kind stays loadable so the
+                      existing decisions survive (see policy ``_deprecated``).
+
+How it stays conflict-free and non-invasive (inherited, all verified):
+- **Read-only.** Reads the inbox and every worker's private ledger read-only; never
+  writes a worker ledger. The per-worker loop (``detect_promotions.py``) is untouched (R2).
+- **Per-record immutable store.** Candidates -> per-runner shard
+  (``.project/promotions/candidates/<runner>.json``); decisions -> one immutable file per
+  ``(kind, key)`` via atomic ``os.replace`` — never a shared JSON array edited by N writers.
+- **Tier-scoped sync-back.** ``skip_if_skill_exists`` scans ``teams/<team>/.claude/skills``
+  (team) / ``.project/skills`` (project), so a promoted asset is skipped at its own tier.
 
 Run modes: hook (stdin payload, SessionStart), ``evaluate`` (CLI inspect), and
 ``resolve`` (record a promote/decline decision). Hooks never crash the agent.
@@ -35,6 +41,7 @@ import re
 import sys
 import time
 import uuid
+from collections import Counter
 from itertools import combinations
 from pathlib import Path
 from typing import Any
@@ -60,11 +67,19 @@ DEFAULTS: dict[str, Any] = {
         "skip_if_agent_exists": True,
         "max_candidates": 20,
     },
-    "governance": {"mode": "orchestrator-authors", "authoring_owner": "orchestrator"},
+    "governance": {"mode": "owner-authors", "authoring_owner": "data-curator"},
 }
 
 MAX_SKILLS_PER_OCCURRENCE = 6
-KINDS = ("team_skill", "team_agent")
+# Promotion kinds. team_skill/project_skill author SHARED skills; new_worker/rebalance
+# are SIGNAL-only diagnoses (no auto-author). team_agent is retained READ-ONLY so the two
+# existing team_agent decisions still load and `resolve --kind team_agent` keeps working;
+# new team_agent candidates are no longer minted (policy marks it _deprecated, evaluate
+# short-circuits) because team-tier sub-agents are not operated (3-tier arch §2-1).
+KINDS = ("team_skill", "team_agent", "project_skill", "new_worker", "rebalance")
+ORCHESTRATOR = "orchestrator"  # inbox node name; never a worker (no private ledger)
+# Edge classes between two inbox endpoints, keyed on subteam membership.
+EDGE_INTRA, EDGE_INTER, EDGE_EXT, EDGE_ORCH = "INTRA", "INTER", "EXT", "ORCH"
 CONTEXT_EVENTS = {"PostToolUse", "PreToolUse", "SessionStart", "UserPromptSubmit", "Stop"}
 
 
@@ -219,7 +234,364 @@ def load_agent_ledgers(team_root: Path, policy: dict[str, Any]) -> tuple[list[di
     return tasks, events
 
 
-# ---------------- candidate detection (distinct-AGENT axis) ----------------
+# ---------------- tier topology + inbox handoff signal ----------------
+
+def team_of(team_root: Path) -> dict[str, str]:
+    """Map worker NAME -> subteam NAME from the roster (``.project/team.json``).
+
+    The roster (not the folder layout) is the single source of truth for tier
+    membership. Workers absent from any ``subteams[].members`` (e.g. ``orchestrator``,
+    a removed worker) get no mapping and fall to ORCH/EXT in ``classify_edge``.
+    """
+    data: Any = None
+    for cand in (team_root / ".project" / "team.json", team_root / "team.json"):
+        try:
+            data = json.loads(cand.read_text(encoding="utf-8"))
+            break
+        except (OSError, json.JSONDecodeError):
+            data = None
+    if not isinstance(data, dict):
+        return {}
+    mapping: dict[str, str] = {}
+    for sub in data.get("subteams") or []:
+        if not isinstance(sub, dict):
+            continue
+        tname = str(sub.get("name") or "").strip()
+        for member in sub.get("members") or []:
+            if isinstance(member, str) and member.strip():
+                mapping.setdefault(member.strip(), tname)  # a worker belongs to exactly one team
+    return mapping
+
+
+def is_team_name(name: str, team_map: dict[str, str]) -> bool:
+    """True if ``name`` is a subteam name (a value in the worker->team map), not a worker."""
+    return name in set(team_map.values())
+
+
+def inbox_edges(
+    team_root: Path, team_map: dict[str, str] | None = None, *,
+    exclude_self: bool = True, exclude_orchestrator: bool = True,
+    orchestrator_name: str = ORCHESTRATOR,
+) -> tuple["Counter[tuple[str, str]]", dict[tuple[str, str], list[int]]]:
+    """Aggregate inbox handoffs as a directed ``from -> to`` multigraph (WORKER-keyed).
+
+    The team/project promotion trigger is the RECURRENCE OF A HANDOFF STRUCTURE
+    (who passes work to whom), not the recurrence of a single task signature. This
+    reads that structure from the inbox, keeping endpoints at the WORKER granularity so
+    the tier-boundary axis (classify_edge) stays accurate.
+
+    - Walks ``.project/inbox`` with ``os.walk`` so the hidden ``.consumed/`` shards are
+      traversed (``Path.glob('**')`` skips dotted dirs and would under-count delivered mail).
+    - Individual message: fan out over ``recipients[]`` (fallback ``to``).
+    - Team-mailbox message (``to_team`` set): if claimed, the single ``claimed_by`` worker
+      is the real target; if not yet claimed, fan out over team members (recipients). A bare
+      team name in ``to`` is NOT treated as a worker (skipped) so it can't pollute edges.
+    - Returns the per-edge count AND a list of ``ts_ns`` per edge so a consumer can judge
+      *temporal* recurrence (``len >= 2`` = handoff happened on at least two occasions).
+    """
+    team_map = team_map or {}
+    inbox_root = team_root / ".project" / "inbox"
+    edges: "Counter[tuple[str, str]]" = Counter()
+    edge_ts: dict[tuple[str, str], list[int]] = {}
+    if not inbox_root.is_dir():
+        return edges, edge_ts
+    for dirpath, _dirs, filenames in os.walk(inbox_root):
+        for name in filenames:
+            if not name.endswith(".json"):
+                continue
+            try:
+                rec = json.loads((Path(dirpath) / name).read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if not isinstance(rec, dict):
+                continue
+            sender = str(rec.get("from") or "").strip()
+            if not sender:
+                continue
+            # Team-mailbox message (to_team set): resolve destinations to WORKERS so the
+            # tier-boundary axis stays worker-accurate. If claimed, the single claimer is
+            # the real handoff target; if unclaimed yet, fan out over the team members
+            # (recipients) as the candidate handlers. A plain individual message just uses
+            # its recipients/to as before.
+            claimed_by = str(rec.get("claimed_by") or "").strip()
+            if rec.get("to_team") and claimed_by:
+                dests = [claimed_by]
+            else:
+                dests = [d.strip() for d in (rec.get("recipients") or []) if isinstance(d, str) and d.strip()]
+                if not dests:
+                    to = str(rec.get("to") or "").strip()
+                    # A team name in `to` (unclaimed, no recipients) isn't a worker — skip
+                    # rather than misclassify it as EXT and pollute the edge set.
+                    dests = [to] if (to and not is_team_name(to, team_map)) else []
+            try:
+                ts = int(rec.get("ts_ns") or 0)
+            except (TypeError, ValueError):
+                ts = 0
+            for dest in dests:
+                if exclude_self and dest == sender:
+                    continue
+                if exclude_orchestrator and (sender == orchestrator_name or dest == orchestrator_name):
+                    continue
+                edges[(sender, dest)] += 1
+                edge_ts.setdefault((sender, dest), []).append(ts)
+    return edges, edge_ts
+
+
+def classify_edge(a: str, b: str, team_map: dict[str, str], orchestrator_name: str = ORCHESTRATOR) -> str:
+    """Classify a handoff edge: ORCH > EXT > (INTRA|INTER).
+
+    INTRA = both endpoints in the SAME subteam (team-skill signal); INTER = different
+    subteams (project-skill signal); EXT = an endpoint not on the roster; ORCH = an
+    endpoint is the orchestrator (a coordination edge, never a team/project signal).
+    """
+    if a == orchestrator_name or b == orchestrator_name:
+        return EDGE_ORCH
+    ta, tb = team_map.get(a, ""), team_map.get(b, "")
+    if not ta or not tb:
+        return EDGE_EXT
+    return EDGE_INTRA if ta == tb else EDGE_INTER
+
+
+def _fmt_pairs(pairs: dict[tuple[str, str], int], top: int = 3) -> list[str]:
+    # Sort by count desc, then by the edge tuple asc as a tie-breaker so the displayed
+    # order is fully deterministic regardless of os.walk traversal order.
+    items = sorted(pairs.items(), key=lambda kv: (-kv[1], kv[0]))[:top]
+    return [f"{a}->{b}({n})" for (a, b), n in items]
+
+
+def _team_skill_present(team: str, team_root: Path) -> bool:
+    """True if the team already has an authored team skill (a SKILL.md under its
+    ``teams/<team>/.claude/skills``). Mirrors ``existing_skills`` but per-team."""
+    skills_dir = team_root / "teams" / team / ".claude" / "skills"
+    if not skills_dir.is_dir():
+        return False
+    return any(child.is_dir() and (child / "SKILL.md").exists() for child in skills_dir.iterdir())
+
+
+def existing_project_skills(team_root: Path) -> set[str]:
+    """Project-tier skills authored under ``.project/skills``. The directory is absent
+    until the first project_skill is promoted (None-safe: returns the empty set)."""
+    skills_dir = team_root / ".project" / "skills"
+    names: set[str] = set()
+    if not skills_dir.is_dir():
+        return names
+    for child in skills_dir.iterdir():
+        if child.is_dir() and (child / "SKILL.md").exists():
+            names.add(child.name)
+    return names
+
+
+# ---------------- candidate detection (TIER-boundary axis) ----------------
+
+def team_skill_candidates_inbox(
+    edges: "Counter[tuple[str, str]]",
+    edge_ts: dict[tuple[str, str], list[int]],
+    team_map: dict[str, str],
+    rules: dict[str, Any],
+    team_root: Path,
+    decided: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Branch ① (normal): a shared INTRA-team workflow.
+
+    Several workers in the SAME subteam hand work to each other often enough that the
+    workflow should be frozen into a team skill. Keyed on TEAM (the boundary axis), not
+    on the company-wide distinct-agent count.
+    """
+    min_intra = int(rules.get("min_intra_handoffs", 8))
+    min_agents = int(rules.get("min_distinct_agents", 2))
+    skip_existing = bool(rules.get("skip_if_skill_exists", True))
+
+    per_team: dict[str, dict[str, Any]] = {}
+    for (a, b), n in edges.items():
+        if classify_edge(a, b, team_map) != EDGE_INTRA:
+            continue
+        group = per_team.setdefault(
+            team_map[a], {"total": 0, "workers": set(), "pairs": {}, "recurring": 0}
+        )
+        group["total"] += n
+        group["workers"].update((a, b))
+        group["pairs"][(a, b)] = n
+        if len(edge_ts.get((a, b), [])) >= 2:
+            group["recurring"] += 1
+
+    out: list[dict[str, Any]] = []
+    for team in sorted(per_team):
+        group = per_team[team]
+        if group["total"] < min_intra or len(group["workers"]) < min_agents:
+            continue
+        if skip_existing and _team_skill_present(team, team_root):
+            continue
+        if team in decided:
+            continue
+        out.append({
+            "kind": "team_skill", "key": team, "team": team,
+            "intra_handoffs": group["total"], "distinct_agents": len(group["workers"]),
+            "agents": sorted(group["workers"]), "recurring_pairs": group["recurring"],
+            "top_pairs": _fmt_pairs(group["pairs"], 3), "evidence": "inbox-intra",
+        })
+    out.sort(key=lambda c: (-c["intra_handoffs"], -c["distinct_agents"], c["key"]))
+    return out[: int(rules.get("max_candidates", 20))]
+
+
+def project_skill_candidates(
+    edges: "Counter[tuple[str, str]]",
+    team_map: dict[str, str],
+    rules: dict[str, Any],
+    project_skills: set[str],
+    decided: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Project tier: a recurring CROSS-team data handoff.
+
+    Two distinct subteams exchange work (INTER) often enough that the cross-team flow
+    should be frozen into a project-tier skill (orchestrator single-entry). Keyed on the
+    sorted team pair ``"teamA+teamB"``.
+    """
+    min_inter = int(rules.get("min_inter_handoffs", 20))
+    min_dirs = int(rules.get("min_directions", 1))
+    skip_existing = bool(rules.get("skip_if_skill_exists", True))
+
+    per_pair: dict[tuple[str, str], dict[str, Any]] = {}
+    for (a, b), n in edges.items():
+        if classify_edge(a, b, team_map) != EDGE_INTER:
+            continue
+        ta, tb = team_map[a], team_map[b]
+        pair = tuple(sorted((ta, tb)))
+        group = per_pair.setdefault(pair, {"total": 0, "dirs": set(), "edges": {}})
+        group["total"] += n
+        group["dirs"].add((ta, tb))
+        group["edges"][(a, b)] = n
+
+    out: list[dict[str, Any]] = []
+    for pair in sorted(per_pair):
+        group = per_pair[pair]
+        if group["total"] < min_inter or len(group["dirs"]) < min_dirs:
+            continue
+        key = "+".join(pair)
+        if skip_existing and key in project_skills:
+            continue
+        if key in decided:
+            continue
+        out.append({
+            "kind": "project_skill", "key": key, "teams": list(pair),
+            "inter_handoffs": group["total"], "directions": len(group["dirs"]),
+            "top_pairs": _fmt_pairs(group["edges"], 3), "evidence": "inbox-inter",
+        })
+    out.sort(key=lambda c: (-c["inter_handoffs"], -c["directions"], c["key"]))
+    return out[: int(rules.get("max_candidates", 20))]
+
+
+def worker_load(team_root: Path, worker: str, adir: Path, policy: dict[str, Any]) -> dict[str, Any]:
+    """Load metric for one worker, from its private task-log ledger (deterministic).
+
+    load = task_weight*tasks + skill_event_weight*skill_uses + signature_weight*signatures.
+    Used by the sparsity diagnosis to tell "this worker is overloaded" from
+    "this team is just quiet".
+    """
+    rel = policy["agent_ledger"]
+    tasks = load_jsonl(adir / rel["tasks"])
+    events = load_jsonl(adir / rel["events"])
+    skill_uses = sum(1 for e in events if str(e.get("skill") or "").strip())
+    sigs = {str(t.get("signature") or "").strip() for t in tasks if str(t.get("signature") or "").strip()}
+    weights = policy.get("load_metric", {})
+    load = (
+        float(weights.get("task_weight", 1.0)) * len(tasks)
+        + float(weights.get("skill_event_weight", 0.5)) * skill_uses
+        + float(weights.get("signature_weight", 0.5)) * len(sigs)
+    )
+    return {
+        "worker": worker, "tasks": len(tasks), "skill_uses": skill_uses,
+        "signatures": len(sigs), "load": round(load, 3),
+    }
+
+
+def diagnose_sparse_teams(
+    team_root: Path,
+    edges: "Counter[tuple[str, str]]",
+    team_map: dict[str, str],
+    workers: dict[str, Path],
+    policy: dict[str, Any],
+    decided_new_worker: dict[str, Any],
+    decided_rebalance: dict[str, Any],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Branches ②/③: when a team's INTRA handoff volume is sparse, diagnose WHY.
+
+    A quiet team is not automatically fine. Two failure modes are surfaced as SIGNALS
+    (no auto-author):
+      ② new_worker  — one worker carries a heavy task-log load while the team barely
+                       hands off internally -> the team likely needs another worker.
+                       A solo team (no intra possible) qualifies on the load floor alone.
+      ③ rebalance   — a single worker pair funnels all the intra flow and the rest of
+                       the team is idle -> the role boundary between that pair may be wrong.
+
+    Absolute floors (not ratio-to-mean) are used so the diagnosis stays deterministic
+    when many workers have an empty ledger (mean collapses toward zero).
+    """
+    cfg = policy.get("sparsity_diagnosis", {})
+    if not cfg.get("enable", True):
+        return [], []
+    sparsity = int(cfg.get("sparsity_threshold", 8))
+    overload_ratio = float(cfg.get("overload_ratio", 2.0))
+    min_overload = float(cfg.get("min_overload_load", 6.0))
+    pair_conc = int(cfg.get("pair_concentration", 5))
+
+    members_by_team: dict[str, list[str]] = {}
+    for worker, team in team_map.items():
+        if team:
+            members_by_team.setdefault(team, []).append(worker)
+
+    intra_by_team: dict[str, dict[tuple[str, str], int]] = {}
+    total_by_team: dict[str, int] = {}
+    for (a, b), n in edges.items():
+        if classify_edge(a, b, team_map) == EDGE_INTRA:
+            team = team_map[a]
+            intra_by_team.setdefault(team, {})[(a, b)] = n
+            total_by_team[team] = total_by_team.get(team, 0) + n
+
+    new_worker: list[dict[str, Any]] = []
+    rebalance: list[dict[str, Any]] = []
+    for team in sorted(members_by_team):
+        members = members_by_team[team]
+        if total_by_team.get(team, 0) >= sparsity:
+            continue  # branch ① (normal, handled by team_skill_candidates_inbox)
+
+        loads = [worker_load(team_root, w, workers[w], policy) for w in members if w in workers]
+        if loads:
+            mean = sum(l["load"] for l in loads) / len(loads)
+            top = max(loads, key=lambda l: l["load"])
+            overloaded = top["load"] >= min_overload and (
+                len(loads) == 1 or (mean > 0 and top["load"] >= overload_ratio * mean)
+            )
+            if overloaded:
+                key = f"{team}:{top['worker']}"
+                if key not in decided_new_worker:
+                    new_worker.append({
+                        "kind": "new_worker", "key": key, "team": team,
+                        "overloaded_worker": top["worker"], "load": top["load"],
+                        "team_mean_load": round(mean, 3), "members": sorted(members),
+                        "reason": "solo-overload" if len(loads) == 1 else "intra-sparse-overload",
+                    })
+
+        if len(members) >= 2:
+            pairs = intra_by_team.get(team, {})
+            if pairs:
+                (pa, pb), pn = max(pairs.items(), key=lambda kv: kv[1])
+                other = sum(n for edge, n in pairs.items() if edge != (pa, pb))
+                if pn >= pair_conc and other == 0:
+                    key = f"{team}:{pa}->{pb}"
+                    if key not in decided_rebalance:
+                        rebalance.append({
+                            "kind": "rebalance", "key": key, "team": team,
+                            "pair": [pa, pb], "concentration": pn, "other_intra": other,
+                            "members": sorted(members), "reason": "single-pair-funnel",
+                        })
+
+    new_worker.sort(key=lambda c: (-c["load"], c["key"]))
+    rebalance.sort(key=lambda c: (-c["concentration"], c["key"]))
+    mx = int(cfg.get("max_candidates", 20))
+    return new_worker[:mx], rebalance[:mx]
+
+
+# ---------------- legacy candidate detection (distinct-AGENT axis, read-only) ----------------
 
 def team_skill_candidates(
     tasks: list[dict[str, Any]], rules: dict[str, Any], skills: set[str], decided: dict[str, Any]
@@ -374,15 +746,53 @@ def _atomic_write_json(path: Path, payload: Any) -> None:
 # ---------------- evaluate / surface / persist ----------------
 
 def evaluate(team_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
-    tasks, events = load_agent_ledgers(team_root, policy)
+    """Surface five tier-aware promotion signals from the inbox handoff structure + task-log loads.
+
+    - team_skill   (branch ①): recurring INTRA-team workflow -> author a team skill.
+    - project_skill          : recurring INTER-team flow      -> author a project skill.
+    - new_worker   (branch ②): sparse team + overloaded worker -> SIGNAL: add a worker.
+    - rebalance    (branch ③): sparse team + single-pair funnel -> SIGNAL: review boundaries.
+    - team_agent             : read-only/deprecated (team-tier sub-agents not operated);
+                               new candidates short-circuit to [] when policy marks it _deprecated,
+                               but the kind stays loadable so the two existing decisions survive.
+    """
     decisions = load_team_decisions(team_root / policy["log"]["decisions_dir"])
-    skills = team_skill_candidates(
-        tasks, policy["team_skill_promotion"], existing_skills(team_root), decisions["team_skill"]
+    team_map = team_of(team_root)
+    workers = worker_dirs(team_root)
+    inbox_cfg = policy.get("inbox", {})
+    edges, edge_ts = inbox_edges(
+        team_root, team_map,
+        exclude_self=bool(inbox_cfg.get("exclude_self", True)),
+        exclude_orchestrator=bool(inbox_cfg.get("exclude_orchestrator", True)),
+        orchestrator_name=str(inbox_cfg.get("orchestrator_name", ORCHESTRATOR)),
     )
-    agents = team_agent_candidates(
-        tasks, events, policy["team_agent_promotion"], agent_texts(team_root), decisions["team_agent"]
+
+    team_skill = team_skill_candidates_inbox(
+        edges, edge_ts, team_map, policy.get("team_skill_inbox_promotion", {}),
+        team_root, decisions["team_skill"],
     )
-    return {"team_skill": skills, "team_agent": agents}
+    project_skill = project_skill_candidates(
+        edges, team_map, policy.get("project_skill_promotion", {}),
+        existing_project_skills(team_root), decisions["project_skill"],
+    )
+    new_worker, rebalance = diagnose_sparse_teams(
+        team_root, edges, team_map, workers, policy,
+        decisions["new_worker"], decisions["rebalance"],
+    )
+
+    agent_rules = policy.get("team_agent_promotion", {})
+    if agent_rules.get("_deprecated"):
+        team_agent: list[dict[str, Any]] = []
+    else:
+        tasks, events = load_agent_ledgers(team_root, policy)
+        team_agent = team_agent_candidates(
+            tasks, events, agent_rules, agent_texts(team_root), decisions["team_agent"]
+        )
+
+    return {
+        "team_skill": team_skill, "team_agent": team_agent, "project_skill": project_skill,
+        "new_worker": new_worker, "rebalance": rebalance,
+    }
 
 
 def write_candidates_shard(team_root: Path, policy: dict[str, Any], candidates: dict[str, Any], runner: str) -> Path:
@@ -394,27 +804,48 @@ def write_candidates_shard(team_root: Path, policy: dict[str, Any], candidates: 
 def format_surface(candidates: dict[str, Any], governance: dict[str, Any]) -> str:
     lines: list[str] = []
     for cand in candidates.get("team_skill", []):
-        objectives = "; ".join(cand.get("objectives", [])) or "(no objective recorded)"
+        pairs = ", ".join(cand.get("top_pairs", []))
         lines.append(
-            f"- [team_skill] signature '{cand['signature']}' used by "
-            f"{cand['distinct_agents']} agents ({', '.join(cand['agents'])}), {cand['recurrence']}x total: {objectives}"
+            f"- [team_skill] team '{cand['key']}': intra-handoffs {cand['intra_handoffs']} "
+            f"across {cand['distinct_agents']} workers ({pairs}) -> author a shared team workflow skill"
         )
-    for cand in candidates.get("team_agent", []):
+    for cand in candidates.get("team_agent", []):  # deprecated -> empty list -> no lines
         package = ", ".join(cand.get("skills", []))
         lines.append(
             f"- [team_agent] skill package [{package}] used by "
             f"{cand['distinct_agents']} agents ({', '.join(cand['agents'])})"
         )
+    for cand in candidates.get("project_skill", []):
+        pairs = ", ".join(cand.get("top_pairs", []))
+        lines.append(
+            f"- [project_skill] cross-team flow '{cand['key']}': inter-handoffs {cand['inter_handoffs']} "
+            f"({pairs}) -> author a project-tier skill"
+        )
+    for cand in candidates.get("new_worker", []):
+        lines.append(
+            f"- [new_worker] team '{cand['team']}' sparse but worker '{cand['overloaded_worker']}' "
+            f"overloaded (load {cand['load']}, team-mean {cand['team_mean_load']}) "
+            f"-> SIGNAL: consider adding a worker to this team"
+        )
+    for cand in candidates.get("rebalance", []):
+        pair = cand.get("pair", ["?", "?"])
+        lines.append(
+            f"- [rebalance] team '{cand['team']}' sparse but pair {pair[0]}->{pair[1]} "
+            f"concentrates {cand['concentration']} of intra flow "
+            f"-> SIGNAL: review role boundaries for this pair"
+        )
     if not lines:
         return ""
-    owner = governance.get("authoring_owner", "orchestrator")
-    mode = governance.get("mode", "orchestrator-authors")
+    owner = governance.get("authoring_owner", "data-curator")
+    mode = governance.get("mode", "owner-authors")
     header = (
-        "Team-promotion conditions were met (recurs across distinct agents). "
-        f"Governance: {mode} (owner: {owner}). Propose via the inbox, then the owner authors once and closes:\n"
-        "- team_skill -> author with `write-skill` into the team root .claude/skills (symlinked to all agents).\n"
-        "- team_agent -> author with `write-subagent` into the team root .claude/agents.\n"
-        "- close with `.claude/hooks/detect_team_promotions.py resolve` (--decision promote|decline).\n"
+        "Team-promotion conditions were met (signals recur across distinct workers/teams). "
+        f"Governance: {mode} (owner: {owner}). Anyone proposes via the inbox; the owner authors once and closes:\n"
+        "- team_skill    -> `write-skill` into teams/<team>/.claude/skills (team-tier workflow).\n"
+        "- project_skill -> `write-skill` into .project/skills (project-tier; created on first promotion).\n"
+        "- new_worker    -> SIGNAL only: review `team-init add-subteam` / `create-team-agent`. No auto-author.\n"
+        "- rebalance     -> SIGNAL only: review role boundaries in .project/team.json. No auto-author.\n"
+        "- close any: `.claude/hooks/detect_team_promotions.py resolve --kind <kind> --key <key> --decision promote|decline`.\n"
     )
     return header + "\n".join(lines)
 
@@ -463,11 +894,12 @@ def run_evaluate(argv: list[str]) -> int:
     candidates = evaluate(team_root, policy)
     runner = os.environ.get("CLAUDE_AGENT_NAME") or "team"
     path = write_candidates_shard(team_root, policy, candidates, runner)
-    total = len(candidates["team_skill"]) + len(candidates["team_agent"])
+    total = sum(len(candidates.get(kind, [])) for kind in KINDS)
     if args.check and total:
         print(f"{total} team-promotion candidate(s) pending", file=sys.stderr)
         return 1
-    print(f"{len(candidates['team_skill'])} team_skill / {len(candidates['team_agent'])} team_agent candidate(s) -> {path}")
+    breakdown = " / ".join(f"{len(candidates.get(kind, []))} {kind}" for kind in KINDS)
+    print(f"{breakdown} -> {path}")
     return 0
 
 

@@ -148,5 +148,146 @@ class CliTests(_StoreCase):
                 os.environ["CLAUDE_AGENT_NAME"] = old
 
 
+class TeamMailboxCase(unittest.TestCase):
+    """Team mailbox + atomic claim model (worker→team addressing)."""
+
+    def setUp(self):
+        self._tmp = TemporaryDirectory()
+        self.store = Path(self._tmp.name) / ".team"
+        self.store.mkdir(parents=True)
+        (self.store / "team.json").write_text(json.dumps({
+            "members": ["dc", "de", "ir", "mw"],
+            "subteams": [
+                {"name": "data", "members": ["dc", "de", "ir"]},
+                {"name": "write", "members": ["mw"]},
+            ],
+        }), encoding="utf-8")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_team_of_and_is_team(self):
+        self.assertEqual(ti.team_of(self.store, "de"), "data")
+        self.assertEqual(ti.team_of(self.store, "mw"), "write")
+        self.assertIsNone(ti.team_of(self.store, "nobody"))
+        self.assertTrue(ti.is_team(self.store, "data"))
+        self.assertFalse(ti.is_team(self.store, "dc"))
+
+    def test_post_to_team_single_copy(self):
+        res = ti.post(self.store, "mw", [], subject="s", body="b", to_team="data")
+        self.assertEqual(res["delivered_to_team"], "data")
+        files = list((self.store / "inbox" / "data").glob("*.json"))
+        self.assertEqual(len(files), 1)  # 팀당 1부 (fan-out 아님)
+        msg = json.loads(files[0].read_text(encoding="utf-8"))
+        self.assertEqual(msg["to_team"], "data")
+        self.assertEqual(msg["sender_team"], "write")
+        self.assertIsNone(msg["claimed_by"])
+
+    def test_post_unknown_team_raises(self):
+        with self.assertRaises(ti.InboxError):
+            ti.post(self.store, "mw", [], subject="s", body="b", to_team="ghost")
+
+    def test_claim_is_exclusive(self):
+        res = ti.post(self.store, "mw", [], subject="s", body="b", to_team="data")
+        mid = res["id"]
+        r1 = ti.claim(self.store, "data", mid, "dc")
+        r2 = ti.claim(self.store, "data", mid, "de")
+        self.assertTrue(r1["claimed"])
+        self.assertFalse(r2["claimed"])  # 이미 dc가 가져감
+        self.assertEqual(r2["claimed_by"], "dc")
+
+    def test_read_team_states(self):
+        res = ti.post(self.store, "mw", [], subject="s", body="b", to_team="data")
+        mid = res["id"]
+        self.assertEqual(len(ti.read_team(self.store, "data")), 1)  # unclaimed
+        ti.claim(self.store, "data", mid, "dc")
+        self.assertEqual(len(ti.read_team(self.store, "data")), 0)  # 더는 unclaimed 아님
+        claimed = ti.read_team(self.store, "data", include_claimed=True)
+        self.assertEqual(len(claimed), 1)
+        self.assertEqual(claimed[0]["_state"], "claimed")
+
+    def test_ack_team_consumes_claimed(self):
+        res = ti.post(self.store, "mw", [], subject="s", body="b", to_team="data")
+        mid = res["id"]
+        ti.claim(self.store, "data", mid, "dc")
+        ack = ti.ack(self.store, "dc", mid, team="data")
+        self.assertTrue(ack["acked"])
+        consumed = ti.read_team(self.store, "data", include_consumed=True)
+        self.assertEqual(len(consumed), 1)
+        self.assertEqual(consumed[0]["_state"], "consumed")
+
+    def test_individual_post_still_works(self):
+        # 팀 전환 후에도 개인 주소 발행은 그대로(병행). 스키마만 통일.
+        res = ti.post(self.store, "de", ["dc"], subject="s", body="b")
+        self.assertEqual(res["delivered_to"], ["dc"])
+        msgs = ti.read(self.store, "dc")
+        self.assertEqual(len(msgs), 1)
+        self.assertIsNone(msgs[0]["to_team"])
+
+    def test_cli_to_team_mutually_exclusive_with_to(self):
+        rc = ti.main(["--store", str(self.store), "post", "--from", "mw",
+                      "--to-team", "data", "--to", "dc", "--subject", "s", "--body", "b"])
+        self.assertEqual(rc, 1)  # --to-team과 --to 동시 금지
+
+
+class QualityFieldsCase(unittest.TestCase):
+    """(가) inbox 스키마 확장: quality_gate / verdict / work_ref (옵셔널, 기본 None)."""
+
+    def setUp(self):
+        self._tmp = TemporaryDirectory()
+        self.store = Path(self._tmp.name) / ".team"
+        self.store.mkdir(parents=True)
+        (self.store / "team.json").write_text(json.dumps({
+            "members": ["dc", "mw"],
+            "subteams": [{"name": "data", "members": ["dc"]}, {"name": "write", "members": ["mw"]}],
+        }), encoding="utf-8")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_default_quality_fields_are_none(self):
+        ti.post(self.store, "dc", ["mw"], subject="s", body="b")
+        msg = ti.read(self.store, "mw")[0]
+        self.assertIsNone(msg["quality_gate"])
+        self.assertIsNone(msg["verdict"])
+        self.assertIsNone(msg["work_ref"])
+
+    def test_assignment_carries_quality_gate(self):
+        gate = {"axes": ["A", "E"], "kind": "manuscript"}
+        ti.post(self.store, "dc", ["mw"], subject="작업", body="b", quality_gate=gate)
+        msg = ti.read(self.store, "mw")[0]
+        self.assertEqual(msg["quality_gate"], gate)
+
+    def test_verdict_reply_carries_verdict_and_work_ref(self):
+        a = ti.post(self.store, "dc", ["mw"], subject="작업", body="b",
+                    quality_gate={"axes": ["A"], "kind": "manuscript"})
+        v = {"result": "FAIL", "majors": 1, "minors": 0, "by": "quality-reviewer", "round": "R3"}
+        ti.post(self.store, "mw", ["dc"], subject="검수결과", body="b",
+                verdict=v, work_ref=a["id"])
+        msg = ti.read(self.store, "dc")[0]
+        self.assertEqual(msg["verdict"], v)
+        self.assertEqual(msg["work_ref"], a["id"])
+
+    def test_team_mailbox_also_carries_quality_fields(self):
+        ti.post(self.store, "mw", [], subject="s", body="b", to_team="data",
+                quality_gate={"axes": ["D"], "kind": "stats"})
+        files = list((self.store / "inbox" / "data").glob("*.json"))
+        msg = json.loads(files[0].read_text(encoding="utf-8"))
+        self.assertEqual(msg["quality_gate"], {"axes": ["D"], "kind": "stats"})
+
+    def test_cli_quality_gate_json_parsed(self):
+        rc = ti.main(["--store", str(self.store), "post", "--from", "dc", "--to", "mw",
+                      "--subject", "s", "--body", "b",
+                      "--quality-gate", '{"axes":["A"],"kind":"manuscript"}'])
+        self.assertEqual(rc, 0)
+        msg = ti.read(self.store, "mw")[0]
+        self.assertEqual(msg["quality_gate"], {"axes": ["A"], "kind": "manuscript"})
+
+    def test_cli_bad_json_rejected(self):
+        rc = ti.main(["--store", str(self.store), "post", "--from", "dc", "--to", "mw",
+                      "--subject", "s", "--body", "b", "--verdict", "not-json"])
+        self.assertEqual(rc, 1)
+
+
 if __name__ == "__main__":
     unittest.main()

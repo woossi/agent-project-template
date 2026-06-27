@@ -50,39 +50,85 @@ class _Case(unittest.TestCase):
     def make_agent_doc(self, name: str, body: str):
         (self.root / ".claude/agents" / f"{name}.md").write_text(body, encoding="utf-8")
 
+    # --- inbox handoff helpers (C-work trigger: recurrence of a HANDOFF STRUCTURE) ---
+    def roster(self, members: list[str], subteams: list[dict]):
+        """Write team.json so classify_edge can map workers -> subteams.
+
+        ``subteams`` is a list of {"name", "members"} dicts. A worker's folder is also
+        seeded (empty task-log) so worker_dirs() discovers it for load diagnosis.
+        """
+        (self.root / ".project").mkdir(parents=True, exist_ok=True)
+        (self.root / ".project/team.json").write_text(json.dumps({
+            "version": 1, "members": members, "subteams": subteams,
+        }), encoding="utf-8")
+        for st in subteams:
+            for m in st["members"]:
+                d = self.root / "teams" / st["name"] / m / ".context/task-log"
+                d.mkdir(parents=True, exist_ok=True)
+
+    def handoff(self, frm: str, to: str, n: int, *, base_ts: int = 1_000):
+        """Write ``n`` inbox messages from ``frm`` to ``to`` (each a distinct ts so edge_ts
+        records >=2 occasions -> 'recurring'). Lands in the recipient's individual inbox,
+        which inbox_edges fans out over recipients[]."""
+        box = self.root / ".project/inbox" / to
+        box.mkdir(parents=True, exist_ok=True)
+        for i in range(n):
+            ts = base_ts + i
+            mid = f"{ts:020d}__{frm}__{i:08x}"
+            (box / f"{mid}.json").write_text(json.dumps({
+                "id": mid, "from": frm, "to": to, "recipients": [to],
+                "to_team": None, "claimed_by": None, "sender_team": None,
+                "subject": "s", "body": "b", "reply_to": None, "ts_ns": ts,
+            }), encoding="utf-8")
+
     def evaluate(self):
         policy = dtp.load_policy(self.root)
         return dtp.evaluate(self.root, policy)
 
 
 class TeamSkillTests(_Case):
-    def test_two_distinct_agents_qualifies(self):
-        self.agent_tasks("worker-1", [{"signature": "shared-task", "objective": "do X"}])
-        self.agent_tasks("worker-2", [{"signature": "shared-task", "objective": "do X too"}])
+    # C-work trigger: a recurring INTRA-team HANDOFF STRUCTURE (not a task signature).
+    # team_skill fires when same-subteam workers hand off >= min_intra_handoffs (default 8)
+    # times across >= 2 workers.
+    def _two_worker_intra_team(self):
+        self.roster(
+            members=["worker-1", "worker-2"],
+            subteams=[{"name": "data", "members": ["worker-1", "worker-2"]}],
+        )
+
+    def test_intra_team_handoffs_qualify(self):
+        self._two_worker_intra_team()
+        self.handoff("worker-1", "worker-2", 5)
+        self.handoff("worker-2", "worker-1", 5)  # 10 intra total, 2 workers
         res = self.evaluate()
         self.assertEqual(len(res["team_skill"]), 1)
         c = res["team_skill"][0]
-        self.assertEqual(c["signature"], "shared-task")
+        self.assertEqual(c["team"], "data")
+        self.assertEqual(c["key"], "data")
         self.assertEqual(c["distinct_agents"], 2)
         self.assertEqual(sorted(c["agents"]), ["worker-1", "worker-2"])
+        self.assertGreaterEqual(c["intra_handoffs"], 8)
 
-    def test_one_agent_repeating_does_not_qualify(self):
-        # The load-bearing distinction: same agent, three of its own records.
-        self.agent_tasks("worker-1", [{"signature": "solo"} for _ in range(3)])
-        res = self.evaluate()
-        self.assertEqual(res["team_skill"], [])
+    def test_sparse_intra_does_not_qualify(self):
+        # below min_intra_handoffs -> no team_skill (the team is just quiet)
+        self._two_worker_intra_team()
+        self.handoff("worker-1", "worker-2", 2)
+        self.assertEqual(self.evaluate()["team_skill"], [])
 
-    def test_folder_name_is_the_axis_not_the_stamp(self):
-        # Even if a record carries a different 'agent' stamp, the folder is ground truth.
-        self.agent_tasks("worker-1", [{"signature": "s", "agent": "spoof"}])
-        self.agent_tasks("worker-2", [{"signature": "s", "agent": "spoof"}])
-        res = self.evaluate()
-        self.assertEqual(res["team_skill"][0]["distinct_agents"], 2)
+    def test_single_worker_cannot_make_intra_edge(self):
+        # one worker can't hand off to itself across a team boundary -> never a team_skill
+        self.roster(members=["solo"], subteams=[{"name": "scout", "members": ["solo"]}])
+        self.handoff("solo", "solo", 10)
+        self.assertEqual(self.evaluate()["team_skill"], [])
 
-    def test_skip_if_skill_exists(self):
-        self.make_skill("shared-task")
-        self.agent_tasks("worker-1", [{"signature": "shared-task"}])
-        self.agent_tasks("worker-2", [{"signature": "shared-task"}])
+    def test_skip_if_team_skill_exists(self):
+        self._two_worker_intra_team()
+        # a team skill already frozen for this subteam -> do not re-surface
+        sk = self.root / "teams" / "data" / ".claude" / "skills" / "data-flow"
+        sk.mkdir(parents=True, exist_ok=True)
+        (sk / "SKILL.md").write_text("# data-flow", encoding="utf-8")
+        self.handoff("worker-1", "worker-2", 5)
+        self.handoff("worker-2", "worker-1", 5)
         self.assertEqual(self.evaluate()["team_skill"], [])
 
 
@@ -114,20 +160,27 @@ class TeamAgentTests(_Case):
         self.assertEqual(self.evaluate()["team_agent"], [])
 
 
+def seed_intra_team_skill(case: _Case):
+    """Make exactly one team_skill candidate keyed on subteam 'data' (the new trigger)."""
+    case.roster(members=["worker-1", "worker-2"],
+                subteams=[{"name": "data", "members": ["worker-1", "worker-2"]}])
+    case.handoff("worker-1", "worker-2", 5)
+    case.handoff("worker-2", "worker-1", 5)
+
+
 class DecisionTests(_Case):
     def test_decline_stops_surfacing(self):
-        self.agent_tasks("worker-1", [{"signature": "shared"}])
-        self.agent_tasks("worker-2", [{"signature": "shared"}])
+        seed_intra_team_skill(self)
         self.assertEqual(len(self.evaluate()["team_skill"]), 1)
         rc = dtp.run_resolve([
-            "--kind", "team_skill", "--key", "shared", "--decision", "decline",
+            "--kind", "team_skill", "--key", "data", "--decision", "decline",
             "--reason", "not reusable", "--by", "orchestrator", "--project-root", str(self.root),
         ])
         self.assertEqual(rc, 0)
         self.assertEqual(self.evaluate()["team_skill"], [])
         # decision is one immutable file per (kind,key); filename carries a key hash.
         ddir = self.root / ".project/promotions/decisions"
-        files = list(ddir.glob("team_skill__shared__*.json"))
+        files = list(ddir.glob("team_skill__data__*.json"))
         self.assertEqual(len(files), 1)
         rec = json.loads(files[0].read_text(encoding="utf-8"))
         self.assertEqual(rec["decision"], "decline")
@@ -145,8 +198,7 @@ class RootAndShardTests(_Case):
         self.assertEqual(dtp.find_team_root(self.root), self.root.resolve())
 
     def test_shard_written_per_runner(self):
-        self.agent_tasks("worker-1", [{"signature": "shared"}])
-        self.agent_tasks("worker-2", [{"signature": "shared"}])
+        seed_intra_team_skill(self)
         policy = dtp.load_policy(self.root)
         dtp.write_candidates_shard(self.root, policy, self.evaluate(), "worker-1")
         shard = self.root / ".project/promotions/candidates/worker-1.json"
@@ -157,8 +209,7 @@ class RootAndShardTests(_Case):
 
 class CliTests(_Case):
     def test_evaluate_check_exit_1_when_pending(self):
-        self.agent_tasks("worker-1", [{"signature": "shared"}])
-        self.agent_tasks("worker-2", [{"signature": "shared"}])
+        seed_intra_team_skill(self)
         rc = dtp.main(["evaluate", "--project-root", str(self.root), "--check"])
         self.assertEqual(rc, 1)
 
@@ -199,10 +250,9 @@ class DecisionCollisionTests(_Case):
         self.assertEqual(dtp.load_team_decisions(ddir)["team_skill"]["k"]["decision"], "promote")
 
     def test_promote_also_stops_surfacing(self):
-        self.agent_tasks("worker-1", [{"signature": "shared"}])
-        self.agent_tasks("worker-2", [{"signature": "shared"}])
+        seed_intra_team_skill(self)
         self.assertEqual(len(self.evaluate()["team_skill"]), 1)
-        dtp.run_resolve(["--kind", "team_skill", "--key", "shared", "--decision", "promote", "--project-root", str(self.root)])
+        dtp.run_resolve(["--kind", "team_skill", "--key", "data", "--decision", "promote", "--project-root", str(self.root)])
         self.assertEqual(self.evaluate()["team_skill"], [])
 
 

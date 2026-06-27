@@ -8,7 +8,18 @@
         "teams/review/stats-validator/**",
         "teams/review/quality-reviewer/**",
         "teams/data/data-engineer/**",
-        "teams/data/inference-runner/**"
+        "teams/data/inference-runner/**",
+        "teams/analysis/causal-analyst/**",
+        "/Users/ujunbin/research/UMC/**",
+        "/Users/ujunbin/article/**",
+        "/Users/ujunbin/knowledge/**"
+      ],
+      "allow": [
+        ".",
+        "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
+        "/Users/ujunbin/.claude/projects/-Users-ujunbin-team-umc/**",
+        "/Users/ujunbin/project/umc/**",
+        "/Users/ujunbin/Library/Mobile Documents/com~apple~CloudDocs/umc-compressed-db/**"
       ]
     },
     "paper-scout": {
@@ -19,7 +30,18 @@
         "teams/review/stats-validator/**",
         "teams/review/quality-reviewer/**",
         "teams/data/data-engineer/**",
-        "teams/data/inference-runner/**"
+        "teams/data/inference-runner/**",
+        "teams/analysis/causal-analyst/**",
+        "/Users/ujunbin/project/umc/**",
+        "/Users/ujunbin/Library/Mobile Documents/com~apple~CloudDocs/umc-compressed-db/**",
+        "/Users/ujunbin/research/UMC/**"
+      ],
+      "allow": [
+        ".",
+        "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
+        "/Users/ujunbin/.claude/projects/-Users-ujunbin-team-umc/**",
+        "/Users/ujunbin/article/**",
+        "/Users/ujunbin/knowledge/**"
       ]
     },
     "manuscript-writer": {
@@ -30,7 +52,18 @@
         "teams/review/stats-validator/**",
         "teams/review/quality-reviewer/**",
         "teams/data/data-engineer/**",
-        "teams/data/inference-runner/**"
+        "teams/data/inference-runner/**",
+        "teams/analysis/causal-analyst/**",
+        "/Users/ujunbin/project/umc/**",
+        "/Users/ujunbin/Library/Mobile Documents/com~apple~CloudDocs/umc-compressed-db/**",
+        "/Users/ujunbin/article/**",
+        "/Users/ujunbin/knowledge/**"
+      ],
+      "allow": [
+        ".",
+        "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
+        "/Users/ujunbin/.claude/projects/-Users-ujunbin-team-umc/**",
+        "/Users/ujunbin/research/UMC/**"
       ]
     },
     "manuscript-steward": {
@@ -41,7 +74,18 @@
         "teams/review/stats-validator/**",
         "teams/review/quality-reviewer/**",
         "teams/data/data-engineer/**",
-        "teams/data/inference-runner/**"
+        "teams/data/inference-runner/**",
+        "teams/analysis/causal-analyst/**",
+        "/Users/ujunbin/project/umc/**",
+        "/Users/ujunbin/Library/Mobile Documents/com~apple~CloudDocs/umc-compressed-db/**",
+        "/Users/ujunbin/article/**",
+        "/Users/ujunbin/knowledge/**"
+      ],
+      "allow": [
+        ".",
+        "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
+        "/Users/ujunbin/.claude/projects/-Users-ujunbin-team-umc/**",
+        "/Users/ujunbin/research/UMC/**"
       ]
     },
     "stats-validator": {
@@ -52,7 +96,18 @@
         "teams/write/manuscript-steward/**",
         "teams/review/quality-reviewer/**",
         "teams/data/data-engineer/**",
-        "teams/data/inference-runner/**"
+        "teams/data/inference-runner/**",
+        "teams/analysis/causal-analyst/**",
+        "/Users/ujunbin/Library/Mobile Documents/com~apple~CloudDocs/umc-compressed-db/**",
+        "/Users/ujunbin/article/**",
+        "/Users/ujunbin/knowledge/**"
+      ],
+      "allow": [
+        ".",
+        "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
+        "/Users/ujunbin/.claude/projects/-Users-ujunbin-team-umc/**",
+        "/Users/ujunbin/research/UMC/**",
+        "/Users/ujunbin/project/umc/**"
       ]
     },
     "quality-reviewer": {
@@ -63,7 +118,18 @@
         "teams/write/manuscript-steward/**",
         "teams/review/stats-validator/**",
         "teams/data/data-engineer/**",
-        "teams/data/inference-runner/**"
+        "teams/data/inference-runner/**",
+        "teams/analysis/causal-analyst/**",
+        "/Users/ujunbin/Library/Mobile Documents/com~apple~CloudDocs/umc-compressed-db/**",
+        "/Users/ujunbin/article/**",
+        "/Users/ujunbin/knowledge/**"
+      ],
+      "allow": [
+        ".",
+        "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
+        "/Users/ujunbin/.claude/projects/-Users-ujunbin-team-umc/**",
+        "/Users/ujunbin/research/UMC/**",
+        "/Users/ujunbin/project/umc/**"
       ]
     },
     "data-engineer": {
@@ -74,7 +140,18 @@
         "teams/write/manuscript-steward/**",
         "teams/review/stats-validator/**",
         "teams/review/quality-reviewer/**",
-        "teams/data/inference-runner/**"
+        "teams/data/inference-runner/**",
+        "teams/analysis/causal-analyst/**",
+        "/Users/ujunbin/research/UMC/**",
+        "/Users/ujunbin/article/**",
+        "/Users/ujunbin/knowledge/**"
+      ],
+      "allow": [
+        ".",
+        "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
+        "/Users/ujunbin/.claude/projects/-Users-ujunbin-team-umc/**",
+        "/Users/ujunbin/project/umc/**",
+        "/Users/ujunbin/Library/Mobile Documents/com~apple~CloudDocs/umc-compressed-db/**"
       ]
     },
     "inference-runner": {
@@ -85,16 +162,48 @@
         "teams/write/manuscript-steward/**",
         "teams/review/stats-validator/**",
         "teams/review/quality-reviewer/**",
-        "teams/data/data-engineer/**"
+        "teams/data/data-engineer/**",
+        "teams/analysis/causal-analyst/**",
+        "/Users/ujunbin/research/UMC/**",
+        "/Users/ujunbin/article/**",
+        "/Users/ujunbin/knowledge/**"
+      ],
+      "allow": [
+        ".",
+        "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
+        "/Users/ujunbin/.claude/projects/-Users-ujunbin-team-umc/**",
+        "/Users/ujunbin/project/umc/**",
+        "/Users/ujunbin/Library/Mobile Documents/com~apple~CloudDocs/umc-compressed-db/**"
+      ]
+    },
+    "causal-analyst": {
+      "deny": [
+        "teams/data/data-curator/**",
+        "teams/scout/paper-scout/**",
+        "teams/write/manuscript-writer/**",
+        "teams/write/manuscript-steward/**",
+        "teams/review/stats-validator/**",
+        "teams/review/quality-reviewer/**",
+        "teams/data/data-engineer/**",
+        "teams/data/inference-runner/**",
+        "/Users/ujunbin/Library/Mobile Documents/com~apple~CloudDocs/umc-compressed-db/**",
+        "/Users/ujunbin/research/UMC/**",
+        "/Users/ujunbin/article/**",
+        "/Users/ujunbin/knowledge/**"
+      ],
+      "allow": [
+        ".",
+        "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
+        "/Users/ujunbin/.claude/projects/-Users-ujunbin-team-umc/**",
+        "/Users/ujunbin/project/umc/**"
       ]
     }
   },
   "defaults": {
     "allow": [
       ".",
-      "/Users/ujunbin/project/umc/**",
-      "/Users/ujunbin/research/UMC/**",
-      "/Users/ujunbin/article/**"
+      "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
+      "/Users/ujunbin/.claude/projects/-Users-ujunbin-team-umc/**"
     ],
     "bash": {
       "allow": [],

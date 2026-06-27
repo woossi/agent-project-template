@@ -25,6 +25,7 @@ automatically managed.
 | team-derive-author | `team-derive-author/` | Open `team-derive-author/SKILL.md` only when the request clearly matches the `team-derive-author` workflow. |
 | team-inbox | `team-inbox/` | Open `team-inbox/SKILL.md` only when the request clearly matches the `team-inbox` workflow. |
 | team-init | `team-init/` | Open `team-init/SKILL.md` only when the request clearly matches the `team-init` workflow. |
+| team-quality-ledger | `team-quality-ledger/` | Open `team-quality-ledger/SKILL.md` only when the request clearly matches the `team-quality-ledger` workflow. |
 | write-skill | `write-skill/` | Open `write-skill/SKILL.md` only when the request clearly matches the `write-skill` workflow. |
 | write-subagent | `write-subagent/` | Open `write-subagent/SKILL.md` only when the request clearly matches the `write-subagent` workflow. |
 | write-task | `write-task/` | Open `write-task/SKILL.md` only when the request clearly matches the `write-task` workflow. |

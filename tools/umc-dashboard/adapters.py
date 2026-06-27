@@ -106,17 +106,38 @@ class TeamCli:
         return self._script("team-inbox", "team_inbox.py")
 
     def inbox_post(self, sender: str, to: list[str], subject: str, body: str,
-                   *, reply_to: str | None = None) -> CliResult:
-        argv = [self.python, self._inbox(), "post", "--as", sender,
+                   *, reply_to: str | None = None, to_team: str | None = None,
+                   quality_gate: dict | None = None, verdict: dict | None = None,
+                   work_ref: str | None = None) -> CliResult:
+        # post의 발신자 플래그는 --from (read/ack의 --as와 다름). 과거 --as를 넘겨 발행이
+        # 깨졌던 버그를 --from으로 교정.
+        argv = [self.python, self._inbox(), "post", "--from", sender,
                 "--subject", subject, "--body", body]
+        if to_team:
+            argv += ["--to-team", to_team]  # 팀 메일박스(1부) 발행
         for r in to:
             argv += ["--to", r]
         if reply_to:
             argv += ["--reply-to", reply_to]
+        # (가) 품질 루프 필드: 할당 시 quality_gate, 검수 회신 시 verdict+work_ref.
+        if quality_gate is not None:
+            argv += ["--quality-gate", json.dumps(quality_gate, ensure_ascii=False)]
+        if verdict is not None:
+            argv += ["--verdict", json.dumps(verdict, ensure_ascii=False)]
+        if work_ref:
+            argv += ["--work-ref", work_ref]
         return self._call_json(argv)
 
-    def inbox_ack(self, agent: str, msg_id: str) -> CliResult:
-        return self._call_json([self.python, self._inbox(), "ack", "--as", agent, "--id", msg_id])
+    def inbox_ack(self, agent: str, msg_id: str, *, team: str | None = None) -> CliResult:
+        argv = [self.python, self._inbox(), "ack", "--as", agent, "--id", msg_id]
+        if team:
+            argv += ["--team", team]
+        return self._call_json(argv)
+
+    def inbox_claim(self, team: str, msg_id: str, claimer: str) -> CliResult:
+        """팀 메일박스 메시지를 워커가 claim(원자적). 경합 시 1명만 성공."""
+        return self._call_json([self.python, self._inbox(), "claim",
+                                "--team", team, "--id", msg_id, "--as", claimer])
 
     # ---------------- promotion / derivation resolve ----------------
 
@@ -134,7 +155,44 @@ class TeamCli:
             argv += ["--reason", reason]
         return self._call_json(argv)
 
+    # ---------------- quality ledger ((가)+(나) 품질 루프) ----------------
+
+    def _quality_ledger(self) -> str:
+        return self._script("team-quality-ledger", "quality_ledger.py")
+
+    def quality_record(self, team: str, worker: str, kind: str, result: str,
+                       *, work_ref: str | None = None, by: str | None = None,
+                       round_: str | None = None) -> CliResult:
+        """검증팀 verdict를 팀장 quality-ledger에 기록(PASS만 통과, PARTIAL/FAIL=실패)."""
+        argv = [self.python, self._quality_ledger(), "--team", team, "record",
+                "--worker", worker, "--kind", kind, "--result", result]
+        if work_ref:
+            argv += ["--work-ref", work_ref]
+        if by:
+            argv += ["--by", by]
+        if round_:
+            argv += ["--round", round_]
+        return self._call_json(argv)
+
+    def quality_signal(self, team: str, *, threshold: int = 2) -> CliResult:
+        """(나) 2연속 실패 신호: spawn_specialized_worker / rebalance 권고."""
+        return self._call_json([self.python, self._quality_ledger(), "--team", team,
+                                "signal", "--threshold", str(threshold)])
+
+    def quality_mark_spawned(self, team: str, worker: str, kind: str) -> CliResult:
+        return self._call_json([self.python, self._quality_ledger(), "--team", team,
+                                "mark-spawned", "--worker", worker, "--kind", kind])
+
     # ---------------- roster ----------------
 
     def agent_list(self) -> CliResult:
         return self._call_json([self.python, self._script("create-team-agent", "team_agent.py"), "list"])
+
+    def agent_create(self, name: str, subteam: str, requester: str,
+                     *, role: str | None = None) -> CliResult:
+        """(나)→(다): 팀장이 자기 팀에 전문화 워커 생성. own-team 가드가 적용된다."""
+        argv = [self.python, self._script("create-team-agent", "team_agent.py"), "create", name,
+                "--subteam", subteam, "--requester", requester]
+        if role:
+            argv += ["--role", role]
+        return self._call_json(argv)

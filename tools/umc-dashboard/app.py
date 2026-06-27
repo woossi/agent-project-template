@@ -30,7 +30,8 @@ from adapters import TeamCli
 from launcher import TmuxLauncher
 from session_pool import SessionPool
 from worker_session import WorkerEvent
-from widgets import AgentGrid, BacklogBoard, InboxTimeline, CandidateQueue, WorkerConsole
+from widgets import (AgentGrid, BacklogBoard, InboxTimeline, CandidateQueue,
+                     WorkerConsole, ResourceStrip)
 from widgets.modals import (SendMessageModal, PostInboxModal, AddTaskModal,
                             ConfirmModal, InstructModal)
 
@@ -42,17 +43,22 @@ REFRESH_SECONDS = 3.0
 
 class Dashboard(App):
     CSS = """
-    Screen { layout: horizontal; }
+    Screen { layout: vertical; }
+    #body { height: 1fr; layout: horizontal; }
     #sidebar { width: 36; border-right: solid $accent; }
     #main { width: 1fr; }
-    #top { height: 30%; }
-    #mid { height: 40%; border-top: solid $accent; }
-    #bottom { height: 30%; border-top: solid $accent; }
+    #right { width: 44; border-left: solid $accent; }
+    #top { height: 45%; }
+    #bottom { height: 55%; border-top: solid $accent; }
+    #cand-pane { height: 45%; }
+    #console-pane { height: 55%; border-top: solid $accent; }
+    #strip { height: 4; border-top: solid $accent; background: $boost; }
     .panel-title { background: $boost; color: $text; text-style: bold; padding: 0 1; }
     AgentGrid { height: 1fr; border: none; }
-    WorkerConsole { width: 1fr; }
+    WorkerConsole { width: 1fr; height: 1fr; }
     InboxTimeline { width: 1fr; }
-    CandidateQueue { width: 1fr; }
+    CandidateQueue { width: 1fr; height: 1fr; }
+    ResourceStrip Static { width: 1fr; padding: 0 1; }
     """
 
     BINDINGS = [
@@ -94,18 +100,22 @@ class Dashboard(App):
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
-        with Horizontal():
+        # 3열: 좌 워커 · 중앙 보드(상 백로그/하 inbox 전이) · 우 후보+콘솔.
+        with Horizontal(id="body"):
             with Vertical(id="sidebar"):
                 yield AgentGrid(id="agents")
             with Vertical(id="main"):
                 with Vertical(id="top"):
                     yield BacklogBoard(id="backlog")
-                with Vertical(id="mid"):
-                    yield WorkerConsole(id="console")
                 with Vertical(id="bottom"):
-                    with Horizontal():
-                        yield InboxTimeline(id="inbox")
-                        yield CandidateQueue(id="candidates")
+                    yield InboxTimeline(id="inbox")
+            with Vertical(id="right"):
+                with Vertical(id="cand-pane"):
+                    yield CandidateQueue(id="candidates")
+                with Vertical(id="console-pane"):
+                    yield WorkerConsole(id="console")
+        # 하단 풀폭: 팀 부하 현재량 스트립.
+        yield ResourceStrip(id="strip")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -125,10 +135,21 @@ class Dashboard(App):
         self.query_one(InboxTimeline).update_snapshot(snap)
         self.query_one(CandidateQueue).update_snapshot(snap)
         self._render_backlog()
+        self._render_strip(snap)
         tmux_ok, tmux_why = self.launcher.available()
         tmux_s = f"tmux {len(running)}개 실행" if tmux_ok else f"tmux:{tmux_why}"
         self.sub_title = (f"{self.root.name} · 미리알림:{self.reminders_list} · "
                           f"inbox {len(snap.inbox)} · {tmux_s}")
+
+    def _render_strip(self, snap: "store.Snapshot") -> None:
+        """팀 부하 현재량 스트립. 전부 store/세션풀에서 결정적으로 나오는 절대량."""
+        unread = sum(1 for m in snap.inbox if not m.consumed)
+        active = len(self.pool.active_workers())
+        # 미완 백로그: 미리알림을 아직 안 당겼으면 0(캐시 비어있음). 당긴 뒤에만 의미.
+        open_backlog = sum(1 for t in self._tasks if not t.get("completed"))
+        self.query_one(ResourceStrip).update_data(
+            unread=unread, active_sessions=active,
+            worker_count=len(snap.workers), open_backlog=open_backlog)
 
     def _render_backlog(self) -> None:
         """캐시된 Reminders 작업으로 백로그를 그린다(네트워크/osascript 호출 없음)."""
@@ -255,7 +276,7 @@ class Dashboard(App):
             self._instructing = worker
             self._instruct_worker(worker, team, prompt)
 
-        self.push_screen(InstructModal(worker, submit, resuming=resuming))
+        self.push_screen(InstructModal(worker, submit, resuming=resuming, team=team))
 
     def action_reset_session(self) -> None:
         """선택 워커의 headless 대화를 새로 시작(다음 지시는 새 세션)."""

@@ -69,47 +69,92 @@ def _rel(target_abs: Path, link: Path) -> str:
 
 
 # --- Skill compartmentalization (3-tier company) ---
-# GOVERNANCE skills re-/define the team itself (roster, goals, derivation authoring).
-# They are linked ONLY to the governance authoring_owner — a non-owner worker has no
-# business re-defining the team, so these stay off every other worker's skills folder.
-GOVERNANCE_SHARED = frozenset({
-    "team-init", "create-team-agent", "agent-clone-setup", "set-team-goal", "team-derive-author",
-})
+# GOVERNANCE skills re-/define the team itself. They split into two TIERS (user decision
+# 2026-06-27, "거버넌스 팀장 분산"):
+#   COMPANY-tier: re-generate the WHOLE roster/subteams or set up clones — a company-wide
+#     power that must stay with ONE company owner; a team lead must not be able to rewrite
+#     other teams' definitions.  -> team-init, agent-clone-setup
+#   TEAM-tier: self-governance scoped to one's OWN subteam — add a worker, set the team
+#     goal, author team derivations.  -> create-team-agent, set-team-goal, team-derive-author
+# A team lead (subteam orchestrator) holds the TEAM-tier set; the company owner holds
+# COMPANY-tier + (its own) TEAM-tier; a plain worker holds neither.
+GOVERNANCE_COMPANY = frozenset({"team-init", "agent-clone-setup"})
+GOVERNANCE_TEAM = frozenset({"create-team-agent", "set-team-goal", "team-derive-author"})
+GOVERNANCE_SHARED = GOVERNANCE_COMPANY | GOVERNANCE_TEAM  # full set (any-governance test)
+
+# LEAD-ONLY operational skills — NOT governance (they don't re-define the team), but only a
+# team lead operates them: the quality ledger that drives the (가)+(나) autonomous-assignment
+# loop lives in the lead's private folder, so a non-lead can't usefully run it. Linked to
+# leads + the company owner, withheld from plain workers (same tier set as TEAM governance).
+LEAD_ONLY = frozenset({"team-quality-ledger"})
+
+# Skills whose target is scoped to a single subteam — guarded so a team lead can only act
+# on its OWN team (see _require_own_team in the CLI). team-init/agent-clone-setup are
+# COMPANY-tier and not subteam-scoped, so they are not in this set.
+SUBTEAM_SCOPED = GOVERNANCE_TEAM
 
 
-def _governance_owner(team_root: Path) -> str | None:
-    """The single worker allowed to hold governance skills (team-promotion.json owner)."""
+def _company_owner(team_root: Path) -> str | None:
+    """The single worker allowed to hold COMPANY-tier governance (company_owner / legacy
+    authoring_owner in team-promotion.json)."""
     pol = team_root / ".project" / "policies" / "team-promotion.json"
     data = _load_json_or_none(pol)
     if isinstance(data, dict):
         gov = data.get("governance")
         if isinstance(gov, dict):
-            owner = gov.get("authoring_owner")
-            if isinstance(owner, str) and owner.strip():
-                return owner.strip()
+            for key in ("company_owner", "authoring_owner"):  # new key, then legacy
+                owner = gov.get(key)
+                if isinstance(owner, str) and owner.strip():
+                    return owner.strip()
     return None
+
+
+# Back-compat alias: older call sites / tests referenced _governance_owner. The COMPANY
+# owner is the closest analogue (it is the legacy single authoring_owner).
+_governance_owner = _company_owner
+
+
+def _orchestrators(team_root: Path) -> set[str]:
+    """Every subteam orchestrator (team lead), from team.json subteams (single source)."""
+    data = _load_json_or_none(team_root / ".project" / "team.json")
+    leads: set[str] = set()
+    if isinstance(data, dict):
+        for st in data.get("subteams") or []:
+            if isinstance(st, dict):
+                orch = st.get("orchestrator")
+                if isinstance(orch, str) and orch.strip():
+                    leads.add(orch.strip())
+    return leads
 
 
 def _allowed_shared_skills(team_root: Path, name: str) -> set[str] | None:
     """The set of SHARED root skills this worker may link, or None for "all" (back-compat).
 
-    Every shared skill is allowed EXCEPT governance skills, which are allowed only for the
-    governance owner. When no governance owner is resolvable (e.g. a fresh/flat team with no
-    team-promotion.json), return None so behavior is unchanged (link everything).
+    Governance is tiered (user decision 2026-06-27):
+      - the COMPANY owner gets every shared skill (COMPANY + TEAM governance + non-gov);
+      - a subteam ORCHESTRATOR (team lead) gets non-gov + TEAM-tier governance only;
+      - a plain worker gets non-gov only (all governance withheld).
+    When no company owner is resolvable (a fresh/flat team with no team-promotion.json),
+    return None so behavior is unchanged (link everything) — fail-safe back-compat.
     """
     root_skills = team_root / ".claude" / "skills"
     if not root_skills.is_dir():
         return None
-    owner = _governance_owner(team_root)
+    owner = _company_owner(team_root)
     if owner is None:
         return None  # no governance policy => preserve legacy "link all"
     all_shared = {
         c.name for c in root_skills.iterdir()
         if c.is_dir() and not c.name.startswith((".", "_"))
     }
+    # "ordinary" = neither governance NOR lead-only. Plain workers get exactly these.
+    ordinary = all_shared - GOVERNANCE_SHARED - LEAD_ONLY
     if name == owner:
-        return all_shared  # owner gets everything, including governance
-    return all_shared - GOVERNANCE_SHARED  # non-owner: governance withheld
+        return all_shared  # company owner: everything (COMPANY + TEAM gov + lead-only + ordinary)
+    if name in _orchestrators(team_root):
+        # team lead: ordinary + TEAM-tier governance + lead-only operational skills
+        return ordinary | (GOVERNANCE_TEAM & all_shared) | (LEAD_ONLY & all_shared)
+    return ordinary  # plain worker: governance AND lead-only withheld
 
 
 class AgentError(RuntimeError):
@@ -270,15 +315,16 @@ def _subteam_of(team_root: Path, name: str) -> str | None:
     return None
 
 
-def agent_dir_for(team_root: Path, name: str) -> Path:
+def agent_dir_for(team_root: Path, name: str, *, subteam_hint: str | None = None) -> Path:
     """Resolve a worker's folder, 2-tier (teams/<team>/<name>) or flat (agents/<name>).
 
-    Prefers the subteam location from team.json. Falls back to flat ``agents/<name>``
-    when the worker is not in any subteam (a flat team, or a fresh/CI root with no
-    subteams) — this fallback is what keeps every existing test green after this
-    generalization, since their fake roots have no subteams.
+    Prefers the subteam location from team.json. ``subteam_hint`` lets a fresh create place
+    a NOT-YET-registered worker straight into its team folder (the worker isn't in team.json
+    members yet, so _subteam_of can't find it). Falls back to flat ``agents/<name>`` when the
+    worker is in no subteam and no hint is given (a flat team, or a fresh/CI root with no
+    subteams) — this fallback keeps every existing flat-root test green.
     """
-    sub = _subteam_of(team_root, name)
+    sub = _subteam_of(team_root, name) or subteam_hint
     if sub:
         return team_root / "teams" / sub / name
     return team_root / "agents" / name
@@ -303,7 +349,13 @@ def _wire_shared(team_root: Path, agent_dir: Path, name: str, *, force: bool) ->
     return out
 
 
-def _register_in_roster(team_root: Path, name: str) -> bool:
+def _register_in_roster(team_root: Path, name: str, *, subteam: str | None = None) -> dict[str, bool]:
+    """Add ``name`` to the roster, and (if ``subteam`` given) to that subteam's members.
+
+    Returns {"roster_added": bool, "subteam_added": bool}. Writing the subteam membership
+    here keeps team.json the single source so a lead-created worker is a first-class member
+    without a full team-init regen (the worker's path permissions land at the next team-init).
+    """
     team_file = team_root / ".project" / "team.json"
     if team_file.exists():
         data = json.loads(team_file.read_text(encoding="utf-8"))
@@ -312,19 +364,76 @@ def _register_in_roster(team_root: Path, name: str) -> bool:
     members = data.get("members")
     if not isinstance(members, list):
         members = []
-    if name in members:
-        data["members"] = members
-        return False
-    members.append(name)
+    roster_added = name not in members
+    if roster_added:
+        members.append(name)
     data["members"] = members
-    _atomic_write_json(team_file, data)
-    return True
+
+    subteam_added = False
+    if subteam:
+        subs = data.get("subteams")
+        if isinstance(subs, list):
+            for st in subs:
+                if isinstance(st, dict) and str(st.get("name") or "").strip() == subteam:
+                    st_members = st.get("members")
+                    if not isinstance(st_members, list):
+                        st_members = []
+                    if name not in st_members:
+                        st_members.append(name)
+                        subteam_added = True
+                    st["members"] = st_members
+                    break
+    if roster_added or subteam_added:
+        _atomic_write_json(team_file, data)
+    return {"roster_added": roster_added, "subteam_added": subteam_added}
 
 
-def create_agent(team_root: Path, name: str, *, role: str | None = None, force: bool = False) -> dict[str, Any]:
+def _orchestrator_of(team_root: Path, subteam: str) -> str | None:
+    """The orchestrator (team lead) of a named subteam, from team.json."""
+    data = _load_json_or_none(team_root / ".project" / "team.json")
+    if isinstance(data, dict):
+        for st in data.get("subteams") or []:
+            if isinstance(st, dict) and str(st.get("name") or "").strip() == subteam:
+                orch = st.get("orchestrator")
+                if isinstance(orch, str) and orch.strip():
+                    return orch.strip()
+    return None
+
+
+def _require_own_team(team_root: Path, *, requester: str | None, subteam: str | None) -> None:
+    """Enforce OWN-team scope for a TEAM-tier governance action (user decision: 자기팀 한정).
+
+    The skill-link gate is a NECESSARY condition (a plain worker can't even call this); this
+    is the SUFFICIENT condition that stops a team lead from acting on ANOTHER team. Layers:
+      - requester must be a registered subteam orchestrator (a team lead at all), and
+      - the target subteam's orchestrator must BE the requester (their own team).
+    The COMPANY owner is allowed cross-team (they legitimately scaffold any team). When the
+    requester is unknown (no env identity) we fail CLOSED for a subteam-scoped create.
+    """
+    if subteam is None:
+        return  # not a subteam-scoped create (e.g. a flat/CI root with no subteams)
+    if requester and requester == _company_owner(team_root):
+        return  # company owner may create in any team
+    if not requester:
+        raise AgentError(
+            "subteam-scoped create needs an identity: export CLAUDE_AGENT_NAME or pass --requester")
+    target_lead = _orchestrator_of(team_root, subteam)
+    if target_lead is None:
+        raise AgentError(f"unknown subteam '{subteam}' (not in team.json)")
+    if requester != target_lead:
+        raise AgentError(
+            f"'{requester}' may not create workers in team '{subteam}' "
+            f"(only its lead '{target_lead}' or the company owner may) — 자기팀 한정")
+
+
+def create_agent(team_root: Path, name: str, *, role: str | None = None, force: bool = False,
+                 subteam: str | None = None, requester: str | None = None) -> dict[str, Any]:
     if not (team_root / ".claude").is_dir():
         raise AgentError(f"team root has no .claude/: {team_root}")
-    agent_dir = agent_dir_for(team_root, name)
+    # Own-team scope guard for TEAM-tier create (only when a subteam is targeted; flat trees
+    # pass subteam=None and skip the guard, preserving every existing flat-root test).
+    _require_own_team(team_root, requester=requester, subteam=subteam)
+    agent_dir = agent_dir_for(team_root, name, subteam_hint=subteam)
     existed = agent_dir.exists()
     if existed and not force:
         return {"name": name, "dir": str(agent_dir), "created": False, "exists": True}
@@ -349,15 +458,17 @@ def create_agent(team_root: Path, name: str, *, role: str | None = None, force: 
             encoding="utf-8",
         )
 
-    roster_added = _register_in_roster(team_root, name)
+    reg = _register_in_roster(team_root, name, subteam=subteam)
 
     return {
         "name": name,
         "dir": str(agent_dir),
         "created": True,
         "reused": existed,
+        "subteam": subteam,
         "symlinks": symlinks,
-        "roster_added": roster_added,
+        "roster_added": reg["roster_added"],
+        "subteam_added": reg["subteam_added"],
     }
 
 
@@ -486,6 +597,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_create.add_argument("name")
     p_create.add_argument("--role", default=None, help="Short role descriptor (does NOT rewrite the shared contract).")
     p_create.add_argument("--force", action="store_true", help="Re-wire symlinks on an existing agent (keeps private seeds).")
+    p_create.add_argument("--subteam", default=None,
+                          help="Target subteam (TEAM-tier create). Places the worker in teams/<subteam>/ "
+                               "and registers it in that subteam's members; enforces own-team scope.")
+    p_create.add_argument("--requester", default=None,
+                          help="Caller identity for the own-team guard (default: $CLAUDE_AGENT_NAME).")
 
     sub.add_parser("list", help="List agent folders vs roster and any drift.")
 
@@ -502,7 +618,9 @@ def main(argv: list[str] | None = None) -> int:
     team_root = Path(args.team_root).expanduser() if args.team_root else default_team_root()
     try:
         if args.op == "create":
-            result = create_agent(team_root, args.name, role=args.role, force=args.force)
+            requester = args.requester or os.environ.get("CLAUDE_AGENT_NAME") or None
+            result = create_agent(team_root, args.name, role=args.role, force=args.force,
+                                  subteam=args.subteam, requester=requester)
         elif args.op == "list":
             result = list_agents(team_root)
         elif args.op == "sync":

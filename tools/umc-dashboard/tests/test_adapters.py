@@ -46,7 +46,81 @@ def test_inbox_post_fans_out_recipients():
     cli.inbox_post("orchestrator", ["alice", "bob"], "제목", "본문")
     argv = fake.calls[0]
     assert argv.count("--to") == 2 and "alice" in argv and "bob" in argv
-    assert "--as" in argv and "orchestrator" in argv
+    # post의 발신자 플래그는 --from (--as는 read/ack 전용). 과거 --as 버그 회귀 방지.
+    assert "--from" in argv and "orchestrator" in argv
+    assert "--as" not in argv
+
+
+def test_inbox_post_to_team():
+    fake = FakeRunner(stdout=json.dumps({"ok": True, "result": {"delivered_to_team": "data"}}))
+    cli = TeamCli(Path("/repo"), runner=fake)
+    cli.inbox_post("mw", [], "제목", "본문", to_team="data")
+    argv = fake.calls[0]
+    assert "--to-team" in argv and "data" in argv
+    assert "--from" in argv and "mw" in argv
+
+
+def test_inbox_claim_argv():
+    fake = FakeRunner(stdout=json.dumps({"ok": True, "result": {"claimed": True}}))
+    cli = TeamCli(Path("/repo"), runner=fake)
+    cli.inbox_claim("data", "0001__mw__ab", "dc")
+    argv = fake.calls[0]
+    assert argv[2] == "claim"
+    assert "--team" in argv and "data" in argv
+    assert "--id" in argv and "0001__mw__ab" in argv
+    assert "--as" in argv and "dc" in argv
+
+
+def test_inbox_post_quality_gate_and_verdict():
+    fake = FakeRunner(stdout=json.dumps({"ok": True, "result": {}}))
+    cli = TeamCli(Path("/repo"), runner=fake)
+    cli.inbox_post("lead-w", ["writer-w"], "할당", "본문",
+                   quality_gate={"axes": ["A", "E"], "kind": "manuscript"})
+    argv = fake.calls[0]
+    assert "--quality-gate" in argv
+    gate = json.loads(argv[argv.index("--quality-gate") + 1])
+    assert gate == {"axes": ["A", "E"], "kind": "manuscript"}
+    # verdict + work_ref on a review reply
+    fake2 = FakeRunner(stdout=json.dumps({"ok": True, "result": {}}))
+    cli2 = TeamCli(Path("/repo"), runner=fake2)
+    cli2.inbox_post("quality-reviewer", ["lead-w"], "검수", "b",
+                    verdict={"result": "FAIL", "majors": 1}, work_ref="0001__x__ab")
+    a2 = fake2.calls[0]
+    assert "--verdict" in a2 and "--work-ref" in a2 and "0001__x__ab" in a2
+
+
+def test_quality_record_argv():
+    fake = FakeRunner(stdout=json.dumps({"ok": True, "result": {}}))
+    cli = TeamCli(Path("/repo"), runner=fake)
+    cli.quality_record("write", "writer-w", "intro", "FAIL",
+                       work_ref="m1", by="quality-reviewer", round_="R3")
+    argv = fake.calls[0]
+    assert "quality_ledger.py" in argv[1]
+    assert "--team" in argv and "write" in argv
+    assert argv[argv.index("record") :]  # record subcommand present
+    assert "--worker" in argv and "writer-w" in argv
+    assert "--kind" in argv and "intro" in argv
+    assert "--result" in argv and "FAIL" in argv
+    assert "--by" in argv and "quality-reviewer" in argv
+
+
+def test_quality_signal_argv():
+    fake = FakeRunner(stdout=json.dumps({"ok": True, "result": {"signals": []}}))
+    cli = TeamCli(Path("/repo"), runner=fake)
+    cli.quality_signal("write", threshold=2)
+    argv = fake.calls[0]
+    assert "signal" in argv and "--threshold" in argv and "2" in argv
+
+
+def test_agent_create_argv_enforces_own_team_flags():
+    fake = FakeRunner(stdout=json.dumps({"ok": True, "result": {"created": True}}))
+    cli = TeamCli(Path("/repo"), runner=fake)
+    cli.agent_create("new-w", subteam="write", requester="manuscript-steward", role="전문화")
+    argv = fake.calls[0]
+    assert "team_agent.py" in argv[1]
+    assert argv[2] == "create" and "new-w" in argv
+    assert "--subteam" in argv and "write" in argv
+    assert "--requester" in argv and "manuscript-steward" in argv
 
 
 def test_resolve_promotion_argv():

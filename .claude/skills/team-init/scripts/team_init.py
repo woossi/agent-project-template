@@ -101,7 +101,16 @@ def normalize_subteams(data: dict[str, Any], members: list[str]) -> list[dict[st
         reminders_list = entry.get("reminders_list")
         reminders_list = str(reminders_list).strip() if isinstance(reminders_list, str) and reminders_list.strip() else None
 
-        out.append({"name": name, "members": sub_members, "orchestrator": orch, "reminders_list": reminders_list})
+        raw_allow = entry.get("allow_paths")
+        if raw_allow in (None, []):
+            allow_paths: list[str] = []
+        elif isinstance(raw_allow, list) and all(isinstance(p, str) and p.strip() for p in raw_allow):
+            allow_paths = [p.strip() for p in raw_allow]
+        else:
+            raise TeamInitError(f"subteam '{name}' allow_paths must be a list of non-empty strings")
+
+        out.append({"name": name, "members": sub_members, "orchestrator": orch,
+                    "reminders_list": reminders_list, "allow_paths": allow_paths})
     return out
 
 
@@ -133,11 +142,20 @@ def normalize_setup(data: dict[str, Any]) -> dict[str, Any]:
 
     subteams = normalize_subteams(data, members)
 
+    # Optional governance-tier overrides; default split lives in build_promotion_policy.
+    def _str_list(key: str) -> list[str] | None:
+        v = data.get(key)
+        if isinstance(v, list) and all(isinstance(x, str) and x.strip() for x in v):
+            return [x.strip() for x in v]
+        return None
+
     return {
         "team": team,
         "members": members,
         "roles": roles,
         "authoring_owner": owner,
+        "company_skills": _str_list("company_skills"),
+        "team_skills": _str_list("team_skills"),
         "min_distinct_agents": min_agents,
         "reminders_list": reminders_list,
         "subteams": subteams,
@@ -158,21 +176,47 @@ def build_team_json(setup: dict[str, Any]) -> dict[str, Any]:
     }
     # Subteams are the logical company -> team -> worker layer. Only emit the key
     # when present so a flat team's team.json stays byte-identical to before.
+    # ``allow_paths`` is a workspace-policy concern (it flows into agent-workspace.json),
+    # not a roster concern, so it is dropped from team.json to keep the two stores'
+    # responsibilities separate. Empty allow_paths is omitted entirely.
     if setup.get("subteams"):
-        out["subteams"] = setup["subteams"]
+        out["subteams"] = [
+            {k: v for k, v in s.items() if k in ("name", "members", "orchestrator", "reminders_list")}
+            for s in setup["subteams"]
+        ]
     return out
+
+
+# Default tiered governance split (user decision 2026-06-27, "거버넌스 팀장 분산"):
+# COMPANY-tier stays with the single company owner; TEAM-tier is distributed to each
+# subteam orchestrator (team lead). team-setup.json may override either list.
+DEFAULT_COMPANY_SKILLS = ["team-init", "agent-clone-setup"]
+DEFAULT_TEAM_SKILLS = ["create-team-agent", "set-team-goal", "team-derive-author"]
+
+
+def _governance_block(setup: dict[str, Any]) -> dict[str, Any]:
+    """Tiered governance for team-promotion.json. ``authoring_owner`` is kept as the legacy
+    alias of ``company_owner`` so older readers (team-derivation.json, _company_owner's
+    fallback) keep working unchanged."""
+    owner = setup["authoring_owner"]
+    return {
+        "mode": "tiered",
+        "company_owner": owner,
+        "authoring_owner": owner,  # legacy alias, back-compat
+        "company_skills": list(setup.get("company_skills") or DEFAULT_COMPANY_SKILLS),
+        "team_skills": list(setup.get("team_skills") or DEFAULT_TEAM_SKILLS),
+    }
 
 
 def build_promotion_policy(setup: dict[str, Any]) -> dict[str, Any]:
     n = setup["min_distinct_agents"]
-    owner = setup["authoring_owner"]
     return {
         "version": 1,
         "agent_ledger": {"tasks": ".context/task-log/tasks.jsonl", "events": ".context/task-log/events.jsonl"},
         "log": {"candidates_dir": ".project/promotions/candidates", "decisions_dir": ".project/promotions/decisions"},
         "team_skill_promotion": {"min_distinct_agents": n, "min_total_recurrence": 2, "skip_if_skill_exists": True, "max_candidates": 20},
         "team_agent_promotion": {"min_package_size": 2, "min_distinct_agents": n, "skip_if_agent_exists": True, "max_candidates": 20},
-        "governance": {"mode": "orchestrator-authors", "authoring_owner": owner},
+        "governance": _governance_block(setup),
     }
 
 
@@ -193,6 +237,45 @@ def build_derivation_policy(setup: dict[str, Any]) -> dict[str, Any]:
         "memory_derivation": {"min_distinct_agents": n, "skip_if_recorded": True, "max_candidates": 20},
         "governance": {"mode": "orchestrator-authors", "authoring_owner": owner},
     }
+
+
+# Team-agnostic common baseline prepended to EVERY worker's allow. These are the paths
+# that are not specific to any one team: the project root, the scratchpad, and the
+# workflow-output dir. The guard's merged_config REPLACES defaults.allow with the
+# agent's own allow when present (it does NOT union), so this baseline must be baked into
+# each worker's allow directly or that worker loses '.'/scratchpad/workflow access.
+BASELINE_ALLOW = [
+    ".",
+    "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
+    "/Users/ujunbin/.claude/projects/-Users-ujunbin-team-umc/**",
+]
+
+
+def _team_allow_paths(setup: dict[str, Any], name: str) -> list[str]:
+    """The allow_paths of the subteam a worker belongs to (empty if none). Uses the same
+    worker -> subteam lookup axis as _worker_path."""
+    for st in setup.get("subteams") or []:
+        if isinstance(st, dict) and name in (st.get("members") or []):
+            return list(st.get("allow_paths") or [])
+    return []
+
+
+def _other_team_allow_paths(setup: dict[str, Any], name: str) -> list[str]:
+    """External work paths owned by OTHER teams (every team's allow_paths minus this
+    worker's own team). These are added to the worker's deny so the team-external
+    whitelist is enforced on EVERY tool (Read/Edit/Write AND Bash) via the deny side,
+    without an allow-side check that would over-block unrelated paths like /tmp."""
+    mine = set(_team_allow_paths(setup, name))
+    others: list[str] = []
+    seen: set[str] = set()
+    for st in setup.get("subteams") or []:
+        if not isinstance(st, dict):
+            continue
+        for path in st.get("allow_paths") or []:
+            if path not in mine and path not in seen:
+                seen.add(path)
+                others.append(path)
+    return others
 
 
 def _worker_path(setup: dict[str, Any], name: str) -> str:
@@ -217,18 +300,32 @@ def build_agent_workspace_policy(setup: dict[str, Any], existing: dict[str, Any]
     resources (``teams/<team>/.claude`` and ``.context``) are NOT denied — they fall outside
     every sibling's worker-folder pattern and stay readable.
 
-    ``defaults`` (the project work boundaries, NOT in team-setup.json) are preserved from the
-    existing policy so regeneration never drops a configured allow path.
+    Each worker's ``allow`` is BASELINE_ALLOW + its subteam's ``allow_paths`` (team external
+    work boundaries). The guard REPLACES defaults.allow with this when present, so the full
+    effective allow is visible per worker in this file alone. ``defaults.allow`` is pinned to
+    baseline-only: a registered worker never reads it, but an unregistered/typo/empty/``main``
+    name falls back to it — baseline-only means such a name gets zero external team paths
+    (fail-safe against team-whitelist bypass). ``bash``/``deny`` defaults are preserved.
     """
     members = setup["members"]
     agents = {
-        name: {"deny": [f"{_worker_path(setup, other)}/**" for other in members if other != name]}
+        name: {
+            # deny = N^2 peer worker folders + OTHER teams' external work paths. Both are
+            # checked by the guard on every tool (Read/Edit/Write/Bash), so the team-external
+            # whitelist is symmetric across channels (no Bash bypass).
+            "deny": [f"{_worker_path(setup, other)}/**" for other in members if other != name]
+                    + _other_team_allow_paths(setup, name),
+            "allow": BASELINE_ALLOW + _team_allow_paths(setup, name),
+        }
         for name in members
     }
     base = existing if isinstance(existing, dict) else {}
-    defaults = base.get("defaults")
-    if not isinstance(defaults, dict):
-        defaults = {"allow": ["."], "bash": {"allow": [], "deny": []}, "deny": []}
+    base_defaults = base.get("defaults") if isinstance(base.get("defaults"), dict) else {}
+    defaults = {
+        "allow": list(BASELINE_ALLOW),
+        "bash": base_defaults.get("bash") if isinstance(base_defaults.get("bash"), dict) else {"allow": [], "deny": []},
+        "deny": base_defaults.get("deny") if isinstance(base_defaults.get("deny"), list) else [],
+    }
     version = base.get("version", 1)
     return {"agents": agents, "defaults": defaults, "version": version}
 
@@ -362,7 +459,7 @@ def add_subteam(team_root: Path, entry: dict[str, Any], *, create_agents: bool =
     data["members"] = members
     data["roles"] = roles
     data["subteams"] = existing_subteams + [{
-        k: v for k, v in entry.items() if k in ("name", "members", "orchestrator", "reminders_list")
+        k: v for k, v in entry.items() if k in ("name", "members", "orchestrator", "reminders_list", "allow_paths")
     }]
 
     setup = normalize_setup(data)

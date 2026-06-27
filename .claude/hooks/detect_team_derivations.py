@@ -55,7 +55,7 @@ DEFAULTS: dict[str, Any] = {
     "term_derivation": {"min_distinct_agents": 2, "skip_if_registered": True, "max_candidates": 20},
     "preference_derivation": {"min_distinct_agents": 2, "skip_if_recorded": True, "max_candidates": 20},
     "memory_derivation": {"min_distinct_agents": 2, "skip_if_recorded": True, "max_candidates": 20},
-    "governance": {"mode": "orchestrator-authors", "authoring_owner": "orchestrator"},
+    "governance": {"mode": "owner-authors", "authoring_owner": "data-curator"},
 }
 
 KINDS = ("term", "preference", "memory")
@@ -382,7 +382,7 @@ def format_surface(candidates: dict[str, Any], governance: dict[str, Any]) -> st
             lines.append(f"- [team_{kind}] '{cand['key']}' ({how}): {notes}")
     if not lines:
         return ""
-    owner = governance.get("authoring_owner", "orchestrator")
+    owner = governance.get("authoring_owner", "data-curator")
     header = (
         f"Team-derivation conditions were met. Governance: owner {owner}. The owner authors once and closes:\n"
         "- team_term -> register into .project/word.json (register_term.py --word-file; owner serializes the write).\n"

@@ -234,5 +234,116 @@ class CliTests(_Case):
         self.assertEqual(rc2, 0)
 
 
+def build_governed_team_root(root: Path) -> None:
+    """A team root WITH subteams + tiered governance, to exercise governance distribution.
+
+    company owner = curator (data team lead too). Other team lead = lead-w (write).
+    plain = plain-w (write). All five governance skills + one ordinary skill exist as
+    shared root skills so the allowlist can include/exclude them.
+    """
+    build_fake_team_root(root)
+    skills = root / ".claude" / "skills"
+    for sk in ("team-init", "agent-clone-setup", "create-team-agent",
+               "set-team-goal", "team-derive-author", "team-quality-ledger", "give-feedback"):
+        (skills / sk).mkdir(parents=True, exist_ok=True)
+        (skills / sk / "SKILL.md").write_text(f"# 스킬: {sk}", encoding="utf-8")
+    team = root / ".project"
+    (team / "team.json").write_text(json.dumps({
+        "version": 1,
+        "members": ["curator", "lead-w", "plain-w"],
+        "subteams": [
+            {"name": "data", "members": ["curator"], "orchestrator": "curator"},
+            {"name": "write", "members": ["lead-w", "plain-w"], "orchestrator": "lead-w"},
+        ],
+    }), encoding="utf-8")
+    (team / "policies").mkdir(parents=True, exist_ok=True)
+    (team / "policies" / "team-promotion.json").write_text(json.dumps({
+        "governance": {
+            "mode": "tiered",
+            "company_owner": "curator",
+            "authoring_owner": "curator",
+            "company_skills": ["team-init", "agent-clone-setup"],
+            "team_skills": ["create-team-agent", "set-team-goal", "team-derive-author"],
+        }
+    }), encoding="utf-8")
+
+
+class GovernanceTierTests(unittest.TestCase):
+    """(다) 거버넌스 팀장 분산: company owner / team lead / plain worker 별 권한."""
+
+    def setUp(self):
+        self._tmp = TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        build_governed_team_root(self.root)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_company_owner_gets_everything(self):
+        allowed = ta._allowed_shared_skills(self.root, "curator")
+        for sk in ta.GOVERNANCE_COMPANY | ta.GOVERNANCE_TEAM:
+            self.assertIn(sk, allowed, f"company owner should hold {sk}")
+        self.assertIn("give-feedback", allowed)  # plus ordinary skills
+
+    def test_team_lead_gets_team_tier_not_company_tier(self):
+        allowed = ta._allowed_shared_skills(self.root, "lead-w")
+        for sk in ta.GOVERNANCE_TEAM:
+            self.assertIn(sk, allowed, f"team lead should hold TEAM-tier {sk}")
+        for sk in ta.GOVERNANCE_COMPANY:
+            self.assertNotIn(sk, allowed, f"team lead must NOT hold COMPANY-tier {sk}")
+        self.assertIn("give-feedback", allowed)
+
+    def test_plain_worker_gets_no_governance(self):
+        allowed = ta._allowed_shared_skills(self.root, "plain-w")
+        for sk in ta.GOVERNANCE_COMPANY | ta.GOVERNANCE_TEAM:
+            self.assertNotIn(sk, allowed, f"plain worker must NOT hold {sk}")
+        self.assertIn("give-feedback", allowed)  # ordinary skills still linked
+
+    def test_lead_only_skill_distribution(self):
+        # team-quality-ledger is LEAD-ONLY (not governance): leads + company owner get it,
+        # plain workers do not.
+        self.assertIn("team-quality-ledger", ta._allowed_shared_skills(self.root, "curator"))
+        self.assertIn("team-quality-ledger", ta._allowed_shared_skills(self.root, "lead-w"))
+        self.assertNotIn("team-quality-ledger", ta._allowed_shared_skills(self.root, "plain-w"))
+
+    def test_lead_creates_in_own_team(self):
+        res = ta.create_agent(self.root, "new-w", subteam="write", requester="lead-w")
+        self.assertTrue(res["created"])
+        self.assertEqual(res["subteam"], "write")
+        self.assertTrue(res["subteam_added"])
+        # placed under teams/write/ and registered in that subteam's members
+        self.assertTrue((self.root / "teams/write/new-w/.claude/memory/memory.md").is_file())
+        tj = json.loads((self.root / ".project/team.json").read_text(encoding="utf-8"))
+        write_members = next(s["members"] for s in tj["subteams"] if s["name"] == "write")
+        self.assertIn("new-w", write_members)
+        self.assertIn("new-w", tj["members"])
+
+    def test_lead_cannot_create_in_other_team(self):
+        with self.assertRaises(ta.AgentError):
+            ta.create_agent(self.root, "intruder", subteam="data", requester="lead-w")
+
+    def test_plain_worker_cannot_create(self):
+        with self.assertRaises(ta.AgentError):
+            ta.create_agent(self.root, "x", subteam="write", requester="plain-w")
+
+    def test_company_owner_may_create_cross_team(self):
+        res = ta.create_agent(self.root, "any-w", subteam="write", requester="curator")
+        self.assertTrue(res["created"])  # owner is allowed across teams
+
+    def test_missing_identity_fails_closed_for_subteam_create(self):
+        with self.assertRaises(ta.AgentError):
+            ta.create_agent(self.root, "y", subteam="write", requester=None)
+
+    def test_unknown_subteam_rejected(self):
+        with self.assertRaises(ta.AgentError):
+            ta.create_agent(self.root, "z", subteam="ghost", requester="lead-w")
+
+    def test_flat_create_still_works_without_subteam(self):
+        # No subteam => no own-team guard (back-compat with flat roots / existing tests).
+        res = ta.create_agent(self.root, "flat-w")
+        self.assertTrue(res["created"])
+        self.assertIsNone(res["subteam"])
+
+
 if __name__ == "__main__":
     unittest.main()

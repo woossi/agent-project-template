@@ -79,11 +79,16 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(pol["agents"]["paper-scout"]["deny"], ["agents/data-curator/**"])
         self.assertEqual(sorted(pol["agents"]), ["data-curator", "paper-scout"])
 
-    def test_workspace_policy_preserves_existing_defaults(self):
+    def test_workspace_policy_regenerates_defaults_to_baseline(self):
+        # NEW design (per-team allow_paths, 2026-06-27): defaults.allow is REGENERATED to the
+        # team-agnostic BASELINE, not inherited from the old policy. Work boundaries are no
+        # longer global defaults — they flow into each worker's own ``allow`` from the
+        # subteam's allow_paths. A flat team has no allow_paths, so workers get baseline only.
         s = ti.normalize_setup(setup(members=["a", "b"]))
         existing = {"version": 1, "defaults": {"allow": [".", "/abs/umc/**"], "deny": [], "bash": {}}, "agents": {}}
         pol = ti.build_agent_workspace_policy(s, existing)
-        self.assertIn("/abs/umc/**", pol["defaults"]["allow"])  # work boundary kept
+        self.assertEqual(pol["defaults"]["allow"], ti.BASELINE_ALLOW)  # regenerated to baseline
+        self.assertNotIn("/abs/umc/**", pol["defaults"]["allow"])  # stale global boundary dropped
         self.assertEqual(sorted(pol["agents"]), ["a", "b"])  # agents map regenerated
 
 
@@ -109,8 +114,11 @@ class InitTests(unittest.TestCase):
         tj = json.loads((self.root / ".project/team.json").read_text(encoding="utf-8"))
         self.assertEqual(tj["reminders_list"], "umc")
 
-    def test_init_regenerates_workspace_policy_preserving_boundaries(self):
-        # an existing policy carries project work boundaries that are NOT in team-setup
+    def test_init_regenerates_workspace_policy_to_baseline(self):
+        # NEW design: init fully REGENERATES agent-workspace.json. Stale agent keys are gone
+        # AND the old global boundary in defaults.allow is dropped — defaults.allow becomes the
+        # team-agnostic BASELINE. (Real work boundaries now come from subteam allow_paths into
+        # each worker's allow; this flat setup has none, so baseline only.)
         wp = self.root / ".claude/policies/agent-workspace.json"
         wp.parent.mkdir(parents=True, exist_ok=True)
         wp.write_text(json.dumps({
@@ -121,7 +129,8 @@ class InitTests(unittest.TestCase):
         ti.init_team(self.root, ti.normalize_setup(setup(members=["data-curator", "paper-scout"])))
         pol = json.loads(wp.read_text(encoding="utf-8"))
         self.assertEqual(sorted(pol["agents"]), ["data-curator", "paper-scout"])  # stale keys gone
-        self.assertIn("/Users/x/project/umc/**", pol["defaults"]["allow"])  # boundary preserved
+        self.assertEqual(pol["defaults"]["allow"], ti.BASELINE_ALLOW)  # regenerated to baseline
+        self.assertNotIn("/Users/x/project/umc/**", pol["defaults"]["allow"])  # stale global boundary dropped
 
     def test_policies_are_valid_for_hooks(self):
         ti.init_team(self.root, ti.normalize_setup(setup(min_distinct_agents=2)))

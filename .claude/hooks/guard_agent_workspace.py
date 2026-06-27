@@ -6,6 +6,8 @@ import argparse
 import fnmatch
 import json
 import os
+import re
+import shlex
 import sys
 from pathlib import Path
 from typing import Any
@@ -97,7 +99,8 @@ def merged_config(policy: dict[str, Any], agent_name: str) -> dict[str, Any]:
     if not isinstance(agents, dict):
         agents = {}
     agent_config = agents.get(agent_name)
-    if not isinstance(agent_config, dict):
+    registered = isinstance(agent_config, dict)
+    if not registered:
         agent_config = {}
 
     allow = (
@@ -106,6 +109,15 @@ def merged_config(policy: dict[str, Any], agent_name: str) -> dict[str, Any]:
         else as_string_list(defaults.get("allow")) or ["."]
     )
     deny = as_string_list(defaults.get("deny")) + as_string_list(agent_config.get("deny"))
+    if not registered:
+        # Unregistered / typo / empty / "main": synthesize a deny over EVERY registered
+        # worker folder. With no agent entry of its own, no self-folder is exempted, so all
+        # worker folders are blocked (fail-closed against identity collapse). The allow side
+        # already falls back to defaults.allow (baseline-only), so no external team path leaks.
+        for cfg in agents.values():
+            if isinstance(cfg, dict):
+                deny += as_string_list(cfg.get("deny"))
+        deny = sorted(set(deny))
 
     default_bash = defaults.get("bash")
     if not isinstance(default_bash, dict):
@@ -222,11 +234,66 @@ def check_path_policy(paths: list[str], root: Path, config: dict[str, Any]) -> i
     return 0
 
 
-def check_bash_policy(command: str, config: dict[str, Any]) -> int:
+def bash_path_tokens(command: str) -> list[str]:
+    """Best-effort static extraction of path-like tokens from a Bash command.
+
+    shlex-tokenize, then split each token further on = : , (to catch env=path,
+    --flag=path, A:B / comma-joined PATH forms), strip redirect/pipe glyphs, and keep
+    only fragments that contain a slash and do not start with '-'. Falls back to a naive
+    split when shlex fails on unbalanced quotes (the fallback still surfaces peer paths).
+    This is a deny-side guard only — it cannot catch paths hidden behind shell variables,
+    globs, or here-docs, so it is a partial defense, not a complete one.
+    """
+    try:
+        toks = shlex.split(command, comments=False, posix=True)
+    except ValueError:
+        toks = command.split()
+    out: list[str] = []
+    for tok in toks:
+        for piece in re.split(r"[=:,]", tok):
+            # Strip shell metacharacters/quotes/redirects that shlex may leave attached
+            # to a path token (e.g. trailing ';' in "cat a.pdf; ls" or wrapping quotes).
+            piece = piece.strip().strip("<>|&;()'\"`")
+            if piece and "/" in piece and not piece.startswith("-"):
+                out.append(piece)
+    return out
+
+
+def check_bash_path_targets(command: str, root: Path, config: dict[str, Any]) -> int:
+    """Block a Bash command whose path-like arguments touch a DENIED path.
+
+    Deny-only, mirroring ``check_path_policy``'s deny side onto Bash. ``config["deny"]``
+    carries both the N^2 peer worker folders AND each team's OTHER-team external work
+    dirs (team_init expands them), so a worker cannot ``cat`` a sibling's folder or
+    another team's external path. Unrelated absolute paths (``/tmp``, ``/usr``, ...) are
+    deliberately NOT blocked — only what policy explicitly denies — so normal shell work
+    is untouched. Best-effort: static token extraction can't see shell variables, globs,
+    or command substitution (see ``bash_path_tokens``); OS sandboxing is the hard backstop.
+    """
+    deny = config["deny"]
+    if not deny:
+        return 0
+    for tok in bash_path_tokens(command):
+        rel, abs_path = path_targets(tok, root)
+        if any(path_matches_target(pattern, rel, abs_path, root) for pattern in deny):
+            display = rel if rel is not None else abs_path
+            print(
+                f"Blocked Bash command touching {display}: "
+                f"denied by workspace policy for agent {config['agent']}.",
+                file=sys.stderr,
+            )
+            return 2
+    return 0
+
+
+def check_bash_policy(command: str, root: Path, config: dict[str, Any]) -> int:
     bash = config["bash"]
     if not bash["enabled"]:
         print(f"Blocked Bash: disabled for agent {config['agent']}.", file=sys.stderr)
         return 2
+    target_code = check_bash_path_targets(command, root, config)
+    if target_code != 0:
+        return target_code
     if any(command_matches(pattern, command) for pattern in bash["deny"]):
         print(
             f"Blocked Bash command: denied by workspace policy for agent {config['agent']}.",
@@ -273,7 +340,7 @@ def main(argv: list[str] | None = None) -> int:
     if tool_name == "Bash":
         command = tool_input.get("command")
         if isinstance(command, str):
-            return check_bash_policy(command, config)
+            return check_bash_policy(command, root, config)
 
     return 0
 
