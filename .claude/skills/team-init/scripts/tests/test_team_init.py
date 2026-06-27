@@ -140,6 +140,103 @@ class InitTests(unittest.TestCase):
         self.assertEqual(res["agents_created"], ["orchestrator", "worker-1"])
 
 
+class SubteamNormalizeTests(unittest.TestCase):
+    def _members(self):
+        return ["data-curator", "data-engineer", "paper-scout"]
+
+    def test_absent_subteams_stays_flat(self):
+        s = ti.normalize_setup(setup())
+        self.assertEqual(s["subteams"], [])
+
+    def test_subteam_members_must_be_in_roster(self):
+        with self.assertRaises(ti.TeamInitError):
+            ti.normalize_subteams({"subteams": [{"name": "data", "members": ["ghost"]}]}, self._members())
+
+    def test_worker_in_two_subteams_rejected(self):
+        with self.assertRaises(ti.TeamInitError):
+            ti.normalize_subteams({"subteams": [
+                {"name": "a", "members": ["data-curator"]},
+                {"name": "b", "members": ["data-curator"]},
+            ]}, self._members())
+
+    def test_duplicate_subteam_name_rejected(self):
+        with self.assertRaises(ti.TeamInitError):
+            ti.normalize_subteams({"subteams": [
+                {"name": "data", "members": ["data-curator"]},
+                {"name": "data", "members": ["data-engineer"]},
+            ]}, self._members())
+
+    def test_orchestrator_defaults_to_first_member(self):
+        subs = ti.normalize_subteams({"subteams": [{"name": "data", "members": ["data-curator", "data-engineer"]}]}, self._members())
+        self.assertEqual(subs[0]["orchestrator"], "data-curator")
+
+    def test_orchestrator_must_be_subteam_member(self):
+        with self.assertRaises(ti.TeamInitError):
+            ti.normalize_subteams({"subteams": [
+                {"name": "data", "members": ["data-curator"], "orchestrator": "paper-scout"},
+            ]}, self._members())
+
+    def test_subteams_propagate_to_team_json_only_when_present(self):
+        flat = ti.build_team_json(ti.normalize_setup(setup()))
+        self.assertNotIn("subteams", flat)  # flat team.json unchanged
+        nested = ti.build_team_json(ti.normalize_setup(setup(
+            members=["data-curator", "data-engineer"],
+            subteams=[{"name": "data", "members": ["data-curator", "data-engineer"], "reminders_list": "umc-data"}],
+        )))
+        self.assertEqual(nested["subteams"][0]["name"], "data")
+        self.assertEqual(nested["subteams"][0]["reminders_list"], "umc-data")
+
+
+class AddSubteamTests(unittest.TestCase):
+    def setUp(self):
+        self._tmp = TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        # seed an existing flat team
+        ti.main(["init", "--input", str(self._write_in(setup(members=["data-curator", "data-engineer"]))),
+                 "--team-root", str(self.root)])
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _write_in(self, payload):
+        p = self.root / "in.json"
+        p.write_text(json.dumps(payload), encoding="utf-8")
+        return p
+
+    def test_add_subteam_appends_and_grows_roster(self):
+        entry = self.root / "sub.json"
+        entry.write_text(json.dumps({
+            "name": "write", "members": ["manuscript-writer", "data-curator"], "reminders_list": "umc-write",
+            "orchestrator": "manuscript-writer",
+        }), encoding="utf-8")
+        rc = ti.main(["add-subteam", "--input", str(entry), "--team-root", str(self.root)])
+        self.assertEqual(rc, 0)
+        # roster grew with the brand-new worker
+        saved = json.loads((self.root / "team-setup.json").read_text(encoding="utf-8"))
+        self.assertIn("manuscript-writer", saved["members"])
+        self.assertEqual(saved["subteams"][0]["name"], "write")
+        # team.json reflects it and the isolation policy regenerated for the new worker
+        tj = json.loads((self.root / ".team/team.json").read_text(encoding="utf-8"))
+        self.assertEqual(tj["subteams"][0]["name"], "write")
+        pol = json.loads((self.root / ".claude/policies/agent-workspace.json").read_text(encoding="utf-8"))
+        self.assertIn("manuscript-writer", pol["agents"])
+
+    def test_add_duplicate_subteam_rejected(self):
+        entry = self.root / "sub.json"
+        payload = {"name": "data", "members": ["data-curator", "data-engineer"]}
+        entry.write_text(json.dumps(payload), encoding="utf-8")
+        self.assertEqual(ti.main(["add-subteam", "--input", str(entry), "--team-root", str(self.root)]), 0)
+        # second time with same name fails
+        self.assertEqual(ti.main(["add-subteam", "--input", str(entry), "--team-root", str(self.root)]), 1)
+
+    def test_add_subteam_without_init_fails(self):
+        empty = Path(self._tmp.name) / "fresh"
+        empty.mkdir()
+        entry = empty / "sub.json"
+        entry.write_text(json.dumps({"name": "data", "members": ["x"]}), encoding="utf-8")
+        self.assertEqual(ti.main(["add-subteam", "--input", str(entry), "--team-root", str(empty)]), 1)
+
+
 class CliTests(unittest.TestCase):
     def setUp(self):
         self._tmp = TemporaryDirectory()

@@ -22,5 +22,43 @@
   },
   "authoring_owner": "data-curator",
   "min_distinct_agents": 2,
-  "reminders_list": "umc"
+  "reminders_list": "umc",
+  "subteams": [
+    {
+      "name": "data",
+      "members": [
+        "data-engineer",
+        "data-curator",
+        "inference-runner"
+      ],
+      "orchestrator": "data-curator",
+      "reminders_list": "umc-data"
+    },
+    {
+      "name": "write",
+      "members": [
+        "manuscript-writer",
+        "manuscript-steward"
+      ],
+      "orchestrator": "manuscript-steward",
+      "reminders_list": "umc-write"
+    },
+    {
+      "name": "scout",
+      "members": [
+        "paper-scout"
+      ],
+      "orchestrator": "paper-scout",
+      "reminders_list": "umc-scout"
+    },
+    {
+      "name": "review",
+      "members": [
+        "stats-validator",
+        "quality-reviewer"
+      ],
+      "orchestrator": "quality-reviewer",
+      "reminders_list": "umc-review"
+    }
+  ]
 }
