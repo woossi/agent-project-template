@@ -362,16 +362,19 @@ def build_agent_workspace_policy(setup: dict[str, Any], existing: dict[str, Any]
     owner = setup.get("authoring_owner")
     if isinstance(owner, str) and owner and owner not in members:
         agents[owner] = {
-            # deny = every worker's REAL folder (full roster). This blocks each worker's
-            # private folder while leaving every team's shared ``.claude`` (mailboxes, tasks,
-            # memory) readable — they fall outside the worker-folder patterns. The company
-            # total is a read-only coordinator: no external work paths in ``allow``.
-            "deny": [f"{_worker_path(setup, m)}/**" for m in members],
+            # deny = [] — the company total is NOT plain-denied any worker folder, because
+            # plain deny blocks BOTH read and write and would contradict its read-only mandate.
+            "deny": [],
             # deny_read = [] — the company total may READ every team mailbox (the exact
-            # opposite of a worker, which is read-blocked on other teams' inboxes).
+            # opposite of a worker, which is read-blocked on other teams' inboxes) AND every
+            # worker's private folder (read-only coordination, user decision 2026-06-28).
             "deny_read": [],
-            # allow = BASELINE_ALLOW only: no team external work boundaries, so it never
-            # writes a worker's deliverables directly (read-only orchestration).
+            # deny_write = every worker's REAL folder (full roster). This is the "read-only
+            # window": the coordinator may READ each worker's private folder (memory/.context)
+            # via Read/Grep/Glob and the shell, but Edit/Write/MultiEdit into them are blocked,
+            # so it never authors a worker's deliverables directly (read-only orchestration).
+            "deny_write": [f"{_worker_path(setup, m)}/**" for m in members],
+            # allow = BASELINE_ALLOW only: no team external work boundaries.
             "allow": list(BASELINE_ALLOW),
         }
     base = existing if isinstance(existing, dict) else {}

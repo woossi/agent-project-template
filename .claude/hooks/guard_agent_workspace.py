@@ -20,6 +20,12 @@ PATH_TOOLS = {"Read", "Edit", "Write", "MultiEdit", "Grep", "Glob", "NotebookRea
 # unknown path tool is assumed to write, getting only the lenient plain-deny check — but it
 # is still subject to the full deny list, so this never weakens isolation of deny paths).
 READ_PATH_TOOLS = {"Read", "Grep", "Glob", "NotebookRead"}
+# The write tools, derived as the complement of READ within PATH_TOOLS. A path on the
+# ``deny_write`` list is blocked for these (and for Bash, which can write) but ALLOWED for
+# read tools — the mirror image of ``deny_read``. Used to grant a read-only coordinator
+# (orchestrator) read access to every worker folder while still forbidding it from writing
+# a worker's deliverables (2026-06-28 user decision: "orchestrator만 전 워커 read-only").
+WRITE_PATH_TOOLS = PATH_TOOLS - READ_PATH_TOOLS
 DIRECT_PATH_KEYS = ("file_path", "path", "notebook_path")
 
 
@@ -257,18 +263,24 @@ def merged_config(policy: dict[str, Any], agent_name: str) -> dict[str, Any]:
     # Write tools — a "drop-off slot". Used for other teams' inbox mailboxes so a worker can
     # POST to another team (write) but never READ that team's mail (no context bleed).
     deny_read = as_string_list(defaults.get("deny_read")) + as_string_list(agent_config.get("deny_read"))
+    # deny_write: the mirror of deny_read. A path here is blocked for WRITE tools (Edit/Write/
+    # MultiEdit/NotebookEdit/Bash) but ALLOWED for read tools — a "read-only window". Used to
+    # let the orchestrator READ every worker folder while never WRITING a worker's output.
+    deny_write = as_string_list(defaults.get("deny_write")) + as_string_list(agent_config.get("deny_write"))
     if not registered:
         # Unregistered / typo / empty / "main": synthesize a deny over EVERY registered
         # worker folder. With no agent entry of its own, no self-folder is exempted, so all
         # worker folders are blocked (fail-closed against identity collapse). The allow side
         # already falls back to defaults.allow (baseline-only), so no external team path leaks.
-        # deny_read is folded into deny here: an unidentified caller gets the STRICTER rule
-        # (read AND write blocked), never the lenient drop-off exception.
+        # deny_read AND deny_write are folded into deny here: an unidentified caller gets the
+        # STRICTEST rule (read AND write blocked), never a lenient one-sided exception.
         for cfg in agents.values():
             if isinstance(cfg, dict):
-                deny += as_string_list(cfg.get("deny")) + as_string_list(cfg.get("deny_read"))
+                deny += (as_string_list(cfg.get("deny")) + as_string_list(cfg.get("deny_read"))
+                         + as_string_list(cfg.get("deny_write")))
         deny = sorted(set(deny))
         deny_read = []
+        deny_write = []
 
     default_bash = defaults.get("bash")
     if not isinstance(default_bash, dict):
@@ -290,6 +302,7 @@ def merged_config(policy: dict[str, Any], agent_name: str) -> dict[str, Any]:
         "allow": allow,
         "deny": deny,
         "deny_read": deny_read,
+        "deny_write": deny_write,
         "bash": {"allow": bash_allow, "deny": bash_deny, "enabled": bash_enabled},
     }
 
@@ -363,8 +376,11 @@ def command_matches(pattern: str, command: str) -> bool:
 
 def check_path_policy(paths: list[str], root: Path, config: dict[str, Any], *, is_read: bool = False) -> int:
     # Read tools also honor deny_read (read-only denial: drop-off slots are write-OK/read-NO).
-    # Write tools see only the plain deny list, so they can still POST into a deny_read path.
-    deny_patterns = config["deny"] + (config.get("deny_read", []) if is_read else [])
+    # Write tools instead honor deny_write (write-only denial: read-only windows are read-OK/
+    # write-NO). The two extra lists are mutually exclusive by tool kind, so a path can be on
+    # both and end up symmetrically read-AND-write blocked only when listed in plain deny.
+    extra = config.get("deny_read", []) if is_read else config.get("deny_write", [])
+    deny_patterns = config["deny"] + extra
     for raw_path in paths:
         rel, abs_path = path_targets(raw_path, root)
         display_path = rel if rel is not None else abs_path
@@ -424,6 +440,14 @@ def check_bash_path_targets(command: str, root: Path, config: dict[str, Any]) ->
     mailbox path is exposed as a shell token. Best-effort: static token extraction can't
     see shell variables, globs, or command substitution (see ``bash_path_tokens``); OS
     sandboxing is the hard backstop.
+
+    ``deny_write`` is deliberately NOT applied to Bash: a read-only window (orchestrator over
+    worker folders) must let the coordinator ``cat``/``rg``/``ls`` those paths from the shell.
+    Bash tokens carry no static read/write intent (``cat`` vs ``rm`` look the same here), so
+    enforcing deny_write would block the read it is meant to grant. The window is only ever
+    handed to the trusted, non-adversarial coordinator; adversarial workers keep the strict
+    plain-``deny``/``deny_read`` isolation, and the OS sandbox remains the hard backstop for
+    any shell write.
     """
     deny = config["deny"] + config.get("deny_read", [])
     if not deny:

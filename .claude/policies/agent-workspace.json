@@ -477,7 +477,9 @@
       ]
     },
     "orchestrator": {
-      "deny": [
+      "deny": [],
+      "deny_read": [],
+      "deny_write": [
         "teams/data/data-curator/**",
         "teams/scout/paper-scout/**",
         "teams/write/manuscript-writer/**",
@@ -493,7 +495,6 @@
         "teams/review/review-lead/**",
         "teams/analysis/analysis-lead/**"
       ],
-      "deny_read": [],
       "allow": [
         ".",
         "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",

@@ -141,8 +141,10 @@ class InitTests(unittest.TestCase):
         # ORCH-SINGLE-SOURCE: when authoring_owner is the NON-member company total
         # "orchestrator", its workspace entry is now ALWAYS regenerated (single source of
         # truth in build_agent_workspace_policy), not hand-added — so the key is PRESERVED
-        # across regen, never wiped. deny = every worker folder, deny_read = [] (reads all
-        # team mailboxes), allow = BASELINE only (read-only coordinator, no external work).
+        # across regen, never wiped. READ-ONLY WINDOW (user decision 2026-06-28): deny = []
+        # (no plain block, which would forbid reads too), deny_read = [] (reads all team
+        # mailboxes AND every worker folder), deny_write = every worker folder (may read but
+        # never write a worker's deliverables), allow = BASELINE only.
         wp = self.root / ".claude/policies/agent-workspace.json"
         wp.parent.mkdir(parents=True, exist_ok=True)
         wp.write_text(json.dumps({
@@ -156,8 +158,9 @@ class InitTests(unittest.TestCase):
         # owner=orchestrator is a non-member: its key is regenerated alongside the workers
         self.assertEqual(sorted(pol["agents"]), ["data-curator", "orchestrator", "paper-scout"])
         orch = pol["agents"]["orchestrator"]
-        self.assertEqual(orch["deny"], ["agents/data-curator/**", "agents/paper-scout/**"])  # every worker folder
-        self.assertEqual(orch["deny_read"], [])  # reads all team mailboxes
+        self.assertEqual(orch["deny"], [])  # no plain block (read-only window, not full deny)
+        self.assertEqual(orch["deny_read"], [])  # reads all team mailboxes + every worker folder
+        self.assertEqual(orch["deny_write"], ["agents/data-curator/**", "agents/paper-scout/**"])  # write-blocked
         self.assertEqual(orch["allow"], ti.BASELINE_ALLOW)  # read-only coordinator
         self.assertEqual(pol["defaults"]["allow"], ti.BASELINE_ALLOW)  # regenerated to baseline
         self.assertNotIn("/Users/x/project/umc/**", pol["defaults"]["allow"])  # stale global boundary dropped
