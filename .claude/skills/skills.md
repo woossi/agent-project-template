@@ -15,16 +15,13 @@ automatically managed.
 
 | Skill | Folder | Load rule |
 | --- | --- | --- |
-| academic-writing | `academic-writing/` | Open `academic-writing/SKILL.md` only when the request clearly matches the `academic-writing` workflow. |
 | agent-clone-setup | `agent-clone-setup/` | Open `agent-clone-setup/SKILL.md` only when the request clearly matches the `agent-clone-setup` workflow. |
 | create-team-agent | `create-team-agent/` | Open `create-team-agent/SKILL.md` only when the request clearly matches the `create-team-agent` workflow. |
 | give-feedback | `give-feedback/` | Open `give-feedback/SKILL.md` only when the request clearly matches the `give-feedback` workflow. |
-| paper-review | `paper-review/` | Open `paper-review/SKILL.md` only when the request clearly matches the `paper-review` workflow. |
 | process-feedback | `process-feedback/` | Open `process-feedback/SKILL.md` only when the request clearly matches the `process-feedback` workflow. |
 | register-term | `register-term/` | Open `register-term/SKILL.md` only when the request clearly matches the `register-term` workflow. |
 | reminders-team-bridge | `reminders-team-bridge/` | Open `reminders-team-bridge/SKILL.md` only when the request clearly matches the `reminders-team-bridge` workflow. |
 | set-team-goal | `set-team-goal/` | Open `set-team-goal/SKILL.md` only when the request clearly matches the `set-team-goal` workflow. |
-| stat-claim-verification | `stat-claim-verification/` | Open `stat-claim-verification/SKILL.md` only when the request clearly matches the `stat-claim-verification` workflow. |
 | team-derive-author | `team-derive-author/` | Open `team-derive-author/SKILL.md` only when the request clearly matches the `team-derive-author` workflow. |
 | team-inbox | `team-inbox/` | Open `team-inbox/SKILL.md` only when the request clearly matches the `team-inbox` workflow. |
 | team-init | `team-init/` | Open `team-init/SKILL.md` only when the request clearly matches the `team-init` workflow. |
