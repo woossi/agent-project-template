@@ -1,13 +1,13 @@
-"""중앙 하단(우): 승격·파생 후보 큐.
+"""중앙 하단(우): 승격·파생 후보 큐 (선택 가능).
 
-detect_*가 additionalContext로 모델에만 띄우던 후보를 사람에게 보여준다.
-(승격/거절 버튼은 1단계에서 resolve CLI 호출로 연결.)
+detect_*가 모델에만 띄우던 후보를 사람에게. 선택 후 app이 승격/거절(resolve CLI)을 적용.
 """
 from __future__ import annotations
 
 from textual.app import ComposeResult
-from textual.containers import VerticalScroll
-from textual.widgets import Static
+from textual.containers import Vertical
+from textual.widgets import OptionList, Static
+from textual.widgets.option_list import Option
 
 import store
 
@@ -18,21 +18,42 @@ KIND_LABEL = {
 }
 
 
-class CandidateQueue(VerticalScroll):
+class CandidateQueue(Vertical):
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        self._candidates: list[store.Candidate] = []
+
     def compose(self) -> ComposeResult:
         yield Static("승격 · 파생 후보", classes="panel-title")
-        yield Static("(로딩…)", id="cand-body")
+        yield OptionList(id="cand-list")
 
     def update_snapshot(self, snap: "store.Snapshot") -> None:
-        body = self.query_one("#cand-body", Static)
+        self._candidates = snap.candidates
+        ol = self.query_one("#cand-list", OptionList)
+        prev = ol.highlighted
+        ol.clear_options()
         if not snap.candidates:
-            body.update("[dim]후보 없음[/dim]")
+            ol.add_option(Option("후보 없음", disabled=True))
             return
-        lines: list[str] = []
-        for c in snap.candidates:
+        for i, c in enumerate(snap.candidates):
             label = KIND_LABEL.get(c.kind, c.kind)
-            key = c.key if len(c.key) <= 46 else c.key[:43] + "…"
-            lines.append(f"[yellow]◆[/yellow] [b]{label}[/b]  {key}")
+            key = c.key if len(c.key) <= 40 else c.key[:37] + "…"
+            text = f"[yellow]◆[/yellow] [b]{label}[/b] {key}"
             if c.detail:
-                lines.append(f"   [dim]{c.detail[:50]} · {c.source}[/dim]")
-        body.update("\n".join(lines))
+                text += f"\n   [dim]{c.detail[:46]}[/dim]"
+            ol.add_option(Option(text, id=str(i)))
+        if prev is not None and prev < ol.option_count:
+            ol.highlighted = prev
+
+    @property
+    def selected(self) -> "store.Candidate | None":
+        ol = self.query_one("#cand-list", OptionList)
+        if ol.highlighted is None:
+            return None
+        opt = ol.get_option_at_index(ol.highlighted)
+        if opt.id is None:
+            return None
+        try:
+            return self._candidates[int(opt.id)]
+        except (ValueError, IndexError):
+            return None
