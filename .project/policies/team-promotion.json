@@ -22,9 +22,16 @@
   },
   "governance": {
     "mode": "tiered",
-    "company_owner": "data-curator",
-    "authoring_owner": "data-curator",
-    "company_skills": ["team-init", "agent-clone-setup"],
-    "team_skills": ["create-team-agent", "set-team-goal", "team-derive-author"]
+    "company_owner": "data-lead",
+    "authoring_owner": "data-lead",
+    "company_skills": [
+      "team-init",
+      "agent-clone-setup"
+    ],
+    "team_skills": [
+      "create-team-agent",
+      "set-team-goal",
+      "team-derive-author"
+    ]
   }
 }

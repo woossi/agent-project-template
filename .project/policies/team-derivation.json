@@ -31,6 +31,6 @@
   },
   "governance": {
     "mode": "orchestrator-authors",
-    "authoring_owner": "data-curator"
+    "authoring_owner": "data-lead"
   }
 }

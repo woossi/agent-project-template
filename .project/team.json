@@ -13,7 +13,12 @@
     "quality-reviewer",
     "data-engineer",
     "inference-runner",
-    "causal-analyst"
+    "causal-analyst",
+    "data-lead",
+    "write-lead",
+    "scout-lead",
+    "review-lead",
+    "analysis-lead"
   ],
   "roles": {
     "data-curator": "프로젝트 관련 자료·데이터·분석 결과를 체계적으로 관리하고 팀 컨텍스트 자원으로 지원한다. 그림은 데이터·분석결과로부터의 생성·파일·레지스트리를 소유하되, 본문 그림의 일관성(추가·제거·배치 판단)은 manuscript-steward가 소유한다(생성·파일=data-curator, 본문 일관성 판단=manuscript-steward).",
@@ -24,7 +29,12 @@
     "data-engineer": "데이터 엔지니어링 전임 에이전트: UMC 원천 데이터(생활인구·실거래 등 CSV 7.1GB/3653파일)를 CSV보다 저용량 압축 포맷(parquet/duckdb)으로 전환·스키마화하고 쿼리 가능한 압축 DB 인프라 계층을 구축·관리한다. 경계 분할 — 원천 데이터의 압축 저장·스키마·쿼리 인프라 계층을 소유하며, 분석 결과·그림·데이터 레지스트리·팀 컨텍스트 큐레이션은 data-curator가 유지한다. data-engineer가 만든 압축 DB를 data-curator가 소비한다",
     "manuscript-steward": "논문 작성 자원 관리 에이전트: 논문 본문 글 자체의 일관성을 유지하는 것을 목표로 한다. (1) 학술적 개념어의 일관적 사용을 위한 공유 자원(용어 사전·표기 규약)을 관리한다. (2) 논문 내부 그림 자료의 추가·제거 여부와 본문 내 배치 일관성을 판단·관리한다(그림 생성·파일은 data-curator 소유, 본문 일관성 판단은 steward 소유). (3) 논문의 구조·용어·작성 방식을 공유 자원에서 본 에이전트의 전문화된 영역으로 귀속하여 관리한다. (4) 본문 수치·통계량 정본의 단일 출처를 보관하고 일관성을 유지한다(2026-06-27 사용자 결정으로 이관). 예: 0.279·ICC 0.49%·표본흐름 772/490/156/126·차원별 F1 등. 다른 peer가 본문 수치를 쓸 때 steward 정본이 기준이며 창작·변형은 금지다. 경계 분할 — manuscript-writer는 섹션 글의 집필·재작성을 소유하고, manuscript-steward는 그 글들을 가로지르는 개념어·용어·구조·표현·수치정본의 일관성을 소유한다(집필=writer, 일관성·정본보관=steward). 수치 정본의 데이터·코드 일치 '독립 재현 검증'은 stats-validator가 소유한다(정본 보관=steward, 독립 검증=stats-validator). 학술적 용어의 다른 대안 탐색이 필요하면 paper-scout에 검색을 요청할 수 있다.",
     "inference-runner": "분석 추론 재실행 전담 에이전트: 논문화에 필요한 분석 파이프라인을 재실행하여 산출물을 생산한다. 핵심은 정보차단 멀티에이전트 역행추론(judgment-synthesizer 단계 C–E)의 디지털 사막 223건 재실행과, 정보차단 장치(guard_typology)를 켠 구성 대 끈 구성의 비차단 ablation 실행으로 확증편향 감소를 입증할 산출물을 만드는 것이다. EB 수축 등 분석 모형의 재실행도 필요 시 소유한다. 경계 분할 — inference-runner는 분석 파이프라인 재실행과 산출물 '생산'을 소유하고, 그 산출물의 인과추론 설계·해석은 causal-analyst가, 독립 검증·수치 대조·인간코딩 IRR 설계는 stats-validator가, 산출물의 큐레이션·레지스트리·그림은 data-curator가, 원천 데이터 압축·스키마는 data-engineer가 맡는다. 생산자와 검증자를 분리해 검증 독립성을 지킨다.",
-    "causal-analyst": "인과추론 분석 전문 에이전트(analysis 팀): UMC 두 핵심 실험의 인과추론 설계·식별전략·해석을 소유한다. (1) 정보차단 멀티에이전트 역행추론(judgment-synthesizer 단계 C–E, 디지털 사막)의 인과 설계 — 정보차단 장치가 확증편향을 줄인다는 인과 주장의 식별 가정·반사실(counterfactual) 정의·추정대상(estimand) 명세를 담당한다. (2) 정보차단 장치(guard_typology) 켠 구성 대 끈 구성의 비차단 ablation에서 인과효과(처치효과) 추정·해석을 담당하고 교란·선택편향 위협과 그 완화를 명시한다. 경계 분할(2026-06-27 사용자 결정) — 분석 파이프라인 재실행과 산출물 '생산'은 inference-runner(data팀)가 소유하고, causal-analyst는 그 산출을 입력으로 인과 '설계·해석'을 소유한다(생산=inference-runner, 인과설계·해석=causal-analyst). 산출물·추정치의 독립 통계 검증은 stats-validator(review팀)가 소유한다(생산≠설계, 설계≠검증). causal-analyst는 재실행 산출물을 inference-runner에 요청하고, 자신의 식별전략·추정치 해석을 stats-validator의 독립 검증 대상으로 넘긴다. 추후 bayesian-analyst·text-analyst로 갈래 확장 여지를 둔다."
+    "causal-analyst": "인과추론 분석 전문 에이전트(analysis 팀): UMC 두 핵심 실험의 인과추론 설계·식별전략·해석을 소유한다. (1) 정보차단 멀티에이전트 역행추론(judgment-synthesizer 단계 C–E, 디지털 사막)의 인과 설계 — 정보차단 장치가 확증편향을 줄인다는 인과 주장의 식별 가정·반사실(counterfactual) 정의·추정대상(estimand) 명세를 담당한다. (2) 정보차단 장치(guard_typology) 켠 구성 대 끈 구성의 비차단 ablation에서 인과효과(처치효과) 추정·해석을 담당하고 교란·선택편향 위협과 그 완화를 명시한다. 경계 분할(2026-06-27 사용자 결정) — 분석 파이프라인 재실행과 산출물 '생산'은 inference-runner(data팀)가 소유하고, causal-analyst는 그 산출을 입력으로 인과 '설계·해석'을 소유한다(생산=inference-runner, 인과설계·해석=causal-analyst). 산출물·추정치의 독립 통계 검증은 stats-validator(review팀)가 소유한다(생산≠설계, 설계≠검증). causal-analyst는 재실행 산출물을 inference-runner에 요청하고, 자신의 식별전략·추정치 해석을 stats-validator의 독립 검증 대상으로 넘긴다. 추후 bayesian-analyst·text-analyst로 갈래 확장 여지를 둔다.",
+    "data-lead": "data 팀 조율 전담 팀장(orchestrator): 산출물을 직접 생산하지 않고 팀 운영만 소유한다. (1) 받은 팀 메일박스를 분류해 최근접 팀원에게 할당하고 품질지표(quality_gate)를 부착한다. (2) 검증팀 verdict를 team-quality-ledger에 기록하고 2연속 실패 신호를 본다. (3) 자기 팀 거버넌스(create-team-agent·set-team-goal·team-derive-author)로 워커 추가·목표·파생을 자기 팀 한정으로 수행한다. 데이터 압축·스키마=data-engineer, 큐레이션·레지스트리·그림=data-curator, 분석 재실행 생산=inference-runner가 소유한다(팀장은 생산 비소유, 조율만).",
+    "write-lead": "write 팀 조율 전담 팀장(orchestrator): 산출물을 직접 집필하지 않고 팀 운영만 소유한다. 할당·품질원장·자기 팀 거버넌스를 수행한다. 섹션 집필·재작성=manuscript-writer, 개념어·구조·수치정본 일관성=manuscript-steward가 소유한다(팀장은 생산 비소유, 조율만).",
+    "scout-lead": "scout 팀 조율 전담 팀장(orchestrator): 논문 검색을 직접 수행하지 않고 팀 운영만 소유한다. 할당·품질원장·자기 팀 거버넌스를 수행한다. 고품질 학술 논문 검색·선별·PDF 다운로드=paper-scout가 소유한다(팀장은 생산 비소유, 조율만).",
+    "review-lead": "review 팀 조율 전담 팀장(orchestrator): 검수·검증을 직접 수행하지 않고 팀 운영만 소유한다. 할당·품질원장·자기 팀 거버넌스를 수행한다. 독립 품질 검수(review-gate)=quality-reviewer, 통계·수치 독립 재현 검증=stats-validator가 소유한다. 검증 독립성을 위해 팀장은 검증 판정에 개입하지 않고 라우팅만 한다(생산·판정 비소유, 조율만).",
+    "analysis-lead": "analysis 팀 조율 전담 팀장(orchestrator): 인과추론 분석을 직접 수행하지 않고 팀 운영만 소유한다. 할당·품질원장·자기 팀 거버넌스를 수행한다. 인과추론 설계·식별전략·해석=causal-analyst가 소유한다(팀장은 생산 비소유, 조율만)."
   },
   "goals_dir": ".project/goals",
   "inbox": ".project/inbox",
@@ -34,43 +44,48 @@
       "members": [
         "data-engineer",
         "data-curator",
-        "inference-runner"
+        "inference-runner",
+        "data-lead"
       ],
-      "orchestrator": "data-curator",
+      "orchestrator": "data-lead",
       "reminders_list": "umc-data"
     },
     {
       "name": "write",
       "members": [
         "manuscript-writer",
-        "manuscript-steward"
+        "manuscript-steward",
+        "write-lead"
       ],
-      "orchestrator": "manuscript-steward",
+      "orchestrator": "write-lead",
       "reminders_list": "umc-write"
     },
     {
       "name": "scout",
       "members": [
-        "paper-scout"
+        "paper-scout",
+        "scout-lead"
       ],
-      "orchestrator": "paper-scout",
+      "orchestrator": "scout-lead",
       "reminders_list": "umc-scout"
     },
     {
       "name": "review",
       "members": [
         "stats-validator",
-        "quality-reviewer"
+        "quality-reviewer",
+        "review-lead"
       ],
-      "orchestrator": "quality-reviewer",
+      "orchestrator": "review-lead",
       "reminders_list": "umc-review"
     },
     {
       "name": "analysis",
       "members": [
-        "causal-analyst"
+        "causal-analyst",
+        "analysis-lead"
       ],
-      "orchestrator": "causal-analyst",
+      "orchestrator": "analysis-lead",
       "reminders_list": "umc-analysis"
     }
   ]

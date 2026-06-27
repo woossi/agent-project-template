@@ -7,6 +7,13 @@ team-umc 팀의 현재 작업 패킷입니다. 가장 작은 작업 단위이며
 
 상태: 진행 중 (orchestrator — 학위논문(B판) 전환 추적)
 
+★★ 각 팀 조율 전담 팀장 5명 신설 (2026-06-27)
+- ★사용자 요청: "아예 팀장을 하나 만들자 각각". 기존엔 팀원 1명이 orchestrator 겸임 → 각 팀에 조율 전담 워커 신설.
+- ★사용자 결정: (1)역할=조율 전담(할당·품질원장·거버넌스·조정만, 생산은 팀원 — 생산자≠조율자) (2)5팀 전부 분리(scout·analysis 1인팀도 → 2인팀) (3)이름=<팀>-lead (4)증분 방식이나 안전 위해 team-setup.json source-of-truth 갱신 후 team-init 재생성 채택 (5)회사 owner(COMPANY 거버넌스+cross-team)=data-curator→data-lead 이전.
+- ★신설: data-lead·write-lead·scout-lead·review-lead·analysis-lead. team-setup.json(members+roles+subteams orchestrator·members 교체, authoring_owner=data-lead) → team_init.init_team 재생성(team.json·promotion·derivation·workspace 정책) → create_agent 5폴더 생성(회사owner 자격) → sync --all --force 14워커 재배선.
+- ★검증: 거버넌스 권한이 기존 겸임자 5명(data-curator·manuscript-steward·paper-scout·quality-reviewer·causal-analyst)에서 0으로 회수, 전담 팀장 5명으로 이동(data-lead=COMPANY2+TEAM3+q-ledger, 나머지4=TEAM3+q-ledger). 일반워커 9명 거버넌스0. agent-workspace.json 14정체성 등록, 각 팀장 자기팀 외부경로 정확. broken symlink 0. 235 테스트 통과(회귀0). R2 PASS.
+- 남은(범위밖): 미리알림 목록은 팀장이 자기팀 목록(umc-data 등) 그대로 바인딩(추가 생성 불요). 새 팀장 폴더 메모리/tasks는 seed 상태(첫 가동 시 채워짐).
+
 ★★ 3종 정책 통합설계 — 팀 자율운영 루프 구현 완료 (2026-06-27, P0+P1+P2 위에 얹음)
 - ★사용자 요청: "3종 통합설계 진행". 사양 단일출처 `.context/3policy-integration-spec.md`. 한 닫힌 루프 — 팀 메일박스 도착→(가)팀장 자율할당+품질지표→워커 실행→검증팀 판정→(나)2연속 실패 신호→(다)권한으로 팀장이 전문화 워커 생성.
 - ★사용자 결정 4종: Q1 거버넌스=전역2(team-init·agent-clone-setup→data-curator)/팀장3(create-team-agent·set-team-goal·team-derive-author→각 orchestrator). Q2 PARTIAL=실패(PASS만 통과·리셋). Q3 비원고게이트=종류별분담(원고=quality-reviewer·데이터/분석=stats-validator). Q4 자율=L1(신호 후 팀장 판단, 무인 아님).
