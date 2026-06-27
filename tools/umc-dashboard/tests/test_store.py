@@ -45,22 +45,30 @@ def test_roster_and_subteams():
         assert alice.role == "리드 역할"
 
 
-def test_inbox_unclaimed_vs_consumed():
+def test_snapshot_excludes_consumed_for_perf():
+    # read_snapshot은 consumed를 안 읽는다(매 3초 refresh 경량화 — 먹통 방지). 살아있는
+    # 작업(미claim·claimed)만 스냅샷에 담긴다. consumed 이력은 load_inbox로 따로 조회.
     with TemporaryDirectory() as d:
         root = Path(d)
         _seed(root)
         snap = store.read_snapshot(root)
-        assert len(snap.inbox) == 2  # 1 unclaimed + 1 consumed in core mailbox
-        # 워커 배지 = 자기 팀의 미claim 수. alice·bob 둘 다 core 팀 → 1
+        assert len(snap.inbox) == 1  # 미claim 1건만(consumed m0 제외)
+        assert snap.inbox[0].id == "m1" and snap.inbox[0].state == "unclaimed"
+        # 워커 배지 = 자기 팀의 미claim 수
         assert snap.unread_count_for("bob") == 1
-        assert snap.unread_count_for("alice") == 1
-        # 팀명으로도 조회 가능
         assert snap.unread_count_for("core") == 1
+
+
+def test_load_inbox_includes_consumed_when_asked():
+    # consumed 이력이 필요하면 명시 호출로 읽을 수 있다(타임라인 --all 등).
+    with TemporaryDirectory() as d:
+        root = Path(d)
+        _seed(root)
+        msgs = store.load_inbox(root, include_consumed=True)
+        states = {m.id: m.state for m in msgs}
+        assert states.get("m1") == "unclaimed" and states.get("m0") == "consumed"
         # newest first
-        assert snap.inbox[0].ts_ns >= snap.inbox[1].ts_ns
-        # state 태깅
-        states = {m.id: m.state for m in snap.inbox}
-        assert states["m1"] == "unclaimed" and states["m0"] == "consumed"
+        assert msgs[0].ts_ns >= msgs[-1].ts_ns
 
 
 def test_goals():

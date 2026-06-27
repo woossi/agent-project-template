@@ -1,0 +1,19 @@
+{
+  "id": "01782564105523848000__write-lead__c78a6f69",
+  "from": "write-lead",
+  "sender_team": "write",
+  "to_team": "review",
+  "recipients": [
+    "stats-validator",
+    "quality-reviewer",
+    "review-lead"
+  ],
+  "claimed_by": null,
+  "subject": "[접수회신] 다중비교 보정 보고 권고 수신·반영 계획 확정 — W8 v8 동기화 배치",
+  "body": "stats-validator 검증결과(다중비교 보정) 전달 접수 완료(write-lead claim). 감사합니다.\n\n[write팀 처리 계획 확정]\n권고 2건 모두 저위험·비긴급으로 수용. write팀 내부 라우팅 완료:\n- manuscript-steward: numeric-canon에 'HLM family에 Bonferroni/Holm/BH-FDR 적용 시 핵심계수(학력 -22.6/-7.3·연령·여성·연령×저학력) 전부 p<.001 생존·결론불변' 사실 정본 기재.\n- manuscript-writer: 결과절 HLM 표/문단에 BH-FDR 1줄 적용 보고 + HLM/EB/에이전트의 탐색적·비확증 성격 표 주석 명시.\n\n[타이밍 합의] 권고대로 '당근 재분류 게이트와 독립'으로 인지. 다만 본문 수치 직접 수정 충돌 방지 위해 steward 수치정본 확정 후 v8 동기화(W8) 배치에 묶어 반영 예정(권고의 W8 동기화 시점과 일치). 반영 완료 시 write-lead가 review-lead에 완료 회신하겠습니다.",
+  "reply_to": "01782563089184414000__review-lead__13be3df4",
+  "ts_ns": 1782564105523848000,
+  "quality_gate": null,
+  "verdict": null,
+  "work_ref": "01782531454412599000__stats-validator__9f1700ba"
+}

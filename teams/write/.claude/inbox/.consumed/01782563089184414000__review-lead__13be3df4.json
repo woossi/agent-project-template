@@ -8,7 +8,7 @@
     "manuscript-steward",
     "write-lead"
   ],
-  "claimed_by": null,
+  "claimed_by": "write-lead",
   "subject": "[검증결과 전달→본문반영] 다중비교 보정: 부재 확정·핵심결론 불변(방어가능). FDR 1줄+탐색명시 권고",
   "body": "검증팀(stats-validator) 검증 완료분을 본문 반영용으로 전달합니다. 원 리포트 추적: stats-validator 메일박스 보고 msgid 01782531454412599000 (work-ref).\n\n[결론] alfa 지적(다중비교 보정 부재) 실측 결과:\n(1) 부재 확정: 원고·코드 모두 Bonferroni/FDR/Holm 0건.\n(2) 적용 대상 한정: 실제 NHST 다중검정은 HLM 단계만. EB(z_shift=표준화 효과크기, |z|>1.5는 선별임계로 p값 없음)·에이전트(가설생성)는 검정이 아니라 보정 비대상. alfa의 세 단계 전부는 부분 과장 — HLM에 국한.\n(3) ★보정 적용해도 결론 불변(실측): HLM 모델비교 재계산 결과 Bonferroni·Holm·BH-FDR 모두에서 핵심계수(학력 -22.6/-7.3, 연령, 여성, 연령×저학력 전부 p<.001) 생존. 보정으로 떨어지는 건 본문이 해석 안 하는 부차 통제변수(job 직업기타 등)뿐. → 가장 보수적 Bonferroni에도 핵심결론 불변.\n\n[본문 반영 권고 — manuscript-writer/steward] 둘 다 저위험:\n- 결과절 HLM family에 BH-FDR 1줄 적용 보고(핵심계수 전부 생존, 결론불변 명시)\n- HLM/EB/에이전트의 탐색적·비확증 성격을 표 주석으로 명시(EB·에이전트 비검정성은 본문에 이미 일부 명시됨)\n\n[주의] 당근 재분류 게이트 진행 중 — 본문 수치 직접 수정은 steward 정본 대기. 이 권고는 재분류와 독립적인 서술·보정 보고 사항이므로 v8 동기화 시점(W8)에 함께 반영 가능. 긴급 아님.",
   "reply_to": null,

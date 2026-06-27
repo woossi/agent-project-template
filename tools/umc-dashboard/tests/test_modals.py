@@ -63,25 +63,39 @@ def test_cancel_path_dismisses_without_callback():
     assert p._calls == []
 
 
-def test_base_button_pressed_stops_event():
-    """ok/cancel 버튼 핸들러가 e.stop()으로 버블링을 끊는지(중복 처리 예방)."""
-    class FakeButton:
-        id = "ok"
+class _FakeEvent:
+    def __init__(self):
+        self.stopped = 0
+    def stop(self):
+        self.stopped += 1
 
-    class FakeEvent:
-        def __init__(self):
-            self.button = FakeButton()
-            self.stopped = 0
-        def stop(self):
-            self.stopped += 1
 
+def test_ok_handler_submits_and_stops():
+    # @on(Button.Pressed, "#ok") 핸들러 — submit + e.stop().
     p = _Probe(is_current=True)
     submitted = []
     p.action_submit = lambda: submitted.append(True)
-    e = FakeEvent()
-    _BaseModal.on_button_pressed(p, e)
-    assert e.stopped == 1  # 이벤트 전파 차단
-    assert submitted == [True]  # ok → submit
+    e = _FakeEvent()
+    _BaseModal._on_ok(p, e)
+    assert e.stopped == 1 and submitted == [True]
+
+
+def test_cancel_handler_cancels_and_stops():
+    p = _Probe(is_current=True)
+    cancelled = []
+    p.action_cancel = lambda: cancelled.append(True)
+    e = _FakeEvent()
+    _BaseModal._on_cancel(p, e)
+    assert e.stopped == 1 and cancelled == [True]
+
+
+def test_no_legacy_on_button_pressed():
+    # 회귀 방지: on_button_pressed(이름 기반 핸들러)가 있으면 Textual이 MRO에서
+    # _BaseModal·하위 둘 다 호출해 preset 클릭 시 모달이 닫히는 버그가 재발한다.
+    # @on 셀렉터 라우팅만 쓰고 on_button_pressed는 절대 정의하지 않는다.
+    import widgets.modals as m
+    assert not hasattr(m._BaseModal, "on_button_pressed")
+    assert not hasattr(m.InstructModal, "on_button_pressed")
 
 
 def test_preset_prompt_inbox_is_team_scoped():

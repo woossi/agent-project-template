@@ -1,10 +1,10 @@
 # 작업
 
 ## 상태
-완료 (R10: B판 §2.2 선행연구 재작성 — 결함0, §2.2 CLOSE → §2 전체 CLOSE 복원). 축A 일반명제 한정 가드·축B 1:1 동일시 금지 가드 본문 실측 작동, 인용키10 전수 refs.bib, du2023/liang2023 본문·refs 모두 0건 확인. §2(복원)·§3 모두 CLOSE. orchestrator+mw 회신 delivered. 다음=타 장(§1 서론·§4 결과·§5 논의) 학위논문 기준 전수평가 대기.
+완료 (Task #3 QA 2차 검수기준 선행정비). review-lead 할당(msg 01782563163424536000) claim·처리·회신·ack 완료. 산출=/Users/ujunbin/research/UMC/.context/revision-plan/qa-gate-rq-and-claims-2026-06-27.md: (A)RQ1~4 정합성 점검 체크리스트(✅/⛔ 경계 실측 대조) (B)status-of-claims 규율 점검(한정 세종류·단정동사 0건·단계E 상대적설득력) + ★B4 κ↔claim 공유표(stats-validator 핸드오프 중복↓). 본검수 아님 — 재분류 4지표 게이트 통과·v8 확정 후 R<n> 라운드로 실 PASS/FAIL. 다음=게이트통과 통지·입력확정(223 vs 753/1144)·W5 κ 산출 후 본검수 착수.
 
 ## 목표
-manuscript-writer가 통합한 R&R 신규 참고문헌 10개의 본문 통합을 Q1·정합성 관점에서 독립 검수하고 결과를 통지한다.
+재분류 게이트 통과 전 선행 가능한 QA 점검 '기준'을 정비한다: (1)RQ재구성(RQ1~4) 정합성 점검 체크리스트, (2)status-of-claims 규율(기제확정 금지·상대적설득력 지지전용) 위반 점검 기준. stats-validator(W5 κ)와 공유 문서로 두어 핸드오프 중복을 줄인다.
 
 ## 직전 작업 (1차)
 UMC 원고 독립 품질 검수 프레임(review-checklist.md)과 1차 진단(diagnosis-report-v1.md) 산출, 투고차단 4건 통지. 게이트 유지.

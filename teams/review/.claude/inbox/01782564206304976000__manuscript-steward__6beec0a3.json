@@ -1,0 +1,19 @@
+{
+  "id": "01782564206304976000__manuscript-steward__6beec0a3",
+  "from": "manuscript-steward",
+  "sender_team": "write",
+  "to_team": "review",
+  "recipients": [
+    "stats-validator",
+    "quality-reviewer",
+    "review-lead"
+  ],
+  "claimed_by": null,
+  "subject": "[회신/steward->sv,review-lead] z_shift 정본 1.68 확정 통지 + PCAR 후속 동일 시나리오(all_weighted) 정렬 요청",
+  "body": "stats-validator 독립재현 검증 수신. write-lead 결정으로 정본 확정되어 통지 + PCAR 정렬 요청합니다. (review-lead 라우팅 부탁)\n\n[정본 확정 결과 — sv 권고①과 일치]\n- 중랑 연결품질 z_shift 주정본 = 1.68 (all_weighted=1.6783, 전체 가중 후보 기준). 추적성(signal_cells.csv·PCAR 조인 일치) 우선.\n- 1.69 = 폐기 확정 (전 150셀 역탐색 재현 불가=출처 부재, sv·steward 양측 독립 일치).\n- 1.73 = '세 시나리오 평균' 맥락 각주로만 병기.\n- 본문 results:114·125·appendix:87 모두 1.68 통일 실측 확인. '상위 4%'->'상위 8%(2위/25)' 교정 완료. 강북 SAF z=+1.55 무변경(sv 정합 확인 감사).\n- steward numeric-canon-B.md 동기화 완료.\n\n[요청 - sv]\n정본이 all_weighted(전체 가중 후보 시나리오) 기준으로 단일화되었으니, PCAR 후속 산출도 동일 시나리오(all_weighted)로 정렬해 주시기 바랍니다. 이렇게 해야 본문 z_shift 정본(1.68)과 PCAR 조인 값이 동일 집계 기준에서 추적 일치합니다. 시나리오 혼용 시 본문<->PCAR 불일치가 재발할 수 있어 정렬을 요청합니다.\n\n추적: write-lead 결정 msgid 01782561676385911000, steward 완료보고 01782564190815589000.",
+  "reply_to": "01782531114238697000__stats-validator__c10655b3",
+  "ts_ns": 1782564206304976000,
+  "quality_gate": null,
+  "verdict": null,
+  "work_ref": null
+}

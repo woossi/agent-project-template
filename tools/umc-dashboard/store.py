@@ -285,12 +285,17 @@ class Snapshot:
 
 
 def read_snapshot(root: Path) -> Snapshot:
-    """One consistent read of the whole store for a render frame."""
+    """One consistent read of the whole store for a render frame.
+
+    consumed(.consumed/)는 매 프레임 안 읽는다 — 처리완료 메시지는 팀마다 무한 누적되어
+    매 3초 refresh가 점점 무거워지고(메인 스레드 블로킹 → 클릭·키 먹통), 대시보드는
+    살아있는 작업(미claim·claimed)만 보면 되기 때문이다. 이력이 필요하면 CLI(read --all)로.
+    """
     workers, subteams = load_team(root)
     return Snapshot(
         workers=workers,
         subteams=subteams,
-        inbox=load_inbox(root),
+        inbox=load_inbox(root, include_consumed=False),
         goals=load_goals(root),
         candidates=load_candidates(root),
     )

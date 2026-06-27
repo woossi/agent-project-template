@@ -7,6 +7,13 @@ team-umc 팀의 현재 작업 패킷입니다. 가장 작은 작업 단위이며
 
 상태: 진행 중 (orchestrator — 학위논문(B판) 전환 추적)
 
+★★ UI 먹통 + preset 클릭 시 모달 닫힘 버그 수정 (2026-06-27)
+- ★사용자 증상 3개: (1)"가끔 UI 먹통" (2)"마우스 클릭·c 키 안 먹음" (3)"inbox·리마인더 클릭 시 프롬프트 창이 닫혀 안 됨".
+- ★(1)+(2) 원인: refresh_data(매 3초 set_interval, 메인 UI 스레드)가 블로킹 호출 3개 — launcher.running_workers()의 tmux list-windows subprocess, launcher.available()의 shutil.which, store.read_snapshot의 전 메일박스+consumed 누적 파일IO. tmux 느리거나 워커 10개 동시 write와 겹치면 메인 스레드가 멈춰 클릭·키 먹통. 해결: headless 통일했으니 tmux 조회 제거(running=pool.active_workers()만, 논블로킹) + read_snapshot이 consumed(.consumed/) 미독(무한 누적분 매프레임 안 읽음, 살아있는 작업만).
+- ★(3) 원인=Textual 핸들러 MRO 중복 디스패치: on_button_pressed(이름 기반)를 _BaseModal·InstructModal 둘 다 정의 → Textual이 MRO 전체에서 동명 핸들러를 다 호출 → preset 버튼 눌러도 _BaseModal 핸들러가 별도로 불려 else→action_cancel로 모달 닫힘(e.stop()은 위젯 버블링만 막지 클래스 중복은 못 막음). 해결: on_button_pressed 폐기, @on(Button.Pressed, "#id") 셀렉터 라우팅으로 전환 — #ok/#cancel은 _BaseModal, #preset-*는 InstructModal만 걸림. 재현: preset 클릭 후 모달 유지·프롬프트 채워짐 확인.
+- ★검증: 대시보드 49 통과(+ok/cancel/preset/회귀가드 등)·R2 PASS·app import OK·headless 재현으로 preset 머뭄+cancel 정상닫힘 확인. 회귀가드 테스트(on_button_pressed 정의 금지) 추가.
+- 남은(범위밖): read_snapshot consumed 미독으로 타임라인에서 ✓완료 이력이 안 보임(살아있는 작업만) — 필요시 read --all CLI. trust last-writer-wins 수렴.
+
 ★★ 팀 일괄 구동(g) + 동시구동 레이스 버그 수정 (2026-06-27)
 - ★사용자 진단: "tmux4 패널 작업중인데 개별 워커는 일 안 하고 리더만 일함". 원인 = 자동 워커 구동 메커니즘 부재 — 리더가 c 지시로 작업을 팀 메일박스에 발행만 하고(미claim 누적 data4·write3·scout1·review2), 개별 워커는 누가 c로 깨워야만 claim. active 0/14.
 - ★사용자 결정: 팀 일괄 구동 버튼. 구현: action_instruct_team(키 g) — 선택 워커의 팀 전원을 동시 headless 구동 + '팀 메일박스 확인·claim·처리' inbox preset 일괄 지시. preset_prompt를 modals 모듈함수로 추출(InstructModal 버튼과 단일출처 공유).

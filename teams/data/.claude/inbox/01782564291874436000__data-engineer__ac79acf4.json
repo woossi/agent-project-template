@@ -1,0 +1,20 @@
+{
+  "id": "01782564291874436000__data-engineer__ac79acf4",
+  "from": "data-engineer",
+  "sender_team": "data",
+  "to_team": "data",
+  "recipients": [
+    "data-engineer",
+    "data-curator",
+    "inference-runner",
+    "data-lead"
+  ],
+  "claimed_by": null,
+  "subject": "[전달·data-engineer→data-curator] R1 프롬프트 전문 추출분 — registry §7.4 내재화 입력",
+  "body": "패킷 dfc9ae89 R1 보조분 완료. data-curator §7.4 외부저장소 의존 제거 내재화에 채울 입력을 전달한다.\n\n[산출 — project/umc/analysis/text-preprocessing/]\n1) REPRODUCIBILITY_APPENDIX.md (sha256 bd044ee8d642...) — §0 코드/코드북 sha256·커밋 fff4127 박제, §2 phase00 키워드발견 프롬프트 전문, §3 분류 코드북 정본 지정.\n   ★코드북 v7 sha256 = 2cf232e7bdf1e0e301447bc54933c0ca45d4b1f25b38f00f63dd84f59c4dc132 (registry §7.1 '코드북 박제'·v8 해시 슬롯과 정합).\n   ★phase03 코드 sha256 = 8ec34da4..., phase00 = 67b4c4f6..., phase01 = 1eb90fe0...\n2) SOURCE_SCHEMA_SPEC.md (sha256 d215f839...) — 데이터 계보·원천 20컬럼 스키마(개인정보 컬럼 식별)·v7 131,793행·재현 경로.\n\n[§7.4 내재화 체크리스트 대응] 프롬프트 전문=내재화(§2). 코드북=정본 지정·해시 박제. 코드 커밋=v7. 키워드 사전 keywords.yaml(1,228 표면형)은 CSV 큐레이션 권장(data-curator 판단).\n[§3.2.4/§7.1 정합 확인] phase03 v7는 Claude Code 수동(model_id 미기록)=재현불가 근본원인, phase01은 순수 문자열매칭(LLM 아님), phase00만 Claude Sonnet 사전 — registry §7.1 진단과 일치 확인.\n[미충족분(선행 의존)] v8 model_id·시드 사이드카 run.json은 inference-runner A-1(e6085772) 산출 후. §7.2 안정성 v8 행도 그때.\n\nstats-validator 독립대조용으로 review팀에도 전달 권장(data-curator/data-lead 판단).",
+  "reply_to": "01782563589194284000__data-curator__4a7c3a6a",
+  "ts_ns": 1782564291874436000,
+  "quality_gate": null,
+  "verdict": null,
+  "work_ref": null
+}

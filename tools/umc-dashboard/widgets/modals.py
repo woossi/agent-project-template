@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from textual import on
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
@@ -69,14 +70,20 @@ class _BaseModal(ModalScreen):
     def action_cancel(self) -> None:
         self._close(None)
 
-    def on_button_pressed(self, e: Button.Pressed) -> None:
-        # 이벤트 버블링을 끊는다 — 모달이 dismiss된 뒤에도 큐에 남은 Pressed가
-        # 부모/재처리되어 _close가 두 번 불리는 것을 차단(ScreenStackError 예방).
+    # NB: ``on_button_pressed`` (이름 기반 핸들러)를 쓰면 안 된다 — Textual은 메시지
+    # 핸들러를 MRO 전체에서 수집해 _BaseModal과 하위(InstructModal)의 동명 메서드를 둘 다
+    # 호출한다. 그래서 preset 버튼을 눌러도 _BaseModal 핸들러가 별도로 불려 else→cancel로
+    # 모달을 닫아버렸다(클릭 시 창 닫힘 버그). @on(id 셀렉터)로 버튼별 라우팅하면 #ok/#cancel
+    # 만 여기 걸리고 preset 버튼(#preset-*)은 안 걸린다 — 중복 디스패치 해소.
+    @on(Button.Pressed, "#ok")
+    def _on_ok(self, e: Button.Pressed) -> None:
         e.stop()
-        if e.button.id == "ok":
-            self.action_submit()
-        else:
-            self.action_cancel()
+        self.action_submit()
+
+    @on(Button.Pressed, "#cancel")
+    def _on_cancel(self, e: Button.Pressed) -> None:
+        e.stop()
+        self.action_cancel()
 
     def _close(self, payload: dict | None) -> None:
         # 재진입 가드: 버튼 Pressed와 키 바인딩(Enter/Esc/ctrl+s)이 같은 턴에 겹쳐
@@ -184,16 +191,17 @@ class InstructModal(_BaseModal):
         except Exception:
             return None  # 타이밍상 아직 없으면 첫 focusable로 폴백
 
-    def on_button_pressed(self, e: Button.Pressed) -> None:
-        # 정형 액션 버튼은 submit/cancel이 아니라 TextArea를 채우고 머문다.
-        if e.button.id == "preset-inbox":
-            e.stop()
-            self._fill("inbox")
-        elif e.button.id == "preset-reminders":
-            e.stop()
-            self._fill("reminders")
-        else:
-            super().on_button_pressed(e)  # ok/cancel — super가 e.stop() 처리
+    # preset 버튼은 submit/cancel이 아니라 TextArea를 채우고 머문다. @on 셀렉터라
+    # #ok/#cancel은 _BaseModal 핸들러가, #preset-*는 여기가 처리한다(중복 디스패치 없음).
+    @on(Button.Pressed, "#preset-inbox")
+    def _on_preset_inbox(self, e: Button.Pressed) -> None:
+        e.stop()
+        self._fill("inbox")
+
+    @on(Button.Pressed, "#preset-reminders")
+    def _on_preset_reminders(self, e: Button.Pressed) -> None:
+        e.stop()
+        self._fill("reminders")
 
     def _fill(self, key: str) -> None:
         ta = self.query_one("#prompt", TextArea)

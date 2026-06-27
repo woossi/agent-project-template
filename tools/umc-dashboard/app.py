@@ -126,17 +126,18 @@ class Dashboard(App):
         """빠른 갱신만: 파일 store + tmux. Reminders는 건드리지 않고 캐시만 그린다."""
         snap = store.read_snapshot(self.root)
         self._snap = snap
-        # ● 배지 = tmux 창이 떠 있거나(대화형) headless 세션이 살아있는(멀티턴) 워커.
-        running = self.launcher.running_workers() | self.pool.active_workers()
+        # ● 배지 = headless 세션이 살아있는(멀티턴) 워커. headless 통일(2026-06-27) 이후
+        # tmux 별창을 안 쓰므로, 매 3초 refresh마다 tmux subprocess(list-windows)를 부르던
+        # running_workers()/available() 호출을 제거한다 — 그 블로킹이 메인 UI 스레드를 멈춰
+        # "가끔 클릭·c 키 먹통"을 유발했다. 이제 메모리상의 active_workers()만 본다(논블로킹).
+        running = self.pool.active_workers()
         self.query_one(AgentGrid).update_snapshot(snap, running=running)
         self.query_one(InboxTimeline).update_snapshot(snap)
         self.query_one(CandidateQueue).update_snapshot(snap)
         self._render_backlog()
         self._render_strip(snap)
-        tmux_ok, tmux_why = self.launcher.available()
-        tmux_s = f"tmux {len(running)}개 실행" if tmux_ok else f"tmux:{tmux_why}"
         self.sub_title = (f"{self.root.name} · 미리알림:{self.reminders_list} · "
-                          f"inbox {len(snap.inbox)} · {tmux_s}")
+                          f"inbox {len(snap.inbox)} · 가동 {len(running)}/{len(snap.workers)}")
 
     def _render_strip(self, snap: "store.Snapshot") -> None:
         """팀 부하 현재량 스트립. 전부 store/세션풀에서 결정적으로 나오는 절대량."""
