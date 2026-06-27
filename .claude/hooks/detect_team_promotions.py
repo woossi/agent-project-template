@@ -280,9 +280,10 @@ def inbox_edges(
     reads that structure from the inbox, keeping endpoints at the WORKER granularity so
     the tier-boundary axis (classify_edge) stays accurate.
 
-    - Walks ``.project/inbox`` with ``os.walk`` so the hidden ``.consumed/`` shards are
-      traversed (``Path.glob('**')`` skips dotted dirs and would under-count delivered mail).
-    - Individual message: fan out over ``recipients[]`` (fallback ``to``).
+    - Team-only inbox model (2026-06-27): mailboxes live in each TEAM folder
+      ``teams/<team>/.claude/inbox`` (+ the orchestrator's virtual box and the legacy
+      ``.project/inbox/.archive``). Walks ALL of them with ``os.walk`` so hidden
+      ``.consumed/``/``.claimed/`` shards are traversed (``glob('**')`` skips dotted dirs).
     - Team-mailbox message (``to_team`` set): if claimed, the single ``claimed_by`` worker
       is the real target; if not yet claimed, fan out over team members (recipients). A bare
       team name in ``to`` is NOT treated as a worker (skipped) so it can't pollute edges.
@@ -290,50 +291,68 @@ def inbox_edges(
       *temporal* recurrence (``len >= 2`` = handoff happened on at least two occasions).
     """
     team_map = team_map or {}
-    inbox_root = team_root / ".project" / "inbox"
+    # Collect every mailbox root: per-team folders + orchestrator virtual box + legacy
+    # central inbox (archive of pre-migration mail). Missing dirs are skipped.
+    inbox_roots: list[Path] = []
+    teams_dir = team_root / "teams"
+    if teams_dir.is_dir():
+        for child in sorted(teams_dir.iterdir()):
+            box = child / ".claude" / "inbox"
+            if box.is_dir():
+                inbox_roots.append(box)
+        orch = teams_dir / ".orchestrator" / "inbox"
+        if orch.is_dir():
+            inbox_roots.append(orch)
+    legacy = team_root / ".project" / "inbox"
+    if legacy.is_dir():
+        inbox_roots.append(legacy)
     edges: "Counter[tuple[str, str]]" = Counter()
     edge_ts: dict[tuple[str, str], list[int]] = {}
-    if not inbox_root.is_dir():
+    if not inbox_roots:
         return edges, edge_ts
-    for dirpath, _dirs, filenames in os.walk(inbox_root):
-        for name in filenames:
-            if not name.endswith(".json"):
+    all_files = [
+        Path(dirpath) / name
+        for inbox_root in inbox_roots
+        for dirpath, _dirs, filenames in os.walk(inbox_root)
+        for name in filenames
+        if name.endswith(".json")
+    ]
+    for fpath in all_files:
+        try:
+            rec = json.loads(fpath.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(rec, dict):
+            continue
+        sender = str(rec.get("from") or "").strip()
+        if not sender:
+            continue
+        # Team-mailbox message (to_team set): resolve destinations to WORKERS so the
+        # tier-boundary axis stays worker-accurate. If claimed, the single claimer is
+        # the real handoff target; if unclaimed yet, fan out over the team members
+        # (recipients) as the candidate handlers. A plain individual message just uses
+        # its recipients/to as before (legacy archive mail).
+        claimed_by = str(rec.get("claimed_by") or "").strip()
+        if rec.get("to_team") and claimed_by:
+            dests = [claimed_by]
+        else:
+            dests = [d.strip() for d in (rec.get("recipients") or []) if isinstance(d, str) and d.strip()]
+            if not dests:
+                to = str(rec.get("to") or "").strip()
+                # A team name in `to` (unclaimed, no recipients) isn't a worker — skip
+                # rather than misclassify it as EXT and pollute the edge set.
+                dests = [to] if (to and not is_team_name(to, team_map)) else []
+        try:
+            ts = int(rec.get("ts_ns") or 0)
+        except (TypeError, ValueError):
+            ts = 0
+        for dest in dests:
+            if exclude_self and dest == sender:
                 continue
-            try:
-                rec = json.loads((Path(dirpath) / name).read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):
+            if exclude_orchestrator and (sender == orchestrator_name or dest == orchestrator_name):
                 continue
-            if not isinstance(rec, dict):
-                continue
-            sender = str(rec.get("from") or "").strip()
-            if not sender:
-                continue
-            # Team-mailbox message (to_team set): resolve destinations to WORKERS so the
-            # tier-boundary axis stays worker-accurate. If claimed, the single claimer is
-            # the real handoff target; if unclaimed yet, fan out over the team members
-            # (recipients) as the candidate handlers. A plain individual message just uses
-            # its recipients/to as before.
-            claimed_by = str(rec.get("claimed_by") or "").strip()
-            if rec.get("to_team") and claimed_by:
-                dests = [claimed_by]
-            else:
-                dests = [d.strip() for d in (rec.get("recipients") or []) if isinstance(d, str) and d.strip()]
-                if not dests:
-                    to = str(rec.get("to") or "").strip()
-                    # A team name in `to` (unclaimed, no recipients) isn't a worker — skip
-                    # rather than misclassify it as EXT and pollute the edge set.
-                    dests = [to] if (to and not is_team_name(to, team_map)) else []
-            try:
-                ts = int(rec.get("ts_ns") or 0)
-            except (TypeError, ValueError):
-                ts = 0
-            for dest in dests:
-                if exclude_self and dest == sender:
-                    continue
-                if exclude_orchestrator and (sender == orchestrator_name or dest == orchestrator_name):
-                    continue
-                edges[(sender, dest)] += 1
-                edge_ts.setdefault((sender, dest), []).append(ts)
+            edges[(sender, dest)] += 1
+            edge_ts.setdefault((sender, dest), []).append(ts)
     return edges, edge_ts
 
 

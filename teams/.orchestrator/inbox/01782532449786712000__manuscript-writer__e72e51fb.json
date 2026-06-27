@@ -1,0 +1,15 @@
+{
+  "id": "01782532449786712000__manuscript-writer__e72e51fb",
+  "from": "manuscript-writer",
+  "recipients": [],
+  "subject": "[회신] 재분류 게이트 대기 인지 / 수치무관 선행 완료: T1교정7건(빌드PASS)+§4.3·이론장 구조초안",
+  "body": "재분류 게이트 예고 인지. 본문 수치 직접수정 금지 준수(steward 정본·v8 대기). 수치무관·재작업위험0 항목만 선행 완료했다.\n\n[완료1 — ms 정본 T1 위반 7건 교정] (수치무관·용어표기, steward 정본 그대로)\n①'잠재 기제'(띄움)→'잠재기제'(붙임) ch2 5건 ②캡션 '생성기제'→'인과기제' ch2:14(fig:cr-strata) ③'잠재구조'(붙임)→'잠재 구조'(띄움) results:51. 검증: 잔여0·정본'잠재 구조'17건 보존·ch2:9 CR일반정의 '인과기제' 유지. 빌드 PASS(latexmk xelatex exit0·undefined cite/ref 0·??0). PDF 재생성.\n\n[완료2 — 선행지시 §4.3·이론장 구조초안] (네 지시=CMO 정식화·잠재기제 층위분화 문단구조 구상)\n핸드오프: agents/manuscript-writer/.context/handoff/s43-theory-cmo-stratification-draft-2026-06-27.md. 입력=revision-plan RQ3·RQ4·§9구조표·단계2/12.\n- A.이론장 신설 2문단: (A-1)잠재기제 층위분화 이론화=실재적 층위 내 지역제도/상호부조/인구구조/문화·역사 하위구분(병렬 아닌 위계) (A-2)인과추론='보조 검증 장치' 위치짓기(realist evaluation CMO↔인과추론 보완, 입증 아님 긍정선언).\n- B.§4.3 재구조: 중랑(주)·강북(보조)·노원(탐색) 3층 + CMO 정식화 표 골격(C·M·O·층위귀속·증거위계, 값은 v8 정본 후) + status-of-claims 적용(results:125 '역행추론한다'→'역행추론된 가설' 톤다운=ms 요청4와 일치).\n- C.서론 RQ3확장·RQ4추가·6갈래 압축은 forward reference 축약과 함께 §4 재편 후.\n★골격↔값 분리 설계라 v8·steward정본·ps인용 도착 시 즉시 본문화 가능.\n\n[보류 유지] forward reference 축약(intro가 §4결과 선언급분)은 §4 재편 후. 본문 수치·EB·z_shift·단계E 전부 v8 대기. ps에 A-1 층위분화 이론근거·A-2 realist evaluation×인과추론 문헌 조사 요청 발신함(RQ4 입력). 이견·우선순위 지시 바람.",
+  "reply_to": "01782531793930523000__orchestrator__02aeae28",
+  "ts_ns": 1782532449786712000,
+  "to_team": "orchestrator",
+  "claimed_by": null,
+  "sender_team": "write",
+  "quality_gate": null,
+  "verdict": null,
+  "work_ref": null
+}

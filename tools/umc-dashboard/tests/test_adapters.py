@@ -40,24 +40,38 @@ def test_reminders_add_builds_flags():
     assert "--notes" in argv and "--priority" in argv and "5" in argv and "--due" in argv
 
 
-def test_inbox_post_fans_out_recipients():
-    fake = FakeRunner(stdout=json.dumps({"ok": True, "result": {"posted": 2}}))
-    cli = TeamCli(Path("/repo"), runner=fake)
-    cli.inbox_post("orchestrator", ["alice", "bob"], "제목", "본문")
-    argv = fake.calls[0]
-    assert argv.count("--to") == 2 and "alice" in argv and "bob" in argv
-    # post의 발신자 플래그는 --from (--as는 read/ack 전용). 과거 --as 버그 회귀 방지.
-    assert "--from" in argv and "orchestrator" in argv
-    assert "--as" not in argv
-
-
-def test_inbox_post_to_team():
+def test_inbox_post_to_team_only():
+    # 팀 전용 단일 채널(2026-06-27): 발행은 --to-team만. 개인 --to·broadcast 폐지.
     fake = FakeRunner(stdout=json.dumps({"ok": True, "result": {"delivered_to_team": "data"}}))
     cli = TeamCli(Path("/repo"), runner=fake)
-    cli.inbox_post("mw", [], "제목", "본문", to_team="data")
+    cli.inbox_post("orchestrator", "data", "제목", "본문")
     argv = fake.calls[0]
     assert "--to-team" in argv and "data" in argv
-    assert "--from" in argv and "mw" in argv
+    assert "--from" in argv and "orchestrator" in argv
+    assert "--to" not in argv  # 개인 주소 플래그 없음
+    assert "--as" not in argv  # post는 --from
+
+
+def test_inbox_post_with_quality_gate():
+    fake = FakeRunner(stdout=json.dumps({"ok": True, "result": {}}))
+    cli = TeamCli(Path("/repo"), runner=fake)
+    cli.inbox_post("ms", "write", "할당", "b",
+                   quality_gate={"axes": ["A"], "kind": "manuscript"})
+    argv = fake.calls[0]
+    assert "--quality-gate" in argv
+    gate = json.loads(argv[argv.index("--quality-gate") + 1])
+    assert gate == {"axes": ["A"], "kind": "manuscript"}
+
+
+def test_inbox_ack_team():
+    fake = FakeRunner(stdout=json.dumps({"ok": True, "result": {"acked": True}}))
+    cli = TeamCli(Path("/repo"), runner=fake)
+    cli.inbox_ack("data", "0001__x__ab", "de")
+    argv = fake.calls[0]
+    assert argv[2] == "ack"
+    assert "--team" in argv and "data" in argv
+    assert "--as" in argv and "de" in argv
+    assert "--id" in argv and "0001__x__ab" in argv
 
 
 def test_inbox_claim_argv():
@@ -71,22 +85,15 @@ def test_inbox_claim_argv():
     assert "--as" in argv and "dc" in argv
 
 
-def test_inbox_post_quality_gate_and_verdict():
+def test_inbox_post_verdict_and_work_ref():
+    # 검수 회신: verdict + work_ref를 팀 메일박스로 발행(팀 전용 모델).
     fake = FakeRunner(stdout=json.dumps({"ok": True, "result": {}}))
     cli = TeamCli(Path("/repo"), runner=fake)
-    cli.inbox_post("lead-w", ["writer-w"], "할당", "본문",
-                   quality_gate={"axes": ["A", "E"], "kind": "manuscript"})
+    cli.inbox_post("quality-reviewer", "write", "검수", "b",
+                   verdict={"result": "FAIL", "majors": 1}, work_ref="0001__x__ab")
     argv = fake.calls[0]
-    assert "--quality-gate" in argv
-    gate = json.loads(argv[argv.index("--quality-gate") + 1])
-    assert gate == {"axes": ["A", "E"], "kind": "manuscript"}
-    # verdict + work_ref on a review reply
-    fake2 = FakeRunner(stdout=json.dumps({"ok": True, "result": {}}))
-    cli2 = TeamCli(Path("/repo"), runner=fake2)
-    cli2.inbox_post("quality-reviewer", ["lead-w"], "검수", "b",
-                    verdict={"result": "FAIL", "majors": 1}, work_ref="0001__x__ab")
-    a2 = fake2.calls[0]
-    assert "--verdict" in a2 and "--work-ref" in a2 and "0001__x__ab" in a2
+    assert "--to-team" in argv and "write" in argv
+    assert "--verdict" in argv and "--work-ref" in argv and "0001__x__ab" in argv
 
 
 def test_quality_record_argv():

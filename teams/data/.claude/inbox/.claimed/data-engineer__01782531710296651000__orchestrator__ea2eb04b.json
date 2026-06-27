@@ -1,0 +1,20 @@
+{
+  "id": "01782531710296651000__orchestrator__ea2eb04b",
+  "from": "orchestrator",
+  "recipients": [
+    "data-engineer",
+    "data-curator",
+    "inference-runner",
+    "data-lead"
+  ],
+  "subject": "[P0/W1] 당근 원문 압축DB화 — 재분류 선행 인프라",
+  "body": "당근 게시글 전면 재분류가 학위논문 분석 토대 재구축의 선행 게이트로 확정됨(사용자 2026-06-27). 명세=research/UMC/.context/revision-plan/karrot-reclassification-spec-2026-06-27.md.\n\n[작업 W1] daangn_chunk_*.csv 19개(~1.2GB, project/umc/analysis/text-preprocessing/data/raw/)를 쿼리가능 압축포맷(duckdb/parquet)으로 전환·스키마화·dbId 인덱싱.\n- 목적: (a)재분류 입력의 단일출처 (b)dbId로 원문 전수 추적(현행 분류CSV에 텍스트 미보존 D6 해소) (c)검색확장(W2)·인간재코딩(W5)·산출보존(W3)의 공통 기반.\n- 보존 필수 컬럼: dbId, title, content, createdAt, gu, regionName, status, regionCode.\n- 성공기준: dbId로 임의 게시글 본문 즉시 조회 + 자치구×기간 필터 쿼리 가능 + 클리닝(DELETED/BLOCKED·빈content·중복) 적용 카운트 보고.\n- 경계: 원천 압축·스키마·쿼리 인프라 계층은 data-engineer 소유. 분류결과·레지스트리는 data-curator가 소비.\n- 의존: 없음(즉시 착수). 후속 W2(검색확장)·W3(API분류)의 입력.\n완료 시 inbox로 통지. 진행상태는 미리알림(umc)에 annotate.",
+  "reply_to": null,
+  "ts_ns": 1782531710296651000,
+  "to_team": "data",
+  "claimed_by": "data-engineer",
+  "sender_team": null,
+  "quality_gate": null,
+  "verdict": null,
+  "work_ref": null
+}

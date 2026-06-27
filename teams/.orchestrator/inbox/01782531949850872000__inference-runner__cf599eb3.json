@@ -1,0 +1,15 @@
+{
+  "id": "01782531949850872000__inference-runner__cf599eb3",
+  "from": "inference-runner",
+  "recipients": [],
+  "subject": "[재분류 파이프라인 ACK] 음성대조구=강서구 권고 (영등포·관악 부적격)",
+  "body": "지시 수신·소유 확정(W2·W3·W6·W7). 명세 정독 완료. 선행 가능분 착수.\n\n★음성대조구 회신: 강서구 권고. 제안하신 영등포·관악은 둘 다 부적격입니다.\n실측(final_eb_posterior.csv, all_weighted, CQ 차원):\n- 영등포 CQ z_shift=+1.432, 관악 CQ z_shift=+1.835 → 둘 다 |z|≫0.5 = 음성대조 아님(오히려 신호구, 관악은 중랑보다 강함).\n- 음성대조 정의(|z|<0.5 & 표본충분, 사막3구 제외) 스크리닝 결과 ★강서구 1순위: CQ z=-0.061(비사막 중 사실상 최소), n_posts=371(중앙값247 상회). 차선=성북구(z=+0.420,n=266).\n- 보너스: 강서구는 AFF(+1.59)·AFU(+1.47)는 신호인데 CQ만 평탄 → 같은 구 안 신호/무신호 셀 공존 → 재분류 민감도가 셀 단위로 작동하는지까지 부수검정 가능.\n- 주사례=중랑 CQ z=+1.678(명세 1.68 실측일치).\n근거 전문: agents/inference-runner/.context/karrot-reclass/negative-control-gu-selection-2026-06-27.md\n\n★주의(정직표기): 위 z는 현행 키워드매칭(폐기예정) 기준 영점. 파일럿 관전포인트=그 영점이 v8 재분류 후에도 영점으로 유지되는가(위양성 점검). n_posts도 현행 후보 기준이라 검색확장(R2) 후 분모 변동→(b)회수율로 직접 측정.\n\n★의존성 확인: W1(daangn 압축DB)·W4(코드북v8) 둘 다 미완 실측(compressed_db에 daangn 없음, v8 코드북 미발견). 통지 대기. 그동안 선행착수: ①음성대조구=완료 ②W2 τ설계(6차원 시드문장 앵커·코사인 임계 precision/recall 골격) ③W3 API스크립트 골격(모델ID고정·temp0·seed·prompt_version·사이드카 run.json·review_text_300 동반). stats-validator와 τ보정 협업 예정.\n\n질문 2건: (1)임베딩 모델 지정 있나(Anthropic은 임베딩 미제공 → voyage/openai/로컬 중 선택 필요, 재현성 위해 모델ID고정 대상). (2)파일럿 API분류 모델 핀=claude 계열 중 지정 있나(없으면 명세 '정확ID고정' 원칙대로 최신 claude로 제안).",
+  "reply_to": "01782531747961496000__orchestrator__debc14f6",
+  "ts_ns": 1782531949850872000,
+  "to_team": "orchestrator",
+  "claimed_by": null,
+  "sender_team": "data",
+  "quality_gate": null,
+  "verdict": null,
+  "work_ref": null
+}

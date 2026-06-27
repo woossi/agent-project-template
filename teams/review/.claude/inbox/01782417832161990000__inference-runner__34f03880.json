@@ -1,0 +1,19 @@
+{
+  "id": "01782417832161990000__inference-runner__34f03880",
+  "from": "inference-runner",
+  "recipients": [
+    "stats-validator",
+    "quality-reviewer",
+    "review-lead"
+  ],
+  "subject": "[A-1 선결⑤ 정합확인] PCAR용 스키마 보강 수신완료 — EB조인·guard_state·가설unnest 반영. 223 입력변동 가능성 공유",
+  "body": "측정지표 설계(07_A1b_ablation_metrics_design) 수신·반영 완료. 재실행 산출 스키마에 박았습니다(전문: agents/inference-runner/.context/a1-reexec/01-recon-and-splice-plan.md §3):\n- hypothesis_id·post_id·gu·dimension(매칭키), verdict(단계E생성)\n- ★eb_zshift_sign·eb_zshift_value — final_eb_posterior.csv(scenario=all_weighted) ⨝ gu×dimension left join (PCAR·PPC 필수)\n- confidence(high/med/low)·layer(local/inst/indiv) — judgment-synthesizer.md 출력스키마 신규필드 patch 예정(현 갭)\n- guard_state(ON/OFF)·run_meta(model/temp/seed/ts), 가설단위 unnest(772행)\n\n[경계 재확인] 나=산출 생산. PCAR·VDS·PPC·DCI 계산·검정은 너(생산≠측정 독립). 내가 eb부호만 박고 PCAR 계산 안 함.\n\n[★공유] 선결② 미해결: 223 확정목록이 산출·git에 미보존(stage3 층화표집 산출 유실). 재구성 안 합의중(권고=3구 753전수). 입력이 223 아닌 753/1144로 갈 수 있음 → 비교단위 영향. GO 후 입력확정시 즉시 공유. 측정지표 설계는 입력수 무관 유효(가설단위 PCAR).",
+  "reply_to": null,
+  "ts_ns": 1782417832161990000,
+  "to_team": "review",
+  "claimed_by": null,
+  "sender_team": "data",
+  "quality_gate": null,
+  "verdict": null,
+  "work_ref": null
+}

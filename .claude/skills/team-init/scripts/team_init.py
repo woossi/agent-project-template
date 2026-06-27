@@ -126,9 +126,14 @@ def normalize_setup(data: dict[str, Any]) -> dict[str, Any]:
     roles = data.get("roles")
     roles = {k: str(v) for k, v in roles.items() if isinstance(k, str)} if isinstance(roles, dict) else {}
 
+    # authoring_owner (= company governance owner). Normally a roster member, but the
+    # reserved company total — "orchestrator" — is allowed even though it has no worker
+    # folder (it operates via CLI with its identity env; governance権限 is by name, not by a
+    # symlinked skill folder). See team-only-inbox spec §5-B.
     owner = str(data.get("authoring_owner") or "").strip() or members[0]
-    if owner not in members:
-        raise TeamInitError(f"authoring_owner '{owner}' must be one of members {members}")
+    if owner != "orchestrator" and owner not in members:
+        raise TeamInitError(
+            f"authoring_owner '{owner}' must be one of members {members} or 'orchestrator'")
 
     try:
         min_agents = int(data.get("min_distinct_agents", 2))
@@ -288,6 +293,28 @@ def _worker_path(setup: dict[str, Any], name: str) -> str:
     return f"agents/{name}"
 
 
+def _other_team_inbox_globs(setup: dict[str, Any], name: str) -> list[str]:
+    """Team-only inbox model (2026-06-27): each OTHER team's mailbox is a READ-blocked
+    drop-off slot for this worker. Returned for ``deny_read`` — the guard lets this worker
+    WRITE (post) to another team's inbox but never READ it (no cross-team context bleed).
+    A worker's OWN team inbox is intentionally NOT listed (read+write allowed). Skips the
+    worker's own team; covers every subteam folder mailbox."""
+    my_team = None
+    for st in setup.get("subteams") or []:
+        if isinstance(st, dict) and name in (st.get("members") or []):
+            my_team = st.get("name")
+            break
+    globs: list[str] = []
+    for st in setup.get("subteams") or []:
+        if not isinstance(st, dict):
+            continue
+        tname = st.get("name")
+        if not tname or tname == my_team:
+            continue
+        globs.append(f"teams/{tname}/.claude/inbox/**")
+    return sorted(globs)
+
+
 def build_agent_workspace_policy(setup: dict[str, Any], existing: dict[str, Any] | None = None) -> dict[str, Any]:
     """Regenerate the guard's worker-isolation policy from the roster.
 
@@ -315,6 +342,9 @@ def build_agent_workspace_policy(setup: dict[str, Any], existing: dict[str, Any]
             # whitelist is symmetric across channels (no Bash bypass).
             "deny": [f"{_worker_path(setup, other)}/**" for other in members if other != name]
                     + _other_team_allow_paths(setup, name),
+            # deny_read = OTHER teams' inbox mailboxes: WRITE-OK (post to them), READ-blocked
+            # (no cross-team mail bleed). Own-team inbox is absent → read+write allowed.
+            "deny_read": _other_team_inbox_globs(setup, name),
             "allow": BASELINE_ALLOW + _team_allow_paths(setup, name),
         }
         for name in members

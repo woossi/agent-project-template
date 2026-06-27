@@ -105,18 +105,13 @@ class TeamCli:
     def _inbox(self) -> str:
         return self._script("team-inbox", "team_inbox.py")
 
-    def inbox_post(self, sender: str, to: list[str], subject: str, body: str,
-                   *, reply_to: str | None = None, to_team: str | None = None,
+    def inbox_post(self, sender: str, to_team: str, subject: str, body: str,
+                   *, reply_to: str | None = None,
                    quality_gate: dict | None = None, verdict: dict | None = None,
                    work_ref: str | None = None) -> CliResult:
-        # post의 발신자 플래그는 --from (read/ack의 --as와 다름). 과거 --as를 넘겨 발행이
-        # 깨졌던 버그를 --from으로 교정.
+        # 팀 전용 단일 채널(2026-06-27): 모든 발행은 --to-team. 개인 주소·broadcast 폐지.
         argv = [self.python, self._inbox(), "post", "--from", sender,
-                "--subject", subject, "--body", body]
-        if to_team:
-            argv += ["--to-team", to_team]  # 팀 메일박스(1부) 발행
-        for r in to:
-            argv += ["--to", r]
+                "--to-team", to_team, "--subject", subject, "--body", body]
         if reply_to:
             argv += ["--reply-to", reply_to]
         # (가) 품질 루프 필드: 할당 시 quality_gate, 검수 회신 시 verdict+work_ref.
@@ -128,16 +123,22 @@ class TeamCli:
             argv += ["--work-ref", work_ref]
         return self._call_json(argv)
 
-    def inbox_ack(self, agent: str, msg_id: str, *, team: str | None = None) -> CliResult:
-        argv = [self.python, self._inbox(), "ack", "--as", agent, "--id", msg_id]
-        if team:
-            argv += ["--team", team]
-        return self._call_json(argv)
+    def inbox_ack(self, team: str, msg_id: str, agent: str) -> CliResult:
+        """claim한 팀 메시지를 처리완료. 팀 전용 모델이라 --team 필수."""
+        return self._call_json([self.python, self._inbox(), "ack",
+                                "--team", team, "--as", agent, "--id", msg_id])
 
     def inbox_claim(self, team: str, msg_id: str, claimer: str) -> CliResult:
         """팀 메일박스 메시지를 워커가 claim(원자적). 경합 시 1명만 성공."""
         return self._call_json([self.python, self._inbox(), "claim",
                                 "--team", team, "--id", msg_id, "--as", claimer])
+
+    def inbox_read_team(self, team: str, *, all_states: bool = False) -> CliResult:
+        """팀 메일박스 읽기(미claim, --all이면 claimed+consumed 포함)."""
+        argv = [self.python, self._inbox(), "read", "--team", team]
+        if all_states:
+            argv.append("--all")
+        return self._call_json(argv)
 
     # ---------------- promotion / derivation resolve ----------------
 

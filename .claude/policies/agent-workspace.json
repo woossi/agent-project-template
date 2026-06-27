@@ -19,6 +19,12 @@
         "/Users/ujunbin/article/**",
         "/Users/ujunbin/knowledge/**"
       ],
+      "deny_read": [
+        "teams/analysis/.claude/inbox/**",
+        "teams/review/.claude/inbox/**",
+        "teams/scout/.claude/inbox/**",
+        "teams/write/.claude/inbox/**"
+      ],
       "allow": [
         ".",
         "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
@@ -45,6 +51,12 @@
         "/Users/ujunbin/project/umc/**",
         "/Users/ujunbin/Library/Mobile Documents/com~apple~CloudDocs/umc-compressed-db/**",
         "/Users/ujunbin/research/UMC/**"
+      ],
+      "deny_read": [
+        "teams/analysis/.claude/inbox/**",
+        "teams/data/.claude/inbox/**",
+        "teams/review/.claude/inbox/**",
+        "teams/write/.claude/inbox/**"
       ],
       "allow": [
         ".",
@@ -74,6 +86,12 @@
         "/Users/ujunbin/article/**",
         "/Users/ujunbin/knowledge/**"
       ],
+      "deny_read": [
+        "teams/analysis/.claude/inbox/**",
+        "teams/data/.claude/inbox/**",
+        "teams/review/.claude/inbox/**",
+        "teams/scout/.claude/inbox/**"
+      ],
       "allow": [
         ".",
         "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
@@ -101,6 +119,12 @@
         "/Users/ujunbin/article/**",
         "/Users/ujunbin/knowledge/**"
       ],
+      "deny_read": [
+        "teams/analysis/.claude/inbox/**",
+        "teams/data/.claude/inbox/**",
+        "teams/review/.claude/inbox/**",
+        "teams/scout/.claude/inbox/**"
+      ],
       "allow": [
         ".",
         "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
@@ -126,6 +150,12 @@
         "/Users/ujunbin/Library/Mobile Documents/com~apple~CloudDocs/umc-compressed-db/**",
         "/Users/ujunbin/article/**",
         "/Users/ujunbin/knowledge/**"
+      ],
+      "deny_read": [
+        "teams/analysis/.claude/inbox/**",
+        "teams/data/.claude/inbox/**",
+        "teams/scout/.claude/inbox/**",
+        "teams/write/.claude/inbox/**"
       ],
       "allow": [
         ".",
@@ -154,6 +184,12 @@
         "/Users/ujunbin/article/**",
         "/Users/ujunbin/knowledge/**"
       ],
+      "deny_read": [
+        "teams/analysis/.claude/inbox/**",
+        "teams/data/.claude/inbox/**",
+        "teams/scout/.claude/inbox/**",
+        "teams/write/.claude/inbox/**"
+      ],
       "allow": [
         ".",
         "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
@@ -181,6 +217,12 @@
         "/Users/ujunbin/article/**",
         "/Users/ujunbin/knowledge/**"
       ],
+      "deny_read": [
+        "teams/analysis/.claude/inbox/**",
+        "teams/review/.claude/inbox/**",
+        "teams/scout/.claude/inbox/**",
+        "teams/write/.claude/inbox/**"
+      ],
       "allow": [
         ".",
         "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
@@ -207,6 +249,12 @@
         "/Users/ujunbin/research/UMC/**",
         "/Users/ujunbin/article/**",
         "/Users/ujunbin/knowledge/**"
+      ],
+      "deny_read": [
+        "teams/analysis/.claude/inbox/**",
+        "teams/review/.claude/inbox/**",
+        "teams/scout/.claude/inbox/**",
+        "teams/write/.claude/inbox/**"
       ],
       "allow": [
         ".",
@@ -236,6 +284,12 @@
         "/Users/ujunbin/article/**",
         "/Users/ujunbin/knowledge/**"
       ],
+      "deny_read": [
+        "teams/data/.claude/inbox/**",
+        "teams/review/.claude/inbox/**",
+        "teams/scout/.claude/inbox/**",
+        "teams/write/.claude/inbox/**"
+      ],
       "allow": [
         ".",
         "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
@@ -261,6 +315,12 @@
         "/Users/ujunbin/research/UMC/**",
         "/Users/ujunbin/article/**",
         "/Users/ujunbin/knowledge/**"
+      ],
+      "deny_read": [
+        "teams/analysis/.claude/inbox/**",
+        "teams/review/.claude/inbox/**",
+        "teams/scout/.claude/inbox/**",
+        "teams/write/.claude/inbox/**"
       ],
       "allow": [
         ".",
@@ -290,6 +350,12 @@
         "/Users/ujunbin/article/**",
         "/Users/ujunbin/knowledge/**"
       ],
+      "deny_read": [
+        "teams/analysis/.claude/inbox/**",
+        "teams/data/.claude/inbox/**",
+        "teams/review/.claude/inbox/**",
+        "teams/scout/.claude/inbox/**"
+      ],
       "allow": [
         ".",
         "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
@@ -315,6 +381,12 @@
         "/Users/ujunbin/project/umc/**",
         "/Users/ujunbin/Library/Mobile Documents/com~apple~CloudDocs/umc-compressed-db/**",
         "/Users/ujunbin/research/UMC/**"
+      ],
+      "deny_read": [
+        "teams/analysis/.claude/inbox/**",
+        "teams/data/.claude/inbox/**",
+        "teams/review/.claude/inbox/**",
+        "teams/write/.claude/inbox/**"
       ],
       "allow": [
         ".",
@@ -343,6 +415,12 @@
         "/Users/ujunbin/article/**",
         "/Users/ujunbin/knowledge/**"
       ],
+      "deny_read": [
+        "teams/analysis/.claude/inbox/**",
+        "teams/data/.claude/inbox/**",
+        "teams/scout/.claude/inbox/**",
+        "teams/write/.claude/inbox/**"
+      ],
       "allow": [
         ".",
         "/private/tmp/claude-501/-Users-ujunbin-team-umc/**",
@@ -370,6 +448,12 @@
         "/Users/ujunbin/research/UMC/**",
         "/Users/ujunbin/article/**",
         "/Users/ujunbin/knowledge/**"
+      ],
+      "deny_read": [
+        "teams/data/.claude/inbox/**",
+        "teams/review/.claude/inbox/**",
+        "teams/scout/.claude/inbox/**",
+        "teams/write/.claude/inbox/**"
       ],
       "allow": [
         ".",

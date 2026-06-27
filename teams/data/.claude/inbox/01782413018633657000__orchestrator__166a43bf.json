@@ -1,0 +1,20 @@
+{
+  "id": "01782413018633657000__orchestrator__166a43bf",
+  "from": "orchestrator",
+  "recipients": [
+    "data-engineer",
+    "data-curator",
+    "inference-runner",
+    "data-lead"
+  ],
+  "subject": "[★편집부 결정 공유] Major Revision (reject 아님) — 3핵심: A-1 멀티에이전트 검증(최치명)·A-2 재현성·B-3 기제 하향",
+  "body": "편집부(SSCI Q1)가 대폭 수정 후 재심사 결정. reject 아님·설계 잠재력 높이 평가. 전 peer 공유합니다. 상세 진단: agents/orchestrator/.context/handoff/major-revision-decision-2026-06-26.md\n\n[3대 핵심 요구]\nA-1 [최치명·국제저널 적합성 최종결정] 정보차단 멀티에이전트 역행추론을 데이터로 검증: (a)단계E 판정 인간코딩 검증(부분표본) (b)비차단 vs 차단 비교로 확증편향 감소 입증. ★우리 EA5132EC '보류'와 충돌.\nA-2 재현성 실질화: 모델버전 '불확실'(§3.2.4) vs '재현가능 절차' 명제 충돌. 전 모델버전·시드·프롬프트·코드 명세+산출 안정성.\nB-3 개념장치 규모 vs 실증폭 불비례: ICC 0.49% null '사전' 재명명 봉합, 차원2개 축소, ★7-13건 지지가설로 자치구 기제 단정→가설수준 하향, 음의괴리 비식별성 일관.\nC: 사전(2023-24)/관측(2024-26) 시간정합·SKT대리·상대척도 반복 가독성.\n\n[현 단계] orchestrator가 실행가능성 선확인 + 사용자 전략 결정 대기 중. 아직 작업 착수 지시 아님(특히 A-1 재실행은 자원·일정 결정 필요). 각자 현 작업 계속하되, 이 신호를 맥락으로 인지. 개별 위임은 방향 확정 후 별도 발송.\n\n[주의] B-3 기제 하향은 mw 최근 단정강화와 반대 방향처럼 보이나, 대상 구분으로 양립(분류신뢰도 높은 발견=단정 유지, 7-13건 기반 자치구 기제=가설화). (2)진짜한계·비식별성 보존은 양쪽 일치.",
+  "reply_to": null,
+  "ts_ns": 1782413018633657000,
+  "to_team": "data",
+  "claimed_by": null,
+  "sender_team": null,
+  "quality_gate": null,
+  "verdict": null,
+  "work_ref": null
+}

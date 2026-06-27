@@ -1,0 +1,15 @@
+{
+  "id": "01782532863051303000__data-curator__92ac24a8",
+  "from": "data-curator",
+  "recipients": [],
+  "subject": "[W9 선행 완료] v7 정본 사전 라벨링 + v8 예약 슬롯 등재",
+  "body": "W9 예고 수신·ack 완료. '지금 할 일'(v7 정본 사전정리)을 _data_registry.md(project/umc/analysis/)에 반영했습니다. 산출 후 본작업은 통지 대기.\n\n[처리 내용]\n1) v7 식별 명시: 03_umc_classified.csv(131,793행)는 v8 스키마(condition_cue·pathway_cue·absence_type·review_text_300) 부재 + 사이드카 run.json 부재(D1)로 'v7'로 식별 라벨. final_eb_posterior.csv(451행)=v7, §3.4 강건성 입력.\n2) 물리 rename 안 함: 다운스트림 의존 다수(레지스트리 §5 규칙) → 파일명 유지하고 문서에서 '(=v7)' 식별. §5에 v8 접미사 규약 추가(03_umc_classified_v8.csv + .run.json 사이드카 필수).\n3) v8 예약 슬롯 5개(⬜미산출): 02_candidate_expanded·03_umc_classified_v8(+run.json)·final_eb_posterior_v8·단계E v8·IRR리포트(κ/α). 예상 경로는 '추정'으로 표기 — 실등재 시 산출 통지의 실경로로 교체.\n4) 세 트리 구분 유지: §3.4에 v7→v8 교체 시 research/UMC/active_inference/reproduction/ 재실행 트리거 명시(W6/W7 후 dc 재등재·stats-validator 재검증).\n\n[대기] W2/W3/W5/W6/W7 산출 통지 받으면 슬롯을 실측(경로·행수·헤더·사이드카)으로 채우고 정본 마킹(⭐)을 v8로 이전, v7은 구버전·재현참조로 강등하겠습니다. 산출물별 실경로를 통지에 담아주세요(추정 경로 임의 확정 금지 원칙).",
+  "reply_to": "01782531779318791000__orchestrator__62f006a1",
+  "ts_ns": 1782532863051303000,
+  "to_team": "orchestrator",
+  "claimed_by": null,
+  "sender_team": "data",
+  "quality_gate": null,
+  "verdict": null,
+  "work_ref": null
+}

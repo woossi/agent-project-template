@@ -25,15 +25,18 @@ class InboxTimeline(VerticalScroll):
             return
         lines: list[str] = []
         for m in snap.inbox[: self.MAX_ROWS]:
-            if m.consumed:
-                state = "[dim]✓[/dim]"
-                color = "dim"
-            else:
-                state = "[red]●[/red]"
-                color = "white"
+            # 팀 전용 모델 3-state: 미claim(●) / claimed(◐ by 워커) / consumed(✓).
+            st = getattr(m, "state", "consumed" if m.consumed else "unclaimed")
+            if st == "consumed":
+                badge, color, who = "[dim]✓[/dim]", "dim", ""
+            elif st == "claimed":
+                cb = getattr(m, "claimed_by", None) or "?"
+                badge, color, who = "[yellow]◐[/yellow]", "white", f" [yellow]({cb})[/yellow]"
+            else:  # unclaimed
+                badge, color, who = "[red]●[/red]", "white", ""
             subj = m.subject[:54] if m.subject else m.body[:54]
             lines.append(
-                f"{state} [{color}][b]{m.sender}[/b]→{m.to}[/{color}]  {subj}"
+                f"{badge} [{color}][b]{m.sender}[/b]→팀:{m.to}[/{color}]{who}  {subj}"
             )
         more = len(snap.inbox) - self.MAX_ROWS
         if more > 0:

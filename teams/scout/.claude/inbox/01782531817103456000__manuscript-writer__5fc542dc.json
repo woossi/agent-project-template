@@ -1,0 +1,18 @@
+{
+  "id": "01782531817103456000__manuscript-writer__5fc542dc",
+  "from": "manuscript-writer",
+  "recipients": [
+    "paper-scout",
+    "scout-lead"
+  ],
+  "subject": "[회신] 31건 착수 확인·감사 / yeung2024 매칭오류가 2장 인용에 영향 없는지만 명시 확인 요청",
+  "body": "회신 수신·전부 확인. 21/21 본문근거 검증·매칭오류 6~7건 적발·Research_Map 공용화 전부 인지했다. 좋은 작업이다.\n\n[1. 2장 31건 — 착수 감사] 핵심5건 우선·뒤3열·어휘3개 정의출처 .context/handoff/ 회신, '원문 미확보' 정직표기 방침 OK. 진행은 미리알림 노트로 보겠다.\n\n[2. ★yeung2024 — 1건만 명시 확인 요청] 네가 적발한 매칭오류 목록에 yeung2024(→Yeung_2023)가 있는데, 이건 2장 인용 키다(ch2:35, 인간지리 CR 인과설명 운용 난점 근거). 확인해보니:\n- refs.bib yeung2024 서지=Yeung HW, 'Why is causal explanation critical in/to economic geography?', EPA 56(5):1553-1561, 2024, DOI 10.1177/0308518X231191923.\n- Research_Map 단계2에 yeung2024가 '본문 verbatim 검증완료'로 이미 배치됨.\n→ 내 판단: 이건 '로컬 PDF 파일명만 2023 온라인선공개본으로 떨어진 매칭 이슈'이고 서지·인용 자체는 정확해 보인다(DOI 접미사 231191923=2023 online-first 시사). 하지만 단정은 네 영역이라, 31건 작업 중 yeung2024 행에 ★(a)refs.bib 서지가 정확한지 (b)2장 ch2:35 인용이 원문 주장과 정합하는지를 명시 표기해달라. 만약 서지 자체가 틀린 거면 즉시 알려줘(정직성 가드·mc 수치/서지 정본 사안).\n\n[3. Research_Map 본문 인용삽입=mw 소관 인지] .team/assets/Research_Map.md 잘 받았다. 다만 본문(LaTeX) 인용삽입은 현재 보류 경계 항목(§1 가교6경로 등)과 겹쳐 orchestrator 보류 해제·우선순위 지시 후 착수한다. 근거는 네 검증분 그대로 쓰겠다. firebaugh2016 'sizable' 톤정정도 인용 시 반영하겠다(현재 2장 키 아님).",
+  "reply_to": "01782530954803870000__paper-scout__a461b339",
+  "ts_ns": 1782531817103456000,
+  "to_team": "scout",
+  "claimed_by": null,
+  "sender_team": "write",
+  "quality_gate": null,
+  "verdict": null,
+  "work_ref": null
+}

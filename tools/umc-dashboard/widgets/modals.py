@@ -24,9 +24,9 @@ class _BaseModal(ModalScreen):
     _BaseModal { align: center middle; }
     #box { width: 70; height: auto; max-height: 80%; border: thick $accent; background: $surface; padding: 1 2; }
     #box Label { margin-top: 1; }
-    #buttons { margin-top: 1; height: auto; align-horizontal: right; }
+    #buttons { width: 100%; margin-top: 1; height: auto; align-horizontal: right; }
     #buttons Button { margin-left: 1; }
-    #presets { height: auto; align-horizontal: left; }
+    #presets { width: 100%; height: auto; align-horizontal: left; }
     #presets Button { margin-right: 1; }
     """
 
@@ -39,6 +39,25 @@ class _BaseModal(ModalScreen):
         super().__init__()
         self._on_submit = on_submit
         self._closed = False  # 재진입 가드: _close는 모달당 정확히 1회만 효력
+
+    def on_mount(self) -> None:
+        # 초기 포커스가 안 잡히면 키 입력이 위젯에 전달되지 않는다(입력 무반응의 원인).
+        # on_mount 시점엔 자식 위젯이 아직 완전히 렌더되지 않았을 수 있으므로, 한 프레임
+        # 뒤(call_after_refresh)에 포커스를 줘서 query_one이 확실히 대상을 찾게 한다.
+        self.call_after_refresh(self._apply_initial_focus)
+
+    def _apply_initial_focus(self) -> None:
+        target = self._initial_focus()
+        if target is not None:
+            target.focus()
+        else:
+            self.focus_next()
+
+    def _initial_focus(self):
+        """초기 포커스를 줄 위젯(없으면 None → 첫 focusable로). 하위 모달이 오버라이드.
+
+        아직 위젯이 없으면(타이밍) None을 돌려주도록 안전하게 처리한다."""
+        return None
 
     def _collect(self) -> dict | None:
         """하위 클래스가 구현: 유효 입력이면 payload, 아니면 None."""
@@ -113,18 +132,21 @@ class InstructModal(_BaseModal):
         self.team = team
 
     def _preset(self, key: str) -> str:
-        """정형 액션 프롬프트. 팀 메일박스 + claim 모델 + 미리알림 두 채널."""
+        """정형 액션 프롬프트. 팀 전용 메일박스(claim 모델) + 미리알림 두 채널."""
         team = self.team or "?"
+        worker = self.worker
         rlist = f"umc-{team}"
         if key == "inbox":
             return (
-                f"네 팀({team})의 받은편지함을 확인할 차례다. "
-                f"`team-inbox` 스킬의 team_inbox.py로 팀 메일박스 "
-                f"(받는주소 = 팀 '{team}')의 미소비 메시지를 read 하고, "
-                f"제목·본문을 보고 너에게 할당된 메시지면 claim해서 처리한 뒤 "
-                f"그 메시지를 ack 해라(이미 처리됐거나 네 담당이 아니면 손대지 마라). "
-                f"처리 결과는 발신 팀에게 회신(post)하고, 무엇을 claim·처리·회신했는지 "
-                f"한국어로 짧게 보고해라."
+                f"팀 받은편지함을 확인할 차례다. `team-inbox` 스킬의 team_inbox.py로 "
+                f"네 팀('{team}') 메일박스의 미claim 메시지를 `read --team {team}` 한다. "
+                f"제목·본문을 보고 네 담당이면 `claim --team {team} --as {worker} --id <msgid>`로 "
+                f"원자적으로 가져온 뒤(경합 시 1명만 성공) 처리하고, 끝나면 "
+                f"`ack --team {team} --id <msgid>` 한다. 네 담당이 아니거나 이미 claim된 건 손대지 마라. "
+                f"처리 결과는 발신 팀에게 `post --to-team <발신팀> --reply-to <msgid>`로 회신하고, "
+                f"무엇을 claim·처리·회신했는지 한국어로 짧게 보고해라. "
+                f"미claim 메시지가 없으면 '받은 작업 없음'이라고만 보고해라. "
+                f"(개인 inbox는 폐지됐다 — 모든 메시지는 팀 메일박스로만 온다.)"
             )
         if key == "reminders":
             return (
@@ -150,6 +172,14 @@ class InstructModal(_BaseModal):
                 yield Button("취소", id="cancel")
                 yield Button("지시", id="ok", variant="primary")
 
+    def _initial_focus(self):
+        # 모달이 뜨면 프롬프트 입력칸에 포커스를 둔다(바로 타이핑 가능). preset 버튼은
+        # 마우스 클릭 또는 Tab으로 접근. (포커스 미설정 시 입력 무반응 방지)
+        try:
+            return self.query_one("#prompt", TextArea)
+        except Exception:
+            return None  # 타이밍상 아직 없으면 첫 focusable로 폴백
+
     def on_button_pressed(self, e: Button.Pressed) -> None:
         # 정형 액션 버튼은 submit/cancel이 아니라 TextArea를 채우고 머문다.
         if e.button.id == "preset-inbox":
@@ -172,20 +202,20 @@ class InstructModal(_BaseModal):
 
 
 class PostInboxModal(_BaseModal):
-    """inbox 메시지 발행 — 수신자·제목·본문."""
+    """팀 메일박스 발행 — 받는 팀·제목·본문 (팀 전용 모델: 개인 주소 없음)."""
 
-    def __init__(self, sender: str, workers: list[str], on_submit, *, default_to: str = ""):
+    def __init__(self, sender: str, teams: list[str], on_submit, *, default_to: str = ""):
         super().__init__(on_submit)
         self.sender = sender
-        self._workers = workers  # 'workers'는 Textual 노드의 read-only 속성과 충돌
+        self._teams = teams
         self.default_to = default_to
 
     def compose(self) -> ComposeResult:
         with Vertical(id="box"):
-            yield Label(f"[b]inbox 발행[/b]  (from {self.sender})")
-            yield Label("받는 사람")
-            yield Select([(w, w) for w in self._workers],
-                         value=self.default_to or Select.BLANK, id="to")
+            yield Label(f"[b]팀 메일박스 발행[/b]  (from {self.sender})")
+            yield Label("받는 팀")
+            yield Select([(t, t) for t in self._teams],
+                         value=self.default_to or Select.BLANK, id="to_team")
             yield Label("제목")
             yield Input(id="subject")
             yield Label("본문")
@@ -195,12 +225,12 @@ class PostInboxModal(_BaseModal):
                 yield Button("발행", id="ok", variant="primary")
 
     def _collect(self) -> dict | None:
-        to = self.query_one("#to", Select).value
+        to_team = self.query_one("#to_team", Select).value
         subject = self.query_one("#subject", Input).value.strip()
         body = self.query_one("#body", TextArea).text.strip()
-        if to is Select.BLANK or not subject:
+        if to_team is Select.BLANK or not subject:
             return None
-        return {"to": [str(to)], "subject": subject, "body": body}
+        return {"to_team": str(to_team), "subject": subject, "body": body}
 
 
 class AddTaskModal(_BaseModal):

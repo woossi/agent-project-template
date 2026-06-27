@@ -157,5 +157,75 @@ class GuardAgentWorkspaceTest(unittest.TestCase):
         self.assertIn("Bash command is not allowed", result.stderr)
 
 
+class DenyReadDropOffTest(GuardAgentWorkspaceTest):
+    """deny_read: a drop-off slot (other team's inbox) is WRITE-OK but READ-blocked.
+
+    Models the team-only inbox: a worker may POST to another team (write) yet never
+    READ that team's mailbox (no context bleed). The same path in plain ``deny`` blocks both.
+    """
+
+    POLICY = {
+        "version": 1,
+        "defaults": {"allow": ["."], "deny": [], "bash": {"allow": [], "deny": []}},
+        "agents": {
+            "de": {
+                "allow": ["."],
+                "deny": ["teams/data/de/**"],            # own-folder peers etc: read+write blocked
+                "deny_read": ["teams/write/.claude/inbox/**"],  # other team inbox: write-OK, read-NO
+            },
+            "mw": {"allow": ["."], "deny": []},
+        },
+    }
+
+    def _payload(self, tool, path):
+        return {"hook_event_name": "PreToolUse", "tool_name": tool, "tool_input": {"file_path": path}}
+
+    def test_write_to_dropoff_allowed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            r = self.run_hook(root, self.POLICY,
+                              self._payload("Write", "teams/write/.claude/inbox/m1.json"),
+                              agent_name="de")
+            self.assertEqual(r.returncode, 0, r.stderr)  # drop-off write passes
+
+    def test_read_of_dropoff_blocked(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            r = self.run_hook(root, self.POLICY,
+                              self._payload("Read", "teams/write/.claude/inbox/m1.json"),
+                              agent_name="de")
+            self.assertEqual(r.returncode, 2)  # reading another team's mail is blocked
+            self.assertIn("denied", r.stderr)
+
+    def test_edit_of_dropoff_allowed(self):
+        # Edit is a write tool → drop-off write allowed (must not be stricter than Write).
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            r = self.run_hook(root, self.POLICY,
+                              self._payload("Edit", "teams/write/.claude/inbox/m1.json"),
+                              agent_name="de")
+            self.assertEqual(r.returncode, 0, r.stderr)
+
+    def test_plain_deny_blocks_both_read_and_write(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for tool in ("Read", "Write"):
+                r = self.run_hook(root, self.POLICY,
+                                  self._payload(tool, "teams/data/de/secret.txt"),
+                                  agent_name="de")
+                self.assertEqual(r.returncode, 2, f"{tool} should be blocked by plain deny")
+
+    def test_unregistered_identity_blocks_dropoff_read_and_write(self):
+        # fail-closed: an unidentified caller gets the STRICTER rule — deny_read folded into
+        # deny, so even WRITE to a drop-off is blocked (no lenient exception for unknowns).
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for tool in ("Read", "Write"):
+                r = self.run_hook(root, self.POLICY,
+                                  self._payload(tool, "teams/write/.claude/inbox/m1.json"),
+                                  agent_name="ghost-typo")
+                self.assertEqual(r.returncode, 2, f"unregistered {tool} must be blocked")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -11,9 +11,8 @@ import store  # noqa: E402
 
 
 def _seed(root: Path) -> None:
+    """팀 전용 메일박스 모델: 메일박스는 teams/<팀>/.claude/inbox/."""
     team = root / ".project"
-    (team / "inbox" / "alice" / ".consumed").mkdir(parents=True)
-    (team / "inbox" / "bob").mkdir(parents=True)
     (team / "goals").mkdir(parents=True)
     (root / "AGENTS.md").write_text("x")
     team.joinpath("team.json").write_text(json.dumps({
@@ -22,11 +21,15 @@ def _seed(root: Path) -> None:
         "subteams": [{"name": "core", "members": ["alice", "bob"], "orchestrator": "alice",
                       "reminders_list": "umc"}],
     }))
-    # unread for bob, consumed for alice
-    (team / "inbox" / "bob" / "m1.json").write_text(json.dumps({
-        "id": "m1", "from": "alice", "to": "bob", "subject": "작업 위임", "body": "...", "ts_ns": 200}))
-    (team / "inbox" / "alice" / ".consumed" / "m0.json").write_text(json.dumps({
-        "id": "m0", "from": "bob", "to": "alice", "subject": "회신", "body": "...", "ts_ns": 100}))
+    core_box = root / "teams" / "core" / ".claude" / "inbox"
+    (core_box / ".consumed").mkdir(parents=True)
+    # unclaimed message in core team mailbox
+    (core_box / "m1.json").write_text(json.dumps({
+        "id": "m1", "from": "alice", "to_team": "core", "recipients": ["alice", "bob"],
+        "claimed_by": None, "subject": "작업 위임", "body": "...", "ts_ns": 200}))
+    # consumed message in core team mailbox
+    (core_box / ".consumed" / "m0.json").write_text(json.dumps({
+        "id": "m0", "from": "bob", "to_team": "core", "subject": "회신", "body": "...", "ts_ns": 100}))
     (team / "goals" / "g.json").write_text(json.dumps({
         "id": "g", "title": "목표A", "objective": "obj", "success_criteria": ["c1", "c2"], "status": "active"}))
 
@@ -42,16 +45,22 @@ def test_roster_and_subteams():
         assert alice.role == "리드 역할"
 
 
-def test_inbox_unread_vs_consumed():
+def test_inbox_unclaimed_vs_consumed():
     with TemporaryDirectory() as d:
         root = Path(d)
         _seed(root)
         snap = store.read_snapshot(root)
-        assert len(snap.inbox) == 2
+        assert len(snap.inbox) == 2  # 1 unclaimed + 1 consumed in core mailbox
+        # 워커 배지 = 자기 팀의 미claim 수. alice·bob 둘 다 core 팀 → 1
         assert snap.unread_count_for("bob") == 1
-        assert snap.unread_count_for("alice") == 0  # consumed
+        assert snap.unread_count_for("alice") == 1
+        # 팀명으로도 조회 가능
+        assert snap.unread_count_for("core") == 1
         # newest first
         assert snap.inbox[0].ts_ns >= snap.inbox[1].ts_ns
+        # state 태깅
+        states = {m.id: m.state for m in snap.inbox}
+        assert states["m1"] == "unclaimed" and states["m0"] == "consumed"
 
 
 def test_goals():
@@ -83,7 +92,7 @@ def test_malformed_file_does_not_crash():
     with TemporaryDirectory() as d:
         root = Path(d)
         _seed(root)
-        # half-written tmp file mid atomic-rename
-        (root / ".project" / "inbox" / "bob" / "broken.json").write_text("{ not json")
+        # half-written tmp file mid atomic-rename, in the team mailbox
+        (root / "teams" / "core" / ".claude" / "inbox" / "broken.json").write_text("{ not json")
         snap = store.read_snapshot(root)  # must not raise
-        assert snap.unread_count_for("bob") == 1  # broken one skipped
+        assert snap.unread_count_for("core") == 1  # broken one skipped

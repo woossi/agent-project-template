@@ -208,6 +208,11 @@ class Dashboard(App):
     def _worker_names(self) -> list[str]:
         return [w.name for w in (self._snap.workers if self._snap else [])]
 
+    def _team_names(self) -> list[str]:
+        # 팀 전용 메일박스 모델: 발행 수신자는 팀(+ orchestrator 가상 메일박스).
+        teams = [t.name for t in (self._snap.subteams if self._snap else [])]
+        return teams + ["orchestrator"]
+
     def _toast(self, ok: bool, msg: str) -> None:
         self.notify(msg, severity="information" if ok else "error",
                     timeout=4)
@@ -313,21 +318,23 @@ class Dashboard(App):
     # ---------------- inbox (stage 1: CLI) ----------------
 
     def action_post_inbox(self) -> None:
-        names = self._worker_names()
-        if not names:
+        teams = self._team_names()
+        if not teams:
             return
+        # 선택된 워커가 있으면 그 워커의 팀을 기본 수신 팀으로.
         default_to = ""
         sel = self._selected_worker()
         if sel:
-            default_to = sel[0]
+            default_to = sel[1] or ""  # (worker, team)
 
         def submit(payload: dict) -> None:
-            r = self.cli.inbox_post("orchestrator", payload["to"],
+            to_team = payload["to_team"]
+            r = self.cli.inbox_post("orchestrator", to_team,
                                     payload["subject"], payload["body"])
-            self._toast(r.ok, f"발행 → {','.join(payload['to'])}" if r.ok else f"실패: {r.error}")
+            self._toast(r.ok, f"발행 → 팀 {to_team}" if r.ok else f"실패: {r.error}")
             self.refresh_data()
 
-        self.push_screen(PostInboxModal("orchestrator", names, submit, default_to=default_to))
+        self.push_screen(PostInboxModal("orchestrator", teams, submit, default_to=default_to))
 
     # ---------------- reminders (stage 1: CLI) ----------------
 

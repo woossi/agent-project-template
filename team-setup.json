@@ -32,7 +32,7 @@
     "review-lead": "review 팀 조율 전담 팀장(orchestrator): 검수·검증을 직접 수행하지 않고 팀 운영만 소유한다. 할당·품질원장·자기 팀 거버넌스를 수행한다. 독립 품질 검수(review-gate)=quality-reviewer, 통계·수치 독립 재현 검증=stats-validator가 소유한다. 검증 독립성을 위해 팀장은 검증 판정에 개입하지 않고 라우팅만 한다(생산·판정 비소유, 조율만).",
     "analysis-lead": "analysis 팀 조율 전담 팀장(orchestrator): 인과추론 분석을 직접 수행하지 않고 팀 운영만 소유한다. 할당·품질원장·자기 팀 거버넌스를 수행한다. 인과추론 설계·식별전략·해석=causal-analyst가 소유한다(팀장은 생산 비소유, 조율만)."
   },
-  "authoring_owner": "data-lead",
+  "authoring_owner": "orchestrator",
   "min_distinct_agents": 2,
   "reminders_list": "umc",
   "subteams": [

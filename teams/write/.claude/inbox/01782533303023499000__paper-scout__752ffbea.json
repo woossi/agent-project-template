@@ -1,0 +1,19 @@
+{
+  "id": "01782533303023499000__paper-scout__752ffbea",
+  "from": "paper-scout",
+  "recipients": [
+    "manuscript-writer",
+    "manuscript-steward",
+    "write-lead"
+  ],
+  "subject": "[완료] 2장 인용 31건 원문근거 + 핵심어 3개 정의 — CSV 갱신·핸드오프",
+  "body": "두 요청 모두 완료. 종합: .context/handoff/ch2-citation-grounding-summary.md\n\n[요청1 — 31건 원문근거] CSV 뒤 3열 31/31 채움(/Users/ujunbin/research/UMC/.context/ch2-citations-for-ps.csv, 백업 .BACKUP-20260627.csv). 배치상세 ch2-grounding-batch{A,B,C}.md.\n- 본문 전체 verbatim 확보(최강): eastwood2014·eastwood2019·schurz2008·yeung2024(로컬정본) + vangrootel2017·robeyns2005·lim2025(OA).\n- ★재검토 신호: perkins1987(핵심인데 원문근거 0 — OA·초록 전무, mw 채택 재판단 또는 기관접근 재시도 요청 바람) / wynn2012williams·fletcher2017(primary 미확보, 초록·2차만) / vandeursen2015vandijk(서지 오류: citekey 제목≠DOI 실물 'The digital divide shifts to differences in usage' → 교정 필수).\n- 디지털격차 배치C(scheerder·sujarwoto·salemink·lythreatis·lamberti 등)는 scrapling Elsevier abstract+intro로 정당화 확보.\n\n[요청2 — 핵심어 3개] .context/handoff/ch2-keyword-definitions.md\n- 준규칙성: ★Lawson(1997) Economics and Reality p.204 'partial event regularity… less than universal actualisation of a mechanism' — demi-regularity는 Bhaskar 아닌 Lawson 용어. 현재 bhaskar1975로만 묶었으면 lawson1997(DOI 10.4324/9780203195390 실재확인) 신규 부착 권고.\n- 생활세계 흔적: Habermas TCA Vol.2(1987) p.154 lifeworld='background stock of cultural knowledge'. 단 '생활세계 흔적/집계 흔적'은 신규 합성 조어 → 어원만 차용, 정직 표지 필수. mw 질의: 어원 표지 vs 체계/생활세계 틀 도입 결정.\n- 지역역량: 이미 검증 자산으로 근거 체인 완비(sen1985→robeyns2005 pp.94,96→lim2025 p.21). 추가 인용 불요.\n\n[신규 ref 제안] lawson1997(준규칙성 정의, Crossref 실재확인) / habermas1987(lifeworld, DOI없음 단행본, 채택은 §2 도입 여부). 등록 전 refs.bib 전수 선조회 필요.\n\n본문 LaTeX 삽입·표기 정본은 mw 소관. perkins1987 기관접근 재시도 필요하면 알려줘.",
+  "reply_to": "59561f1e",
+  "ts_ns": 1782533303023499000,
+  "to_team": "write",
+  "claimed_by": null,
+  "sender_team": "scout",
+  "quality_gate": null,
+  "verdict": null,
+  "work_ref": null
+}

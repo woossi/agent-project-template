@@ -102,7 +102,7 @@
 | `.claude/skills/` | 반복 작업 묶음을 포괄 이름으로 승격한 재사용 절차 |
 | `.claude/agents/` | 특정 스킬 패키지를 독립 컨텍스트에서 관리하는 서브에이전트 |
 | `.context/` | 에이전트 실행 로그, 임시 handoff, 검증 산출물 |
-| `.project/` | Model Y 팀 공유 store: 로스터(`team.json`)·목표(`goals/`)·받은 편지함(`inbox/`)·팀 정책·팀 승격/파생·회사 메모리(`memory/`) |
+| `.project/` | Model Y 팀 공유 store: 로스터(`team.json`)·목표(`goals/`)·팀 정책·팀 승격/파생·회사 메모리(`memory/`)·옛 메일 아카이브(`inbox/.archive/`). 라이브 팀 메일박스는 `teams/<팀>/.claude/inbox/`로 이동(팀 전용 모델) |
 | `teams/<팀>/` | 하위 팀 폴더(회사→팀→워커 3계층). 팀 자산 `.claude/{skills,memory,tasks}`(워커 간 협력 스킬·팀 메모리)+`.context`, 마커 `.team-folder` |
 | `teams/<팀>/<워커>/` | peer 워커별 작업·메모리·`.context`(정체성으로 격리, 공유 자산은 root로 symlink) |
 
@@ -124,6 +124,6 @@
 - **팀별 작업경로 화이트리스트**(2026-06-27): `team-setup.json`의 각 subteam `allow_paths`가 `team-init`으로 `agent-workspace.json`의 워커별 `allow`(자기 팀 경로)와 `deny`(타팀 경로)로 전개된다 — scout=`article`+`knowledge`, write=`research/UMC`, data=`project/umc`+iCloud `umc-compressed-db`, review=`research/UMC`+`project/umc`, analysis=`project/umc`. 공통 baseline(프로젝트 루트·스크래치패드·워크플로우 산출)은 전 워커 `allow`에 prepend. 팀은 자기 외부경로만 접근하고, **타팀 외부경로는 각 워커 `deny`에 전개되어 Read/Edit/Write·Bash 모든 채널에서 대칭 차단**된다(allow-side 검사가 아니라 deny 전개라 `/tmp` 등 무관 경로는 과차단하지 않는다). 미등록/오타 정체성은 fail-closed(외부경로 0건·전 워커폴더 deny). Bash는 정적 토큰 추출(best-effort)이라 셸 변수·글로브·치환은 못 막으며 OS 샌드박스가 근본 backstop. 대소문자 변형 우회(#3)는 미수정 잔존(macOS case-insensitive FS).
 - **격리(물리적+문서적, 3계층)**: `.claude/policies/agent-workspace.json`이 각 워커를 자기 폴더로 한정하고 다른 모든 워커 폴더(`teams/<팀>/<워커>/**`)를 차단한다(N² 엄격 격리 — 같은 팀 형제도 차단). 자기 팀 공용 자원(`teams/<팀>/.claude`)은 읽기 가능. 공유 자산(`.claude/{hooks,policies,settings.json,CLAUDE.md}`, `AGENTS.md`)은 root로 symlink되어 동일성이 자동 보장된다.
 - **스킬 3계층 구획화 + 거버넌스 2계층(2026-06-27)**: 워커 스킬은 워커 폴더의 real dir, 팀 스킬은 `teams/<팀>/.claude/skills`(워커 간 워크플로우 고정), 프로젝트 스킬은 `.project/skills`(팀 간 자료 전달, 예정). 공유 root 거버넌스 스킬은 2계층으로 분산된다 — **COMPANY**(`team-init`·`agent-clone-setup`)는 회사 owner(`data-lead`) 단독, **TEAM**(`create-team-agent`·`set-team-goal`·`team-derive-author`)은 각 팀장(orchestrator)에게 symlink된다. 팀장 전용 운영 스킬 `team-quality-ledger`(거버넌스 아님)도 팀장에게만 간다. 나머지 공용 스킬은 전원에게 symlink된다. 일반 워커(생산자)는 거버넌스·팀장스킬 0.
-- **두 채널**: 미리알림(목록 `umc`, 사람도 보는 백로그·진행상태 — `reminders-team-bridge`)과 받은 편지함(`.project/inbox/`, 에이전트끼리 구조화 메시지 — `team-inbox`).
+- **두 채널**: 미리알림(목록 `umc`, 사람도 보는 백로그·진행상태 — `reminders-team-bridge`)과 **팀 메일박스**(`teams/<팀>/.claude/inbox/`, 에이전트끼리 구조화 메시지 — `team-inbox`). **팀 전용 단일 채널(2026-06-27 재설계)**: 개인 inbox·개인→개인 직할 메시지는 폐지됐다. 모든 메시지는 `post --to-team <팀>`으로 팀 메일박스에 1부 쌓이고, 그 팀의 누구든 `claim`(원자적, 1명만)해 처리 후 `ack`한다. 팀 간 전달은 상대 팀 메일박스로 post(scout→data). 격리: 워커는 자기 팀 메일박스만 read하고, **타팀 메일박스는 write(투입)만 되고 read는 guard `deny_read`로 차단**(컨텍스트 오염 방지). 회사 총괄 orchestrator 수신함은 가상 팀 `teams/.orchestrator/inbox/`.
 - **목표·작업**: 팀 목표는 `set-team-goal`로 `.project/goals/`에 기록하고 Tasks로 분해해 할당한다. 팀 합의 결정·용어·선호는 `.project/memory/`·`.project/word.json`·`.project/user_preferences.md`로 파생한다(`team-derive-author`). 팀 계층 승격/파생은 `.project/policies/team-promotion.json`·`team-derivation.json` 조건으로 distinct-agent 축에서 평가된다.
 - **팀 정의 갱신**: 로스터·정책은 `team-init`이 `team-setup.json` 하나로 재생성한다.

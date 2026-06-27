@@ -14,6 +14,12 @@ from typing import Any
 
 
 PATH_TOOLS = {"Read", "Edit", "Write", "MultiEdit"}
+# Read vs write split (2026-06-27): drop-off slots (other teams' inbox) are write-OK but
+# read-blocked, so the guard must know which a tool does. NotebookRead reads; NotebookEdit
+# writes. Anything in PATH_TOOLS not listed as READ is treated as a writer (fail-safe: an
+# unknown path tool is assumed to write, getting only the lenient plain-deny check — but it
+# is still subject to the full deny list, so this never weakens isolation of deny paths).
+READ_PATH_TOOLS = {"Read", "NotebookRead"}
 DIRECT_PATH_KEYS = ("file_path", "path", "notebook_path")
 
 
@@ -109,15 +115,22 @@ def merged_config(policy: dict[str, Any], agent_name: str) -> dict[str, Any]:
         else as_string_list(defaults.get("allow")) or ["."]
     )
     deny = as_string_list(defaults.get("deny")) + as_string_list(agent_config.get("deny"))
+    # deny_read: READ-only denial. A path here is blocked for Read tools but ALLOWED for
+    # Write tools — a "drop-off slot". Used for other teams' inbox mailboxes so a worker can
+    # POST to another team (write) but never READ that team's mail (no context bleed).
+    deny_read = as_string_list(defaults.get("deny_read")) + as_string_list(agent_config.get("deny_read"))
     if not registered:
         # Unregistered / typo / empty / "main": synthesize a deny over EVERY registered
         # worker folder. With no agent entry of its own, no self-folder is exempted, so all
         # worker folders are blocked (fail-closed against identity collapse). The allow side
         # already falls back to defaults.allow (baseline-only), so no external team path leaks.
+        # deny_read is folded into deny here: an unidentified caller gets the STRICTER rule
+        # (read AND write blocked), never the lenient drop-off exception.
         for cfg in agents.values():
             if isinstance(cfg, dict):
-                deny += as_string_list(cfg.get("deny"))
+                deny += as_string_list(cfg.get("deny")) + as_string_list(cfg.get("deny_read"))
         deny = sorted(set(deny))
+        deny_read = []
 
     default_bash = defaults.get("bash")
     if not isinstance(default_bash, dict):
@@ -138,6 +151,7 @@ def merged_config(policy: dict[str, Any], agent_name: str) -> dict[str, Any]:
         "agent": agent_name or "main",
         "allow": allow,
         "deny": deny,
+        "deny_read": deny_read,
         "bash": {"allow": bash_allow, "deny": bash_deny, "enabled": bash_enabled},
     }
 
@@ -209,11 +223,14 @@ def command_matches(pattern: str, command: str) -> bool:
     return fnmatch.fnmatchcase(command, pattern)
 
 
-def check_path_policy(paths: list[str], root: Path, config: dict[str, Any]) -> int:
+def check_path_policy(paths: list[str], root: Path, config: dict[str, Any], *, is_read: bool = False) -> int:
+    # Read tools also honor deny_read (read-only denial: drop-off slots are write-OK/read-NO).
+    # Write tools see only the plain deny list, so they can still POST into a deny_read path.
+    deny_patterns = config["deny"] + (config.get("deny_read", []) if is_read else [])
     for raw_path in paths:
         rel, abs_path = path_targets(raw_path, root)
         display_path = rel if rel is not None else abs_path
-        if any(path_matches_target(pattern, rel, abs_path, root) for pattern in config["deny"]):
+        if any(path_matches_target(pattern, rel, abs_path, root) for pattern in deny_patterns):
             print(
                 f"Blocked {display_path}: denied by workspace policy for agent {config['agent']}.",
                 file=sys.stderr,
@@ -335,7 +352,8 @@ def main(argv: list[str] | None = None) -> int:
     config = merged_config(policy, active_agent_name(payload))
 
     if tool_name in PATH_TOOLS:
-        return check_path_policy(iter_tool_paths(tool_input), root, config)
+        is_read = tool_name in READ_PATH_TOOLS
+        return check_path_policy(iter_tool_paths(tool_input), root, config, is_read=is_read)
 
     if tool_name == "Bash":
         command = tool_input.get("command")

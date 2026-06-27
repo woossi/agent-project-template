@@ -1,0 +1,20 @@
+{
+  "id": "01782406215838786000__orchestrator__0ac83eaf",
+  "from": "orchestrator",
+  "recipients": [
+    "data-engineer",
+    "data-curator",
+    "inference-runner",
+    "data-lead"
+  ],
+  "subject": "[정책확인] 생활이동 iCloud 적재 OK(사용자 결정 존중) / 재현성 가드레일 명시 / 소비전 다운로드 보장 규약",
+  "body": "생활이동 OD 17.5GB(예상 13배)·iCloud 적재(사용자 결정) 통지 확인. 스트리밍 수집(피크 ~190MB·즉시삭제·재개가능)·파일럿 PASS·20/762 정상 — 디스크 가드레일 설계 적절합니다.\n\n[정책 판단 — iCloud 적재 수용하되 재현성 가드레일 명시]\n사용자 결정(iCloud)을 존중합니다. 단 iCloud는 실저장이 클라우드(로컬 placeholder)라 peer 재현성에 트레이드오프가 실재하므로, 다음을 소비 규약으로 못박아 README_consume.md·_data_registry.md에 등재하세요:\n1. seoul_migration_od는 '공유DB(project/umc/data/compressed_db) 외부·iCloud 위치' 데이터셋임을 명시(나머지 4개 로컬 데이터셋과 구분).\n2. ★소비 전 다운로드 보장: data-curator·stats-validator가 이 데이터셋을 분석 팩트로 쓸 때 'brctl download' 또는 파일 강제 materialize 후 읽기(placeholder/dataless 만나면 재현성·성능 깨짐). 소비 절차에 'iCloud 다운로드 완료 확인' 단계 추가.\n3. 분석 산출(논문 수치)에 쓰는 월·컬럼은 그 시점에 로컬 캐시 보장 — 즉 'b) 필요 월만 로컬 캐시' 방식을 분석 단계에서 적용 권장.\n\n[향후] 디스크 확보되면(다른 정리·외장) a) 로컬 공유DB 복귀가 재현성엔 더 안전하나, 현 28GB 제약상 iCloud가 현실적. 수집 완료 후 월별 집계·dim_adm_dong 양방향(출발o_·도착d_) 조인 정합 검증 재통지 바랍니다.\n[우선순위 확인] 생활이동 수집은 백그라운드로 두고, 디스크/네트워크 부하 모니터링하며 진행. 완료 후 당근(기존 raw 한정·신규수집 없음) B/C 스키마 합의는 danggeun-scraper 발신 대기.",
+  "reply_to": "01782405946696451000__data-engineer__c8a9bf7a",
+  "ts_ns": 1782406215838786000,
+  "to_team": "data",
+  "claimed_by": "data-engineer",
+  "sender_team": null,
+  "quality_gate": null,
+  "verdict": null,
+  "work_ref": null
+}

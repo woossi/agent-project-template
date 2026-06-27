@@ -83,55 +83,78 @@ def load_team(root: Path) -> tuple[list[Worker], list[Subteam]]:
 class InboxMessage:
     id: str
     sender: str
-    to: str
+    to: str            # the TEAM mailbox this message is addressed to (to_team)
     subject: str
     body: str
     ts_ns: int
     consumed: bool
+    state: str = "unclaimed"        # unclaimed | claimed | consumed
+    claimed_by: str | None = None
+
+
+def _team_inbox_dirs(root: Path) -> list[tuple[str, Path]]:
+    """(team_name, mailbox_dir) for every team mailbox in the team-only model:
+    teams/<team>/.claude/inbox + the orchestrator virtual box."""
+    out: list[tuple[str, Path]] = []
+    teams = root / "teams"
+    if teams.is_dir():
+        for child in sorted(teams.iterdir()):
+            if child.name == ".orchestrator":
+                box = child / "inbox"
+                if box.is_dir():
+                    out.append(("orchestrator", box))
+                continue
+            if child.name.startswith("."):
+                continue
+            box = child / ".claude" / "inbox"
+            if box.is_dir():
+                out.append((child.name, box))
+    return out
 
 
 def load_inbox(root: Path, *, include_consumed: bool = True, limit: int = 200) -> list[InboxMessage]:
-    """All inbox messages across recipients, newest first.
+    """All TEAM-mailbox messages across teams, newest first (team-only model, 2026-06-27).
 
-    Unread live directly under inbox/<recipient>/; consumed move to
-    inbox/<recipient>/.consumed/ (team_inbox ack). We tag each accordingly.
+    Unclaimed live under teams/<team>/.claude/inbox/; claimed in .claimed/; consumed in
+    .consumed/. We tag each with its state.
     """
-    inbox = root / ".project" / "inbox"
     msgs: list[InboxMessage] = []
-    if not inbox.is_dir():
-        return msgs
-    for recipient_dir in inbox.iterdir():
-        if not recipient_dir.is_dir() or recipient_dir.name.startswith("."):
-            continue
-        # unread
-        for f in recipient_dir.glob("*.json"):
-            m = _to_message(f, consumed=False)
+    for team, box in _team_inbox_dirs(root):
+        for f in box.glob("*.json"):  # unclaimed
+            m = _to_message(f, team=team, state="unclaimed")
             if m:
                 msgs.append(m)
-        # consumed
+        cdir = box / ".claimed"
+        if cdir.is_dir():
+            for f in cdir.glob("*.json"):
+                m = _to_message(f, team=team, state="claimed")
+                if m:
+                    msgs.append(m)
         if include_consumed:
-            cdir = recipient_dir / ".consumed"
+            cdir = box / ".consumed"
             if cdir.is_dir():
                 for f in cdir.glob("*.json"):
-                    m = _to_message(f, consumed=True)
+                    m = _to_message(f, team=team, state="consumed")
                     if m:
                         msgs.append(m)
     msgs.sort(key=lambda m: m.ts_ns, reverse=True)
     return msgs[:limit]
 
 
-def _to_message(path: Path, *, consumed: bool) -> InboxMessage | None:
+def _to_message(path: Path, *, team: str, state: str) -> InboxMessage | None:
     d = _load_json(path)
     if not d:
         return None
     return InboxMessage(
         id=d.get("id", path.stem),
         sender=d.get("from", "?"),
-        to=d.get("to") or ((d.get("recipients") or ["?"])[0]),
+        to=d.get("to_team") or team,
         subject=d.get("subject", ""),
         body=d.get("body", ""),
         ts_ns=int(d.get("ts_ns") or 0),
-        consumed=consumed,
+        consumed=(state == "consumed"),
+        state=state,
+        claimed_by=d.get("claimed_by"),
     )
 
 
@@ -251,7 +274,14 @@ class Snapshot:
     candidates: list[Candidate] = field(default_factory=list)
 
     def unread_count_for(self, name: str) -> int:
-        return sum(1 for m in self.inbox if m.to == name and not m.consumed)
+        """팀 전용 모델: name이 워커면 그 워커의 팀 미claim 수, 팀명이면 그 팀 미claim 수.
+        (개인 inbox가 없으므로 워커 배지는 '내 팀에 쌓인 미claim 작업'을 가리킨다.)"""
+        team = name
+        for st in self.subteams:
+            if name in st.members:
+                team = st.name
+                break
+        return sum(1 for m in self.inbox if m.to == team and m.state == "unclaimed")
 
 
 def read_snapshot(root: Path) -> Snapshot:

@@ -22,8 +22,8 @@
   },
   "governance": {
     "mode": "tiered",
-    "company_owner": "data-lead",
-    "authoring_owner": "data-lead",
+    "company_owner": "orchestrator",
+    "authoring_owner": "orchestrator",
     "company_skills": [
       "team-init",
       "agent-clone-setup"

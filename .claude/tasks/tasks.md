@@ -7,6 +7,19 @@ team-umc 팀의 현재 작업 패킷입니다. 가장 작은 작업 단위이며
 
 상태: 진행 중 (orchestrator — 학위논문(B판) 전환 추적)
 
+★★ 팀 전용 메일박스 재설계 — 개인 inbox 폐지 (2026-06-27)
+- ★사용자 요청: "개인 인박스를 팀 수준으로 재분리하고, 개인→개인 직할 메시지 자체를 없애라." 발단: 대시보드에서 "워커가 기동 안 함" 증상 진단 → 근본원인 2개(store 기본값 .team 잔재로 빈 store 조회 / preset이 팀 메일박스만 보는데 메일박스 빈 상태) + 설계 결함(inbox만 중앙집중, 메모리·스킬·tasks는 계층적).
+- ★사용자 결정: (1)팀 전용 단일 채널(post --to-team만, 개인주소·broadcast·read --as 폐지) (2)팀 메일박스를 teams/<팀>/.claude/inbox/로 계층화 (3)guard에 read/write 구분 추가→타팀 메일박스 write-OK/read-차단(deny_read) (4)마이그레이션=소비 아카이브+미claim 팀 이전 (5)회사 owner data-lead→orchestrator.
+- ★사양 단일출처: .context/team-only-inbox-spec.md. 8단계 구현.
+- ★team_inbox.py 전면 재작성: post --to-team / read --team / claim(os.replace 원자) / ack 단일채널. 메일박스=teams/<팀>/.claude/inbox/(orchestrator는 가상팀 teams/.orchestrator/inbox/). find_team_root는 .project/team.json만 앵커(AGENTS.md symlink 오앵커 버그 수정 — 워커 폴더에서 멈춰 중첩경로 만들던 것).
+- ★guard read/write 구분: READ_PATH_TOOLS / deny_read(드롭오프 슬롯: write 통과·read 차단). 미등록 정체성은 fail-closed(deny_read를 deny로 격상). 적대적 테스트 5케이스(write-OK·read-NO·edit-OK·plain-deny 양차단·미등록 양차단).
+- ★team_init: _other_team_inbox_globs로 타팀 메일박스를 워커 deny_read에 전개(자기팀 제외). authoring_owner에 orchestrator 예약 허용(폴더 없는 회사 총괄). P2 promoter inbox_edges가 전 팀 메일박스+orchestrator+legacy walk.
+- ★마이그레이션: 소비 499→.project/inbox/.archive/, 미claim 16→수신자 팀 메일박스, orchestrator 수신 7→가상 메일박스. 옛 개인 inbox 디렉토리 제거. 살아있는 작업 무손실.
+- ★대시보드: adapters(inbox_post --to-team 전용·inbox_ack --team·read_team) / app(팀 발행·_team_names) / store(팀 메일박스 3-state 로딩·unread_count=자기팀 미claim) / modals(PostInbox 팀선택·preset 팀전용) / inbox_timeline(미claim●/claimed◐/consumed✓).
+- ★회사 owner data-lead→orchestrator: 이름 기반 권한이라 폴더 불요. COMPANY 거버넌스 워커 보유 0(orchestrator만 CLI), 5팀장 TEAM 거버넌스 유지, orchestrator cross-team create 허용.
+- ★검증: 272 테스트 통과(백엔드 238+대시보드 34, 회귀0)·R2 PASS·broken symlink 0·E2E(data-engineer가 data 팀 메일박스 6건 read→3건 claim, 새 모델 실동작 확인). store 버그(.team→.project)·앵커 버그(AGENTS.md)도 이 과정에서 적발·수정.
+- 남은(범위밖): 대시보드 TUI 실측은 이 환경에서 run_test 멈춤으로 단위검증만(사용자 실클릭 확인 필요). 워커가 claim한 3건은 다음 가동 때 ack로 마무리. orchestrator 수신함을 가상팀 외 별도 위치로 둘지는 운영 중 재검토.
+
 ★★ 각 팀 조율 전담 팀장 5명 신설 (2026-06-27)
 - ★사용자 요청: "아예 팀장을 하나 만들자 각각". 기존엔 팀원 1명이 orchestrator 겸임 → 각 팀에 조율 전담 워커 신설.
 - ★사용자 결정: (1)역할=조율 전담(할당·품질원장·거버넌스·조정만, 생산은 팀원 — 생산자≠조율자) (2)5팀 전부 분리(scout·analysis 1인팀도 → 2인팀) (3)이름=<팀>-lead (4)증분 방식이나 안전 위해 team-setup.json source-of-truth 갱신 후 team-init 재생성 채택 (5)회사 owner(COMPANY 거버넌스+cross-team)=data-curator→data-lead 이전.

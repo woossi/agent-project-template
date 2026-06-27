@@ -1,0 +1,19 @@
+{
+  "id": "01782531721783449000__orchestrator__d8cafeae",
+  "from": "orchestrator",
+  "recipients": [
+    "manuscript-writer",
+    "manuscript-steward",
+    "write-lead"
+  ],
+  "subject": "[P0/W4] 분류 코드북 v8 갱신 — C-M-O 필드·프롬프트 버전 박제",
+  "body": "당근 재분류 재설계 확정(명세=research/UMC/.context/revision-plan/karrot-reclassification-spec-2026-06-27.md). 분류 출력구조 변경이 사용자 결정으로 확정됨.\n\n[작업 W4] 현행 코드북(project/umc/analysis/text-preprocessing/.claude/agents/umc_classifier.md, 346줄, 6차원×사례25 — 품질 양호)을 v8로 갱신.\n변경점:\n1) 출력 스키마에 3개 신규 필드 추가: condition_cue(조건 단서: 누가/어떤 상황), pathway_cue(경로 단서: 어떻게 표출·해결 시도), absence_type(absence_typology.json A1~F1 매핑).\n   - 목적: 사용자 새 방향 '어떤 조건에서 어떤 경로로'의 C-M-O 정식화 원자료. 단계E 역행추론 입력 강화.\n2) 기존 필드(umc_related Y/N/?, umc_dimensions 다중라벨, problem_summary) 유지.\n3) ★정보차단 경계 보존: C-M-O 단서는 기술 메타데이터로, 단계B 에이전트 I_R에는 현행대로 텍스트+기본메타만 노출(I_J에서만 C-M-O 활용). 명세 §5 참조.\n4) prompt_version 태그('umc_classifier_v8_20260627')와 codebook 파일 sha256 해시 명시(재현성 D1 대응).\n- 성공기준: v8 코드북 + 6차원 정의가 C-M-O 필드와 정합 + 정보차단 경계 명문 + 버전/해시 박제.\n- 협업: inference-runner가 이 코드북으로 API 분류 스크립트(W3) 작성. 수치정본 일관성은 steward 소유.\n- 의존: 없음(즉시 착수). W3의 입력.\n완료 시 inbox 통지.",
+  "reply_to": null,
+  "ts_ns": 1782531721783449000,
+  "to_team": "write",
+  "claimed_by": null,
+  "sender_team": null,
+  "quality_gate": null,
+  "verdict": null,
+  "work_ref": null
+}
