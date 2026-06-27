@@ -221,6 +221,28 @@ class RootAndShardTests(_Case):
         data = json.loads(shard.read_text(encoding="utf-8"))
         self.assertEqual(len(data["team_skill"]), 1)
 
+    def test_unregistered_runner_folds_into_team_bucket(self):
+        """A CLAUDE_AGENT_NAME typo must not mint a ghost shard next to real workers."""
+        seed_intra_team_skill(self)  # roster = worker-1, worker-2
+        policy = dtp.load_policy(self.root)
+        path = dtp.write_candidates_shard(self.root, policy, self.evaluate(), "worker-socut")
+        cand_dir = self.root / ".project/promotions/candidates"
+        self.assertFalse((cand_dir / "worker-socut.json").exists())  # no ghost
+        self.assertEqual(path, cand_dir / "team.json")  # folded into shared bucket
+
+    def test_orchestrator_is_a_valid_runner(self):
+        """The company coordinator is registered even though it is not a subteam member."""
+        seed_intra_team_skill(self)
+        policy = dtp.load_policy(self.root)
+        path = dtp.write_candidates_shard(self.root, policy, self.evaluate(), "orchestrator")
+        self.assertEqual(path, self.root / ".project/promotions/candidates/orchestrator.json")
+
+    def test_empty_roster_is_fail_open(self):
+        """An unreadable/empty roster must not block a legitimate runner (no guard)."""
+        # no roster() call -> no team.json members
+        (self.root / ".project").mkdir(parents=True, exist_ok=True)
+        self.assertEqual(dtp._validated_runner(self.root, "anyone"), "anyone")
+
 
 class CliTests(_Case):
     def test_evaluate_check_exit_1_when_pending(self):

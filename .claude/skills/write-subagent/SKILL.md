@@ -41,9 +41,8 @@ description: Use when creating or updating a reusable Claude subagent definition
 6. 역할에는 현재 작업 진행상황을 넣지 않는다.
 7. 서브에이전트가 사용할 작업 입력은 `.claude/tasks/tasks.md`에서 받고, 필요한 능력은 `.claude/skills/`의 스킬로 참조한다.
 8. 경계가 필요하면 `.claude/policies/agent-workspace.json`에 같은 이름으로 등록한다.
-9. `.claude/agents/agents.md`에 파일과 역할을 반영한다.
-10. 계약 연계 섹션은 `.claude/hooks/sync_component_contracts.py`가 관리하게 둔다.
-11. 후보에서 승격했다면 `python3 .claude/hooks/detect_promotions.py resolve --kind agent --key <스킬+스킬> --decision promote`로 후보를 닫는다.
+9. `.claude/agents/agents.md` 인덱스 표에 파일과 역할을 직접 추가한다(사람이 보는 색인이므로 손으로 갱신한다).
+10. 후보에서 승격했다면 `python3 .claude/hooks/detect_promotions.py resolve --kind agent --key <스킬+스킬> --decision promote`로 후보를 닫는다.
 
 ## 출력 형식
 
@@ -60,7 +59,7 @@ description: Use when creating or updating a reusable Claude subagent definition
 
 - 파일 하나가 에이전트 하나만 정의해야 한다.
 - YAML `name`과 policy agent 이름이 일치해야 한다.
-- 서브에이전트가 tasks 입력과 skills 능력을 어떻게 쓰는지 계약 연계가 보여야 한다.
+- 서브에이전트가 tasks 입력과 skills 능력을 어떻게 쓰는지 본문에 드러나야 한다.
 - 작업 handoff는 `.context/agents/<agent-name>/`에 두어야 한다.
 - 반복 절차를 에이전트 본문에 복사하지 않아야 한다.
 

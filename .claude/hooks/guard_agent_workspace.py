@@ -12,6 +12,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _hooklib import project_dir_simple as project_dir  # noqa: E402
+
 
 PATH_TOOLS = {"Read", "Edit", "Write", "MultiEdit", "Grep", "Glob", "NotebookRead", "NotebookEdit"}
 # Read vs write split (2026-06-27): drop-off slots (other teams' inbox) are write-OK but
@@ -35,11 +38,6 @@ def load_payload() -> dict[str, Any]:
     except json.JSONDecodeError:
         return {}
     return payload if isinstance(payload, dict) else {}
-
-
-def project_dir(payload: dict[str, Any]) -> Path:
-    raw = os.environ.get("CLAUDE_PROJECT_DIR") or payload.get("cwd") or os.getcwd()
-    return Path(str(raw)).expanduser().resolve()
 
 
 def resolve_policy_path(raw_path: str | None, root: Path) -> Path | None:

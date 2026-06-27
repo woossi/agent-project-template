@@ -40,8 +40,7 @@ description: Use when creating or updating the current task packet under .claude
    - **필수 회고(`--retro`)**: 작업 종료 시 *무조건* `--retro`를 포함한다. "더 나은 결과가 가능했는가 / 개선점"을 한 줄로 적고, 개선점이 없으면 명시적으로 `--retro none`(또는 `--retro 개선없음`)으로 남긴다. 빈 회고를 넣지 않는다.
    - 회고에 실제 개선점이 있으면(=`none`이 아니면) `detect_promotions.py`가 해당 시그니처를 **워커 전용 스킬 개선 후보**(`reason: retro-improvement`)로 띄운다. 단 후보의 저작 주체는 워커가 아니라 **팀장(lead)**이다(아래 거버넌스 참조).
 7. **거버넌스(2026-06-27)**: `write-task`·`write-skill`·`write-subagent`는 **팀장(lead) 전용**으로 회수됐다. 따라서 워커의 회고는 '워커가 직접 스킬을 저작'이 아니라 다음 흐름이다 — ① 워커가 `--retro`로 회고를 원장에 남기고, ② 회고를 `post --to-team <팀>`으로 팀장에게 **보고**하면, ③ **팀장이 판단해** 워커 전용 스킬을 `write-skill`로 저작/수정하고 `detect_promotions.py resolve`로 후보를 닫는다. `detect_promotions.py`가 띄우는 후보(`author: team-lead`)도 이 주체를 명시한다.
-8. 계약 연계 섹션은 `.claude/hooks/sync_component_contracts.py`가 관리하게 둔다.
-9. 완료 기준이 검증 가능한지 확인한다.
+8. 완료 기준이 검증 가능한지 확인한다.
 
 ## 출력 형식
 

@@ -37,6 +37,9 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _hooklib import merge as _merge, project_dir_simple as project_dir  # noqa: E402
+
 DEFAULTS: dict[str, Any] = {
     "agent_ledger": {
         "signals": ".context/memory-log/signals.jsonl",
@@ -66,11 +69,6 @@ SHARE_RE = re.compile(r"^Share:\s*(term|preference|memory)\b\s*:?\s*(.*)$", re.I
 
 # ---------------- roots & policy ----------------
 
-def project_dir(payload: dict[str, Any]) -> Path:
-    raw = os.environ.get("CLAUDE_PROJECT_DIR") or payload.get("cwd") or os.getcwd()
-    return Path(str(raw)).expanduser().resolve()
-
-
 def find_team_root(start: Path) -> Path | None:
     cur = start.resolve()
     for _ in range(10):
@@ -80,17 +78,6 @@ def find_team_root(start: Path) -> Path | None:
             break
         cur = cur.parent
     return None
-
-
-def _merge(base: dict[str, Any], override: Any) -> dict[str, Any]:
-    merged = dict(base)
-    if isinstance(override, dict):
-        for key, value in override.items():
-            if isinstance(merged.get(key), dict) and isinstance(value, dict):
-                merged[key] = _merge(merged[key], value)
-            else:
-                merged[key] = value
-    return merged
 
 
 def load_policy(team_root: Path) -> dict[str, Any]:
@@ -395,6 +382,34 @@ def _safe(text: str) -> str:
     return (slug or "x")[:120]
 
 
+def _roster_members(team_root: Path) -> set[str]:
+    """Registered worker identities from .project/team.json (empty set if unreadable)."""
+    try:
+        data = json.loads((team_root / ".project" / "team.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return set()
+    members = data.get("members") if isinstance(data, dict) else None
+    roster = {m for m in (members or []) if isinstance(m, str)}
+    # The company-wide coordinator owns its own inbox but is not a subteam member;
+    # always treat it as a registered identity.
+    return roster | {"orchestrator"}
+
+
+def _validated_runner(team_root: Path, runner: str) -> str:
+    """Fold an unregistered identity (e.g. a CLAUDE_AGENT_NAME typo) into ``team``.
+
+    Prevents ghost candidate shards like ``paper-socut.json`` from being minted
+    next to the real worker's. Fail-open: ``team`` and an empty/unreadable roster
+    pass through unchanged so a missing roster never blocks legitimate work.
+    """
+    if runner == "team":
+        return runner
+    roster = _roster_members(team_root)
+    if not roster or runner in roster:
+        return runner
+    return "team"
+
+
 def load_team_decisions(decisions_dir: Path) -> dict[str, dict[str, Any]]:
     out: dict[str, dict[str, Any]] = {kind: {} for kind in KINDS}
     if not decisions_dir.is_dir():
@@ -441,6 +456,7 @@ def evaluate(team_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
 
 
 def write_candidates_shard(team_root: Path, policy: dict[str, Any], candidates: dict[str, Any], runner: str) -> Path:
+    runner = _validated_runner(team_root, runner)
     path = team_root / policy["log"]["candidates_dir"] / f"{_safe(runner)}.json"
     _atomic_write_json(path, candidates)
     return path

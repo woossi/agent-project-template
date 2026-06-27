@@ -41,6 +41,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _hooklib import merge as _merge, project_dir_simple as project_dir  # noqa: E402
+
 DEFAULTS: dict[str, Any] = {
     "log": {
         "signals": ".context/memory-log/signals.jsonl",
@@ -67,22 +70,6 @@ ENTRY_RE = re.compile(r"^##\s+(.*\S)\s*$")
 DATE_PREFIX_RE = re.compile(r"^\d{4}-\d{2}-\d{2}\s*[-–]\s*")
 # Optional derivation marker line inside an entry body.
 DERIVE_RE = re.compile(r"^Derive:\s*(preference|term)\b\s*:?\s*(.*)$", re.IGNORECASE)
-
-
-def project_dir(payload: dict[str, Any]) -> Path:
-    raw = os.environ.get("CLAUDE_PROJECT_DIR") or payload.get("cwd") or os.getcwd()
-    return Path(str(raw)).expanduser().resolve()
-
-
-def _merge(base: dict[str, Any], override: Any) -> dict[str, Any]:
-    merged = dict(base)
-    if isinstance(override, dict):
-        for key, value in override.items():
-            if isinstance(merged.get(key), dict) and isinstance(value, dict):
-                merged[key] = _merge(merged[key], value)
-            else:
-                merged[key] = value
-    return merged
 
 
 def load_policy(root: Path) -> dict[str, Any]:

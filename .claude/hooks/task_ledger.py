@@ -28,6 +28,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _hooklib import (  # noqa: E402
+    agent_root as _agent_root,
+    find_repo_root as _find_repo_root,
+    project_dir_per_agent as project_dir,
+)
+
 DIRECT_PATH_KEYS = ("file_path", "path", "notebook_path")
 SKILL_RE = re.compile(r"(?:^|/)\.claude/skills/([^/]+)/SKILL\.md$")
 
@@ -36,64 +43,14 @@ DEFAULT_LOG = {
     "tasks": ".context/task-log/tasks.jsonl",
 }
 
-
-def _find_repo_root(start: Path) -> Path:
-    """Walk up from ``start`` to the team repo root.
-
-    The root is the directory that anchors the shared store: it contains
-    ``.project/team.json`` (canonical) or, as a fallback, ``AGENTS.md``. Peers run
-    hooks from anywhere under the repo (agent folders, skill dirs), so a bare
-    cwd is not a reliable anchor. If nothing matches we keep ``start``.
-    """
-    for base in (start, *start.parents):
-        if (base / ".project" / "team.json").is_file():
-            return base
-    for base in (start, *start.parents):
-        if (base / "AGENTS.md").is_file():
-            return base
-    return start
-
-
-def project_dir(payload: dict[str, Any]) -> Path:
-    """Resolve the per-agent log anchor.
-
-    The task ledger and promotion state are *per-agent private* (each peer is
-    isolated to ``agents/<name>/`` and its ``.context`` is not shared). So we
-    anchor to the repo root, then descend into ``agents/<CLAUDE_AGENT_NAME>/``
-    when an agent identity is set. This keeps every peer's ledger separated no
-    matter where the hook fires (the raw cwd / payload cwd is the session root
-    for all peers and would otherwise collapse them into the root ``.context``).
-
-    ``CLAUDE_PROJECT_DIR`` supplies the shared repo root when the hook is launched from a
-    symlinked worker folder, but it is not the ledger destination. When an agent identity is
-    set, descend to that registered worker folder first.
-    """
-    explicit = os.environ.get("CLAUDE_PROJECT_DIR")
-    start = Path(str(payload.get("cwd") or os.getcwd())).expanduser().resolve()
-    root = Path(explicit).expanduser().resolve() if explicit else _find_repo_root(start)
-    agent = os.environ.get("CLAUDE_AGENT_NAME") or ""
-    if agent:
-        agent_root = _agent_root(root, agent)
-        if agent_root is not None:
-            return agent_root
-    return root
-
-
-def _agent_root(root: Path, agent: str) -> Path | None:
-    """The worker's folder under ``root``, supporting both topologies.
-
-    Prefers the 2-tier location ``teams/<team>/<agent>/`` (any team), falls back to the
-    flat ``agents/<agent>/``. Returns None if neither exists. Kept byte-identical to the
-    copy in detect_promotions.py — both hooks must resolve a worker the same way.
-    """
-    teams_dir = root / "teams"
-    if teams_dir.is_dir():
-        for team in teams_dir.iterdir():
-            cand = team / agent
-            if cand.is_dir():
-                return cand
-    flat = root / "agents" / agent
-    return flat if flat.is_dir() else None
+# Cap on the events.jsonl line count. The events stream is append-only and its
+# only consumer (detect_promotions) reads recent co-usage signals, so unbounded
+# growth is pure waste — a repeated `echo hi` Bash appends an identical record
+# every time. When the file exceeds this many lines after an append, it is
+# trimmed in place to the most recent ``EVENTS_MAX_LINES`` and the pre-trim copy
+# is kept once at ``<path>.1`` for forensics. Configurable via promotion.json's
+# ``log.events_max_lines``. 0 or negative disables rotation.
+DEFAULT_EVENTS_MAX_LINES = 2000
 
 
 def load_log_paths(root: Path) -> dict[str, str]:
@@ -110,6 +67,70 @@ def load_log_paths(root: Path) -> dict[str, str]:
     except (OSError, json.JSONDecodeError):
         pass
     return log
+
+
+def events_max_lines(root: Path) -> int:
+    """Rotation threshold for events.jsonl, read from promotion.json (policy-driven)."""
+    policy_path = root / ".claude/policies/promotion.json"
+    try:
+        policy = json.loads(policy_path.read_text(encoding="utf-8"))
+        configured = policy.get("log")
+        if isinstance(configured, dict):
+            value = configured.get("events_max_lines")
+            if isinstance(value, int):
+                return value
+    except (OSError, json.JSONDecodeError):
+        pass
+    return DEFAULT_EVENTS_MAX_LINES
+
+
+def _last_jsonl_line(path: Path) -> str | None:
+    """Return the last non-empty line of a jsonl file, or None. Best-effort."""
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            last: str | None = None
+            for line in handle:
+                stripped = line.strip()
+                if stripped:
+                    last = stripped
+            return last
+    except OSError:
+        return None
+
+
+def _rotate_events(path: Path, max_lines: int) -> None:
+    """Trim ``path`` to the most recent ``max_lines`` once it grows past them.
+
+    The pre-trim file is moved to ``<path>.1`` (single generation, overwritten each
+    rotation) so nothing is lost silently. Best-effort: any failure leaves the log
+    untouched rather than risk corrupting it. Rotation is disabled when max_lines<=0.
+    """
+    if max_lines <= 0:
+        return
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            lines = handle.readlines()
+    except OSError:
+        return
+    if len(lines) <= max_lines:
+        return
+    keep = lines[-max_lines:]
+    backup = path.with_suffix(path.suffix + ".1")
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    try:
+        with tmp.open("w", encoding="utf-8") as handle:
+            handle.writelines(keep)
+        try:
+            path.replace(backup)
+        except OSError:
+            pass
+        tmp.replace(path)
+    except OSError:
+        # Clean up a half-written temp file; never leave the live log broken.
+        try:
+            tmp.unlink()
+        except OSError:
+            pass
 
 
 def relative_path(raw_path: str, root: Path) -> str | None:
@@ -142,10 +163,22 @@ def skill_from_paths(paths: list[str]) -> str | None:
     return None
 
 
-def append_jsonl(path: Path, record: dict[str, Any]) -> None:
+def append_jsonl(path: Path, record: dict[str, Any], *, dedup_consecutive: bool = False) -> bool:
+    """Append ``record`` as one jsonl line.
+
+    With ``dedup_consecutive`` the record is dropped when byte-identical to the
+    current last line — this suppresses the runaway duplication that an idempotent
+    tool call (e.g. a repeated ``echo`` Bash) would otherwise produce. The events
+    stream only encodes co-usage signals, so a consecutive identical event carries
+    no new information. Returns True if a line was written, False if suppressed.
+    """
+    line = json.dumps(record, ensure_ascii=False, sort_keys=True)
+    if dedup_consecutive and path.exists() and _last_jsonl_line(path) == line:
+        return False
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+        handle.write(line + "\n")
+    return True
 
 
 def build_event(payload: dict[str, Any], root: Path) -> dict[str, Any] | None:
@@ -192,7 +225,10 @@ def run_hook() -> int:
     if event is None:
         return 0
     log = load_log_paths(root)
-    append_jsonl(root / log["events"], event)
+    events_path = root / log["events"]
+    wrote = append_jsonl(events_path, event, dedup_consecutive=True)
+    if wrote:
+        _rotate_events(events_path, events_max_lines(root))
     return 0
 
 

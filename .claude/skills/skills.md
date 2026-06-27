@@ -1,15 +1,16 @@
 # Skills
 
-This file is the generated skill index. Each skill lives in its own folder
+This file is a human-readable skill index. Each skill lives in its own folder
 (`skills/<name>/`) and must include a `SKILL.md` file.
 
 Read only the **Skill Index** table at startup. Open a skill's `SKILL.md` only
 when the request clearly matches that workflow. The detailed skill documents
-are written in Korean for human editing; this index stays English because it is
-automatically managed.
+are written in Korean for human editing; this index stays English.
 
-> The ConfigChange hook (`.claude/hooks/update_skill_index.py`) manages this file
-> automatically when Claude Code detects skill configuration changes.
+> Claude Code discovers skills directly from the `skills/<name>/SKILL.md`
+> folders, so this table is a convenience overview kept in sync by hand — not a
+> load-bearing registry. Update it in the same change when adding or removing a
+> skill folder.
 
 ## Skill Index
 
@@ -54,18 +55,18 @@ One-off tasks, progress logs, and durable facts are not skills.
 
 ```text
 skills/
-  skills.md            # generated index file
+  skills.md            # human-maintained index file
   <skill-name>/        # one skill = one folder, English kebab-case
     SKILL.md           # required: Korean human-authored skill body
     <free files/folders>
 ```
 
 - Use one folder per skill.
-- Use English kebab-case for the folder name because the generated index uses
-  folder names as English routing signals.
+- Use English kebab-case for the folder name because the index uses folder
+  names as English routing signals.
 - `SKILL.md` must list every file and subfolder under "내부 자원".
 - Start new skills with `write-skill` and `.claude/skills/write-skill/templates/SKILL.md`.
-- Do not edit the Skill Index table by hand; the project hook regenerates it.
+- Update the Skill Index table by hand in the same change that adds or removes a skill folder.
 - If a folder is deleted or renamed, update references in the same change.
 
 ### SKILL.md Template

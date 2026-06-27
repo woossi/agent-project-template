@@ -46,6 +46,9 @@ from itertools import combinations
 from pathlib import Path
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _hooklib import merge as _merge, project_dir_simple as project_dir  # noqa: E402
+
 DEFAULTS: dict[str, Any] = {
     "agent_ledger": {
         "tasks": ".context/task-log/tasks.jsonl",
@@ -85,11 +88,6 @@ CONTEXT_EVENTS = {"PostToolUse", "PreToolUse", "SessionStart", "UserPromptSubmit
 
 # ---------------- roots & policy ----------------
 
-def project_dir(payload: dict[str, Any]) -> Path:
-    raw = os.environ.get("CLAUDE_PROJECT_DIR") or payload.get("cwd") or os.getcwd()
-    return Path(str(raw)).expanduser().resolve()
-
-
 def find_team_root(start: Path) -> Path | None:
     """Nearest ancestor (or self) that holds a ``.project/`` directory, else ``None``.
 
@@ -106,17 +104,6 @@ def find_team_root(start: Path) -> Path | None:
             break
         cur = cur.parent
     return None
-
-
-def _merge(base: dict[str, Any], override: Any) -> dict[str, Any]:
-    merged = dict(base)
-    if isinstance(override, dict):
-        for key, value in override.items():
-            if isinstance(merged.get(key), dict) and isinstance(value, dict):
-                merged[key] = _merge(merged[key], value)
-            else:
-                merged[key] = value
-    return merged
 
 
 def load_policy(team_root: Path) -> dict[str, Any]:
@@ -814,6 +801,41 @@ def _safe(text: str) -> str:
     return (slug or "x")[:120]
 
 
+def _roster_members(team_root: Path) -> set[str]:
+    """The set of registered worker identities from .project/team.json.
+
+    Returns an empty set if the roster is unreadable — callers treat that as
+    "cannot validate" and fall back to fail-open so a missing roster never blocks
+    legitimate work (the guard only fires when the roster IS readable).
+    """
+    try:
+        data = json.loads((team_root / ".project" / "team.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return set()
+    members = data.get("members") if isinstance(data, dict) else None
+    roster = {m for m in (members or []) if isinstance(m, str)}
+    # The company-wide coordinator is a legitimate identity that is not in the
+    # subteam member list but owns its own inbox; always treat it as registered.
+    return roster | {"orchestrator"}
+
+
+def _validated_runner(team_root: Path, runner: str) -> str:
+    """Fold an unregistered identity into the shared ``team`` bucket.
+
+    A typo in ``CLAUDE_AGENT_NAME`` (e.g. ``paper-socut``) used to mint a ghost
+    candidate shard alongside the real worker's. Validating against the roster
+    folds such typos into ``team`` so no per-runner ghost file is created while the
+    signal is still counted. The ``team`` fallback itself is always allowed; an
+    empty/unreadable roster also passes through (fail-open, no roster = no guard).
+    """
+    if runner == "team":
+        return runner
+    roster = _roster_members(team_root)
+    if not roster or runner in roster:
+        return runner
+    return "team"
+
+
 def load_team_decisions(decisions_dir: Path) -> dict[str, dict[str, Any]]:
     out: dict[str, dict[str, Any]] = {kind: {} for kind in KINDS}
     if not decisions_dir.is_dir():
@@ -890,6 +912,7 @@ def evaluate(team_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
 
 
 def write_candidates_shard(team_root: Path, policy: dict[str, Any], candidates: dict[str, Any], runner: str) -> Path:
+    runner = _validated_runner(team_root, runner)
     path = team_root / policy["log"]["candidates_dir"] / f"{_safe(runner)}.json"
     _atomic_write_json(path, candidates)
     return path

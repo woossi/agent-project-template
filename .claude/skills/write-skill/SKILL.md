@@ -37,16 +37,12 @@ description: Use when creating or updating a reusable project skill under .claud
 4. `templates/SKILL.md`를 `.claude/skills/<name>/SKILL.md`로 복사해 채운다.
 5. 필요한 보조 파일은 새 스킬 폴더 안에만 둔다.
 6. 작업 패킷이나 서브에이전트 정의를 스킬 안에 저장하지 않는다.
-7. 계약 연계 섹션은 `.claude/hooks/sync_component_contracts.py`가 관리하게 둔다.
-8. 색인은 ConfigChange/PostToolUse 훅이 `.claude/hooks/update_skill_index.py`로 자동 갱신한다. 직접 확인하려면 같은 스크립트를 실행한다.
-9. `python .claude/hooks/update_skill_index.py --check`로 색인이 최신인지 확인한다.
-10. 후보에서 승격했다면 `python3 .claude/hooks/detect_promotions.py resolve --kind skill --key <시그니처> --decision promote`로 후보를 닫는다.
+7. 후보에서 승격했다면 `python3 .claude/hooks/detect_promotions.py resolve --kind skill --key <시그니처> --decision promote`로 후보를 닫는다.
 
 ## 출력 형식
 
 - `.claude/skills/<name>/SKILL.md`
 - 선택: `.claude/skills/<name>/references/`, `scripts/`, `templates/`
-- 갱신: `.claude/skills/skills.md`
 
 ## 내부 자원
 
@@ -62,11 +58,9 @@ description: Use when creating or updating a reusable project skill under .claud
 - `내부 자원`에 실제 포함 파일과 폴더가 모두 적혀야 한다.
 - 작업 진행상황이나 도메인 사실을 스킬에 넣지 않아야 한다.
 - 공개 스킬을 참조했어도 절차는 로컬 `SKILL.md`에 직접 적혀 있어야 하며, 외부 스킬·검색 도구에 런타임 의존하지 않아야 한다.
-- 작업·서브에이전트와의 연계는 `계약 연계` 섹션에 남아 있어야 한다.
-- `python .claude/hooks/update_skill_index.py --check`가 통과해야 한다.
+- 작업·서브에이전트와의 연계는 절차 본문에 남아 있어야 한다.
 
 ## 자주 발생하는 실패 사례
 
 - 일회성 작업을 스킬로 만듦 → `write-task`로 작업 패킷을 작성한다.
 - 역할 정의를 스킬에 넣음 → `write-subagent`로 에이전트 정의를 작성한다.
-- 색인을 손으로 수정함 → ConfigChange 훅이 `.claude/hooks/update_skill_index.py`로 자동 갱신한다.

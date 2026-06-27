@@ -31,6 +31,14 @@ from itertools import combinations
 from pathlib import Path
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _hooklib import (  # noqa: E402
+    agent_root as _agent_root,
+    find_repo_root as _find_repo_root,
+    merge as _merge,
+    project_dir_per_agent as project_dir,
+)
+
 DEFAULTS: dict[str, Any] = {
     "log": {
         "events": ".context/task-log/events.jsonl",
@@ -54,74 +62,6 @@ DEFAULTS: dict[str, Any] = {
 }
 
 MAX_SKILLS_PER_OCCURRENCE = 6
-
-
-def _find_repo_root(start: Path) -> Path:
-    """Walk up from ``start`` to the team repo root.
-
-    The root anchors the shared store: it contains ``.project/team.json``
-    (canonical) or, as a fallback, ``AGENTS.md``. If nothing matches, keep
-    ``start``.
-    """
-    for base in (start, *start.parents):
-        if (base / ".project" / "team.json").is_file():
-            return base
-    for base in (start, *start.parents):
-        if (base / "AGENTS.md").is_file():
-            return base
-    return start
-
-
-def project_dir(payload: dict[str, Any]) -> Path:
-    """Resolve the per-agent ledger/promotion anchor.
-
-    The ledger and promotion state are per-agent private. Anchor to the repo
-    root, then descend into the registered ``CLAUDE_AGENT_NAME`` worker folder when an identity is
-    set, so every peer's candidates/decisions stay separated regardless of where
-    the hook fires. ``CLAUDE_PROJECT_DIR`` supplies the shared repo root, not the
-    per-agent ledger destination.
-
-    This must match ``task_ledger.project_dir`` exactly: the ledger writer and
-    the promotion reader have to agree on the same ``.context`` directory, or
-    candidates are written where the detector never reads them.
-    """
-    explicit = os.environ.get("CLAUDE_PROJECT_DIR")
-    start = Path(str(payload.get("cwd") or os.getcwd())).expanduser().resolve()
-    root = Path(explicit).expanduser().resolve() if explicit else _find_repo_root(start)
-    agent = os.environ.get("CLAUDE_AGENT_NAME") or ""
-    if agent:
-        agent_root = _agent_root(root, agent)
-        if agent_root is not None:
-            return agent_root
-    return root
-
-
-def _agent_root(root: Path, agent: str) -> Path | None:
-    """The worker's folder under ``root``, supporting both topologies.
-
-    Prefers the 2-tier location ``teams/<team>/<agent>/`` (any team), falls back to the
-    flat ``agents/<agent>/``. Returns None if neither exists. Kept byte-identical to the
-    copy in task_ledger.py — both hooks must resolve a worker the same way.
-    """
-    teams_dir = root / "teams"
-    if teams_dir.is_dir():
-        for team in teams_dir.iterdir():
-            cand = team / agent
-            if cand.is_dir():
-                return cand
-    flat = root / "agents" / agent
-    return flat if flat.is_dir() else None
-
-
-def _merge(base: dict[str, Any], override: Any) -> dict[str, Any]:
-    merged = dict(base)
-    if isinstance(override, dict):
-        for key, value in override.items():
-            if isinstance(merged.get(key), dict) and isinstance(value, dict):
-                merged[key] = _merge(merged[key], value)
-            else:
-                merged[key] = value
-    return merged
 
 
 def load_policy(root: Path) -> dict[str, Any]:

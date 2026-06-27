@@ -34,6 +34,9 @@ import time
 from pathlib import Path
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _hooklib import merge as _merge, project_dir_simple as project_dir  # noqa: E402
+
 DEFAULTS: dict[str, Any] = {
     "agent": {"self": "", "peer": "", "peer_inbox": ""},
     "log": {
@@ -53,22 +56,6 @@ DEFAULTS: dict[str, Any] = {
 
 OPEN_STATUS = "open"
 CLOSED_STATUSES = {"ack", "resolved", "decline"}
-
-
-def project_dir(payload: dict[str, Any]) -> Path:
-    raw = os.environ.get("CLAUDE_PROJECT_DIR") or payload.get("cwd") or os.getcwd()
-    return Path(str(raw)).expanduser().resolve()
-
-
-def _merge(base: dict[str, Any], override: Any) -> dict[str, Any]:
-    merged = dict(base)
-    if isinstance(override, dict):
-        for key, value in override.items():
-            if isinstance(merged.get(key), dict) and isinstance(value, dict):
-                merged[key] = _merge(merged[key], value)
-            else:
-                merged[key] = value
-    return merged
 
 
 def load_policy(root: Path) -> dict[str, Any]:

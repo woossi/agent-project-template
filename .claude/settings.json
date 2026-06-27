@@ -71,39 +71,6 @@
         ]
       },
       {
-        "matcher": "Edit|Write|MultiEdit|Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/sync_component_contracts.py\"",
-            "statusMessage": "Syncing component contract structure",
-            "timeout": 30
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write|MultiEdit|Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/update_skill_index.py\"",
-            "statusMessage": "Updating skill index",
-            "timeout": 30
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write|MultiEdit|Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/update_agent_index.py\"",
-            "statusMessage": "Updating agent index",
-            "timeout": 30
-          }
-        ]
-      },
-      {
         "matcher": "Read|Edit|Write|MultiEdit|Grep|Glob|NotebookRead|NotebookEdit|Bash",
         "hooks": [
           {
@@ -113,42 +80,20 @@
             "timeout": 30
           }
         ]
-      },
-      {
-        "matcher": "Edit|Write|MultiEdit|Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/detect_promotions.py\"",
-            "statusMessage": "Evaluating skill/agent promotion conditions",
-            "timeout": 30
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write|MultiEdit|Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/detect_derivations.py\"",
-            "statusMessage": "Evaluating memory derivation conditions",
-            "timeout": 30
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write|MultiEdit|Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/detect_feedback.py\"",
-            "statusMessage": "Evaluating inbound agent feedback",
-            "timeout": 30
-          }
-        ]
       }
     ],
     "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/detect_team_ops.py\"",
+            "statusMessage": "Surfacing a lead's pending mailbox/quality ops",
+            "timeout": 30
+          }
+        ]
+      },
       {
         "matcher": "startup|resume|clear",
         "hooks": [
@@ -200,30 +145,6 @@
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/detect_feedback.py\"",
             "statusMessage": "Surfacing pending inbound feedback",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
-    "ConfigChange": [
-      {
-        "matcher": "skills",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/update_skill_index.py\"",
-            "statusMessage": "Updating skill index",
-            "timeout": 30
-          }
-        ]
-      },
-      {
-        "matcher": "skills",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/sync_component_contracts.py\" --force",
-            "statusMessage": "Syncing skill/task/subagent contracts",
             "timeout": 30
           }
         ]

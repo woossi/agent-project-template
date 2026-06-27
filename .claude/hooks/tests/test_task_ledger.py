@@ -99,6 +99,47 @@ class TaskLedgerTest(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertFalse((root / ".context/task-log/events.jsonl").exists())
 
+    def test_consecutive_identical_events_are_deduped(self) -> None:
+        """A repeated idempotent tool call (e.g. `echo hi` Bash) must not stack up."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            payload = {"session_id": "s1", "tool_name": "Bash", "tool_input": {}}
+            for _ in range(5):
+                run_hook(root, payload)
+            events = read_jsonl(root / ".context/task-log/events.jsonl")
+            self.assertEqual(len(events), 1)
+
+    def test_distinct_events_are_not_deduped(self) -> None:
+        """Dedup is consecutive-only: a different event between repeats is preserved."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            a = {"session_id": "s1", "tool_name": "Edit", "tool_input": {"file_path": str(root / "a.py")}}
+            b = {"session_id": "s1", "tool_name": "Edit", "tool_input": {"file_path": str(root / "b.py")}}
+            run_hook(root, a)
+            run_hook(root, a)  # consecutive dup -> suppressed
+            run_hook(root, b)  # distinct -> kept
+            run_hook(root, a)  # not consecutive with the first a -> kept
+            events = read_jsonl(root / ".context/task-log/events.jsonl")
+            self.assertEqual([e["paths"] for e in events], [["a.py"], ["b.py"], ["a.py"]])
+
+    def test_events_rotate_when_over_max_lines(self) -> None:
+        """Distinct events past the policy cap trim in place, keeping a .1 backup."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            policy = root / ".claude/policies/promotion.json"
+            policy.parent.mkdir(parents=True, exist_ok=True)
+            policy.write_text(json.dumps({"log": {"events_max_lines": 10}}), encoding="utf-8")
+            for i in range(25):
+                run_hook(root, {
+                    "session_id": "s1", "tool_name": "Edit",
+                    "tool_input": {"file_path": str(root / f"f{i}.py")},
+                })
+            events_path = root / ".context/task-log/events.jsonl"
+            events = read_jsonl(events_path)
+            self.assertLessEqual(len(events), 10)
+            self.assertEqual(events[-1]["paths"], ["f24.py"])  # newest retained
+            self.assertTrue(events_path.with_suffix(".jsonl.1").exists())  # backup made
+
     def test_bad_stdin_never_blocks(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
