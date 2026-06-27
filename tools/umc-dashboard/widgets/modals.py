@@ -38,6 +38,7 @@ class _BaseModal(ModalScreen):
     def __init__(self, on_submit: Callable[[dict], None]):
         super().__init__()
         self._on_submit = on_submit
+        self._closed = False  # 재진입 가드: _close는 모달당 정확히 1회만 효력
 
     def _collect(self) -> dict | None:
         """하위 클래스가 구현: 유효 입력이면 payload, 아니면 None."""
@@ -50,12 +51,26 @@ class _BaseModal(ModalScreen):
         self._close(None)
 
     def on_button_pressed(self, e: Button.Pressed) -> None:
+        # 이벤트 버블링을 끊는다 — 모달이 dismiss된 뒤에도 큐에 남은 Pressed가
+        # 부모/재처리되어 _close가 두 번 불리는 것을 차단(ScreenStackError 예방).
+        e.stop()
         if e.button.id == "ok":
             self.action_submit()
         else:
             self.action_cancel()
 
     def _close(self, payload: dict | None) -> None:
+        # 재진입 가드: 버튼 Pressed와 키 바인딩(Enter/Esc/ctrl+s)이 같은 턴에 겹쳐
+        # _close가 두 번 불리면, 두 번째 dismiss는 이미 pop된 빈 스택을 또 pop하려다
+        # ScreenStackError를 낸다. 모달당 1회만 효력을 갖게 막는다.
+        if self._closed:
+            return
+        # 이 모달이 현재 스택 맨 위(활성)일 때만 dismiss가 안전하다. push_screen으로
+        # 떠 있지 않거나 이미 닫힌 상태면 조용히 무시(방어적).
+        if not self.is_current:
+            self._closed = True
+            return
+        self._closed = True
         # 콜백을 dismiss보다 먼저 호출한다. dismiss()가 화면을 pop한 뒤에
         # 콜백을 부르면 끊긴 컨텍스트에서 후속 push_screen/refresh가 무시된다.
         if payload is not None:
@@ -138,11 +153,13 @@ class InstructModal(_BaseModal):
     def on_button_pressed(self, e: Button.Pressed) -> None:
         # 정형 액션 버튼은 submit/cancel이 아니라 TextArea를 채우고 머문다.
         if e.button.id == "preset-inbox":
+            e.stop()
             self._fill("inbox")
         elif e.button.id == "preset-reminders":
+            e.stop()
             self._fill("reminders")
         else:
-            super().on_button_pressed(e)
+            super().on_button_pressed(e)  # ok/cancel — super가 e.stop() 처리
 
     def _fill(self, key: str) -> None:
         ta = self.query_one("#prompt", TextArea)
