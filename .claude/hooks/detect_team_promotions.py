@@ -168,9 +168,9 @@ def _is_worker_dir(p: Path) -> bool:
     """A roll-up worker is a folder carrying a private LEDGER (.context/task-log or
     .context/memory-log). That is the exact surface this roll-up reads, and it cleanly
     excludes non-worker folders that hold only handoff notes under .context (e.g. an
-    orchestrator scratch folder) as well as team folders (whose .claude sits at the team
-    root and whose entry name is dot-prefixed / skipped)."""
-    if not p.is_dir() or p.name.startswith("."):
+    orchestrator scratch folder) as well as TEAM folders, which are explicitly marked
+    with a ``.team-folder`` sentinel so they are never counted as workers."""
+    if not p.is_dir() or p.name.startswith(".") or (p / ".team-folder").exists():
         return False
     ctx = p / ".context"
     return (ctx / "task-log").is_dir() or (ctx / "memory-log").is_dir()

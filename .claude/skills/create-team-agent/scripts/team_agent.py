@@ -370,6 +370,13 @@ def discover_worker_dirs(team_root: Path) -> dict[str, Path]:
     ``.claude``). Scans teams/<team>/<worker>/ AND flat agents/<worker>/ so a half-migrated
     or flat tree both resolve. Worker names are globally unique, so name is a safe key.
     """
+    def _is_worker(c: Path) -> bool:
+        # A worker holds a seeded .claude/memory; a TEAM folder also does, but carries a
+        # .team-folder sentinel that excludes it. dot-prefixed entries are skipped.
+        return (c.is_dir() and not c.name.startswith(".")
+                and not (c / ".team-folder").exists()
+                and (c / ".claude" / "memory").is_dir())
+
     found: dict[str, Path] = {}
     teams_dir = team_root / "teams"
     if teams_dir.is_dir():
@@ -377,12 +384,12 @@ def discover_worker_dirs(team_root: Path) -> dict[str, Path]:
             if not team.is_dir() or team.name.startswith("."):
                 continue
             for child in sorted(team.iterdir(), key=lambda p: p.name):
-                if child.is_dir() and not child.name.startswith(".") and (child / ".claude" / "memory").is_dir():
+                if _is_worker(child):
                     found.setdefault(child.name, child)
     agents_dir = team_root / "agents"
     if agents_dir.is_dir():
         for child in sorted(agents_dir.iterdir(), key=lambda p: p.name):
-            if child.is_dir() and not child.name.startswith(".") and (child / ".claude" / "memory").is_dir():
+            if _is_worker(child):
                 found.setdefault(child.name, child)
     return found
 

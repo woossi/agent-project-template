@@ -131,8 +131,9 @@ def _is_worker_dir(p: Path) -> bool:
     """A derivation worker is a folder carrying any surface this roll-up reads: a private
     memory-log ledger (.context/memory-log) OR a private memory store (.claude/memory),
     since share markers live in memory.md. Excludes non-worker scratch folders (only
-    handoff notes under .context, no .claude/memory) and team folders (dot-prefixed)."""
-    if not p.is_dir() or p.name.startswith("."):
+    handoff notes under .context) and TEAM folders — which also hold .claude/memory but
+    are explicitly marked with a ``.team-folder`` sentinel so they are never roll-up workers."""
+    if not p.is_dir() or p.name.startswith(".") or (p / ".team-folder").exists():
         return False
     return (p / ".context" / "memory-log").is_dir() or (p / ".claude" / "memory").is_dir()
 
