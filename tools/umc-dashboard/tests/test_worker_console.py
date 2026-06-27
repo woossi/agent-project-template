@@ -75,3 +75,33 @@ def test_empty_event_text_skipped():
     c = _console()
     c.append_event("data-lead", WorkerEvent("assistant", "   "))
     assert c._buffers.get("data-lead", []) == []
+
+
+def test_append_throttles_repaint():
+    # 대량 append가 즉시 _repaint를 부르지 않고 _dirty만 세운다(렌더 폭주 방지).
+    c = _console()
+    c._dirty = False
+    repaints = []
+    c._repaint = lambda: repaints.append(1)
+    c._shown = "data-engineer"
+    for i in range(100):
+        c.append_event("data-engineer", WorkerEvent("assistant", f"line {i}"))
+    assert repaints == []          # 즉시 그리지 않음
+    assert c._dirty is True        # dirty만 세움
+    # flush_tick 한 번 = 한 번만 그림
+    c._flush_tick()
+    assert len(repaints) == 1
+    assert c._dirty is False
+    # dirty 아니면 flush는 no-op
+    c._flush_tick()
+    assert len(repaints) == 1
+
+
+def test_hidden_worker_does_not_mark_dirty():
+    # 안 보이는 워커의 이벤트는 dirty조차 안 세운다(보이는 워커만 그릴 가치).
+    c = _console()
+    c._dirty = False
+    c._shown = "data-engineer"
+    c.append_event("other-worker", WorkerEvent("assistant", "x"))
+    assert c._dirty is False
+    assert any("x" in ln for ln in c._buffers["other-worker"])  # 버퍼엔 쌓임

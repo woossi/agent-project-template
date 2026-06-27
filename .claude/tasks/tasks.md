@@ -7,6 +7,12 @@ team-umc 팀의 현재 작업 패킷입니다. 가장 작은 작업 단위이며
 
 상태: 진행 중 (orchestrator — 학위논문(B판) 전환 추적)
 
+★★ g(팀 일괄구동) 렉 — 콘솔 렌더 throttle (2026-06-27)
+- ★사용자 증상: "g 누르니까 또 렉". 원인: g가 팀 워커 3~4명을 동시 headless 구동 → 각 워커가 stream-json 이벤트를 초당 수백 개 call_from_thread로 메인스레드에 보냄 → append_event가 매 이벤트마다 _repaint(전체 버퍼 join+Static.update) → 메인 UI 스레드 렌더 폭주 → 클릭·키 렉.
+- ★해결: WorkerConsole 렌더 throttle. append/status/set_active는 즉시 _repaint 대신 _dirty 플래그만 세우고(_mark_dirty), on_mount의 set_interval(1/6초) _flush_tick이 dirty일 때만 묶어 1회 그림. 초당 최대 6회로 렌더 제한(REPAINT_HZ). focus_worker(사용자 상호작용)만 즉시. 안 보이는 워커 이벤트는 dirty조차 안 세움(버퍼엔 쌓임).
+- ★검증: 대시보드 51 통과(+throttle 2)·R2 PASS·app import OK. throttle 테스트(100 append→repaint 0·dirty만, flush 1회=1 repaint).
+- 남은(범위밖): claude subprocess 자체의 시스템 부하(N명 동시 Opus 호출)는 throttle로 못 줄임 — UI 렉(렌더)만 해소. 동시 구동 수가 많으면 CPU/네트워크 부하는 별개.
+
 ★★ UI 먹통 + preset 클릭 시 모달 닫힘 버그 수정 (2026-06-27)
 - ★사용자 증상 3개: (1)"가끔 UI 먹통" (2)"마우스 클릭·c 키 안 먹음" (3)"inbox·리마인더 클릭 시 프롬프트 창이 닫혀 안 됨".
 - ★(1)+(2) 원인: refresh_data(매 3초 set_interval, 메인 UI 스레드)가 블로킹 호출 3개 — launcher.running_workers()의 tmux list-windows subprocess, launcher.available()의 shutil.which, store.read_snapshot의 전 메일박스+consumed 누적 파일IO. tmux 느리거나 워커 10개 동시 write와 겹치면 메인 스레드가 멈춰 클릭·키 먹통. 해결: headless 통일했으니 tmux 조회 제거(running=pool.active_workers()만, 논블로킹) + read_snapshot이 consumed(.consumed/) 미독(무한 누적분 매프레임 안 읽음, 살아있는 작업만).

@@ -30,11 +30,14 @@ class WorkerConsole(VerticalScroll):
 
     MAX_LINES = 400
 
+    REPAINT_HZ = 6  # 초당 최대 렌더 횟수(throttle) — 동시 가동 시 렌더 폭주 방지
+
     def __init__(self, **kw):
         super().__init__(**kw)
         self._shown: str | None = None              # 현재 화면에 표시 중인 워커
         self._buffers: dict[str, list[str]] = {}    # 워커별 로그 버퍼
         self._active: set[str] = set()              # 가동 중(턴 진행 중)인 워커
+        self._dirty = False                         # 다음 flush에서 다시 그릴지
 
     def compose(self) -> ComposeResult:
         yield Static("워커 콘솔", classes="panel-title", id="console-title")
@@ -43,8 +46,19 @@ class WorkerConsole(VerticalScroll):
     def _buf(self, worker: str) -> list[str]:
         return self._buffers.setdefault(worker, [])
 
+    def _mark_dirty(self) -> None:
+        # 즉시 그리지 않고 dirty만 세운다. _flush_tick(주기 타이머)이 묶어서 한 번 그린다.
+        # 워커 N명이 동시에 stream-json을 초당 수백 개 쏟아도 렌더는 REPAINT_HZ로 제한됨
+        # (이게 없으면 매 이벤트 _repaint → 메인 스레드 렌더 폭주 → g 누르면 렉).
+        self._dirty = True
+
+    def _flush_tick(self) -> None:
+        if self._dirty:
+            self._dirty = False
+            self._repaint()
+
     def focus_worker(self, worker: str | None) -> None:
-        """표시 대상 워커를 바꾼다. 그 워커의 버퍼로 화면을 다시 그린다."""
+        """표시 대상 워커를 바꾼다. 전환은 즉시 반영(사용자 상호작용이라 throttle 불필요)."""
         self._shown = worker
         self._repaint()
 
@@ -54,7 +68,7 @@ class WorkerConsole(VerticalScroll):
             self._active.add(worker)
         else:
             self._active.discard(worker)
-        self._render_title()
+        self._mark_dirty()
 
     # 이벤트는 항상 worker를 동반한다 — 어느 워커 버퍼에 쌓을지 명시.
     def add_prompt(self, worker: str, prompt: str) -> None:
@@ -65,7 +79,7 @@ class WorkerConsole(VerticalScroll):
         if self._shown is None:
             self._shown = worker
         if worker == self._shown:
-            self._repaint()
+            self._mark_dirty()
 
     def append_event(self, worker: str, ev: WorkerEvent) -> None:
         text = ev.text.strip()
@@ -74,14 +88,14 @@ class WorkerConsole(VerticalScroll):
         self._buf(worker).append(f"{_ICON.get(ev.kind, '·')} {text}")
         self._trim(worker)
         if worker == self._shown:
-            self._repaint()
+            self._mark_dirty()
 
     def add_status(self, worker: str, msg: str, *, ok: bool = True) -> None:
         mark = "[blue]✓[/blue]" if ok else "[red]✗[/red]"
         self._buf(worker).append(f"{mark} [dim]{msg}[/dim]")
         self._trim(worker)
         if worker == self._shown:
-            self._repaint()
+            self._mark_dirty()
 
     def _trim(self, worker: str) -> None:
         buf = self._buffers.get(worker)
@@ -121,3 +135,5 @@ class WorkerConsole(VerticalScroll):
     def on_mount(self) -> None:
         # mount 완료 후 한 번 그려, mount 전에 들어온 버퍼/선택을 반영한다.
         self._repaint()
+        # throttle 타이머: dirty일 때만 묶어서 그린다(동시 가동 렌더 폭주 방지).
+        self.set_interval(1.0 / self.REPAINT_HZ, self._flush_tick)
