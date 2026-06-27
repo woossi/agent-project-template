@@ -3,6 +3,12 @@
 __pycache__/
 *.pyc
 
+# Python venvs (uv-managed, recreated from requirements.txt)
+.venv/
+**/.venv/
+*.egg-info/
+.pytest_cache/
+
 # Claude Code local (personal) settings — not shared; use settings.json for shared defaults
 .claude/settings.local.json
 
