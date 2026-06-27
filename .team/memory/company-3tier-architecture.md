@@ -1,20 +1,20 @@
 # UMC 회사 3계층 아키텍처 (회사 → 팀 → 워커)
 
-> 상태: **설계 확정, 구현 대기.** 2026-06-27 orchestrator·사용자 합의.
-> 이 문서는 회사(프로젝트) 레벨 결정의 단일 출처다. 구현 전 청사진이며, 4팀 워커가 참조한다.
+> 상태: **구현 완료.** 2026-06-27 orchestrator·사용자 합의 후 `feat/company-3tier-architecture` 브랜치에서 Phase 0–5 구현.
+> 이 문서는 회사(프로젝트) 레벨 결정의 단일 출처다. 4팀 워커가 참조한다.
 
-## 1. 토폴로지: 회사 → 팀 → 워커
+## 1. 토폴로지: 회사 → 팀 → 워커 (구현됨)
 
 UMC를 **회사(프로젝트)**로 두고, 그 아래 **4개 하위 팀**, 각 팀 아래 **워커(peer)**를 둔다.
-구현 방식은 **가벼운 라우팅** — 디렉토리 계층을 새로 파지 않고, 하위 팀을 *메타데이터*로 표현한다.
-격리(`agent-workspace.json`의 N² deny)는 그대로 둔다. 하위 팀은 *논리적 묶음*이지 *격리 경계*가 아니다.
+**물리적 디렉토리 계층**으로 구현됨: `teams/<팀>/<워커>/`. 팀도 워커처럼 `.claude/{skills,memory,tasks}`+`.context`로 자기 자산을 관리하고, `.team-folder` 마커로 워커와 구분된다.
+격리는 N² deny(`agent-workspace.json`)를 유지하되 경로가 `teams/<팀>/<워커>/**`로 재생성됨 — 같은 팀 형제도 격리(엄격). 워커 발견·symlink 깊이는 `os.path.relpath`로 토폴로지 비의존.
 
 | 하위 팀 | 워커 | 미리알림 목록 | 팀 orchestrator |
 | --- | --- | --- | --- |
 | **데이터** | data-engineer · data-curator · inference-runner | `umc-data` | data-curator |
 | **문서** | manuscript-writer · manuscript-steward | `umc-write` | manuscript-steward |
 | **선행연구** | paper-scout | `umc-scout` | paper-scout (1인) |
-| **검증** | stats-validator · quality-reviewer | `umc-review` | (미정) |
+| **검증** | stats-validator · quality-reviewer | `umc-review` | quality-reviewer |
 
 - 회사 전체 대시보드·팀 간 조정 채널은 기존 `umc` 목록 유지.
 - **검증 팀을 별도로 둔 이유**: stats-validator·quality-reviewer의 역할 핵심은 "생산자와 분리된 독립 검증"이다(team.json 명시). 데이터/문서 팀에 흡수하면 검증 독립성이 깨진다.
@@ -107,8 +107,17 @@ tmux 윈도우가 늘수록 `CLAUDE_AGENT_NAME` export를 깜빡해 전부 `main
 - **서브에이전트**: 워커 종속 우선, 무조건 워커 스킬에 종속, 병렬화 목적에 한정. (§2-1)
 - **메모리 자동정리**: 자체 hook+스킬, MCP는 검색 보조만. (§4)
 
-## 미해결 항목
+## 구현 완료 상태 (Phase 0–5)
 
-- **검증 팀 orchestrator 지정**(stats-validator·quality-reviewer 둘 다 독립 검증자라 누구를 팀장 삼아도 독립성과 미묘하게 충돌 — 사용자 판단 필요).
-- 스킬/메모리 3계층의 정확한 디렉토리 규약(위 "제안" 경로 확정).
-- 팀·프로젝트 스킬 승격기의 구체 스키마(작업 전달 구조를 무엇으로 탐지할지 — inbox 핸드오프? 미리알림 노트?).
+- **Phase 0**: team_agent.py·team_init.py·hooks를 토폴로지 비의존으로 일반화(`os.path.relpath` 깊이계산, subteams 유도, 거버넌스 allowlist, worker_dirs). 평면 fallback으로 전체 220 테스트 그린.
+- **Phase 1**: 4 팀 폴더 골격 + `.team-folder` 마커로 팀/워커 구분 가드(워커 식별 필터 3곳).
+- **Phase 2**: 8 워커 `git mv` → `teams/<팀>/<워커>/`, `sync --all --force`로 재배선, 거버넌스 5개를 7명에게서 회수. symlink 무결성 0 broken.
+- **Phase 3**: 워커 전용 스킬 3개(stat-claim-verification→stats-validator, paper-review→quality-reviewer, academic-writing→manuscript-writer)를 root→워커로 이동(거꾸로 교정).
+- **Phase 4**: agent-workspace.json 재생성(teams 경로 N²), .gitignore, 비워커(orchestrator·section-writer) 삭제(handoff는 `.team/memory/handoff/`로 보존).
+- **Phase 5**: 실제 토폴로지 hook smoke test 통과, AGENTS.md·설계문서 갱신.
+
+## 남은 후속 작업 (이번 범위 밖)
+
+- **팀·프로젝트 스킬 승격기 신설**: 작업 전달 구조 반복을 탐지(1차 신호 = inbox 핸드오프 `from→to`). 계층 경계 distinct 축. 워커 스킬 승격기는 불변. (§2)
+- `create-team-agent`의 AGENT.md 템플릿 "Shared … skills" 문구를 거버넌스 구획화 반영해 정정.
+- 프로젝트 스킬 디렉토리(`.team/skills`) 실제 도입은 첫 팀 간 전달 스킬이 승격될 때.

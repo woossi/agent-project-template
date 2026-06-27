@@ -102,13 +102,15 @@
 | `.claude/skills/` | 반복 작업 묶음을 포괄 이름으로 승격한 재사용 절차 |
 | `.claude/agents/` | 특정 스킬 패키지를 독립 컨텍스트에서 관리하는 서브에이전트 |
 | `.context/` | 에이전트 실행 로그, 임시 handoff, 검증 산출물 |
-| `.team/` | Model Y 팀 공유 store: 로스터(`team.json`)·목표(`goals/`)·받은 편지함(`inbox/`)·팀 정책·팀 승격/파생 |
-| `agents/<이름>/` | peer 에이전트별 작업·메모리·`.context`(정체성으로 격리, 공유 자산은 root로 symlink) |
+| `.team/` | Model Y 팀 공유 store: 로스터(`team.json`)·목표(`goals/`)·받은 편지함(`inbox/`)·팀 정책·팀 승격/파생·회사 메모리(`memory/`) |
+| `teams/<팀>/` | 하위 팀 폴더(회사→팀→워커 3계층). 팀 자산 `.claude/{skills,memory,tasks}`(워커 간 협력 스킬·팀 메모리)+`.context`, 마커 `.team-folder` |
+| `teams/<팀>/<워커>/` | peer 워커별 작업·메모리·`.context`(정체성으로 격리, 공유 자산은 root로 symlink) |
 
-## 메모리 규칙
+## 메모리 규칙 (3계층 구획화)
 
-- 개별 작업 사실은 agents/<이름>/.claude/memory/에 둔다
-- 팀 합의 결정과 목표는 .team/memory/와 .team/goals/에 둔다
+- 개별 워커 작업 사실은 teams/<팀>/<워커>/.claude/memory/에 둔다
+- 팀 합의·맥락은 teams/<팀>/.claude/memory/에 둔다
+- 회사(프로젝트) 전체 결정·목표는 .team/memory/와 .team/goals/에 둔다
 
 `.claude/memory/`에는 확정된 장기 맥락만 짧게 남긴다.
 현재 작업 상태는 `.claude/tasks/`에 두고, 실행 로그·진행상황·handoff·대량 산출물은 `.context/`에 둔다.
@@ -118,8 +120,9 @@
 이 프로젝트는 단일 에이전트가 아니라 **공유 1벌 + 정체성 N개**(Model Y)로 운영하는 팀이다. Conductor 없이 터미널 Claude로 각 peer를 실행하며, 같은 파일시스템의 `.team/` 공유 store로 조정한다.
 
 - **정체성**: 각 터미널에서 `export CLAUDE_AGENT_NAME=<이름>` 후 실행한다. 미설정 시 `main`으로 떨어져 정체성이 붕괴하므로 반드시 export한다. guard와 받은 편지함이 이 값을 읽는다.
-- **로스터**: `.team/team.json`(멤버·역할·미리알림 바인딩). 현재 멤버는 `data-curator`(자료·데이터·분석 결과·그림 관리, 팀 컨텍스트 자원 지원, governance authoring owner)와 `paper-scout`(학술 논문 검색·선별·PDF 수집)다. 로스터·형제 격리 정책은 `team-setup.json` 하나로 `team-init`이 재생성하므로 손으로 멤버 이름을 고치지 않는다.
-- **격리**: `.claude/policies/agent-workspace.json`이 각 이름을 자기 작업 폴더로 한정하고 형제 폴더(`agents/<다른이름>/`)를 차단한다. 공유 자산(`.claude/{hooks,policies,skills,settings.json,CLAUDE.md}`, `AGENTS.md`)은 root로 symlink되어 동일성이 자동 보장된다.
+- **로스터·하위 팀**: `.team/team.json`(멤버·역할·미리알림 바인딩·`subteams`). 8 워커가 4 하위 팀으로 묶인다 — **데이터**(data-engineer·data-curator·inference-runner, `umc-data`), **문서**(manuscript-writer·manuscript-steward, `umc-write`), **선행연구**(paper-scout, `umc-scout`), **검증**(stats-validator·quality-reviewer, `umc-review`). 각 워커는 정확히 한 팀. 로스터·하위 팀·격리 정책은 `team-setup.json` 하나로 `team-init`이 재생성하고, 팀 증분 추가는 `team-init add-subteam`을 쓴다(손으로 멤버를 고치지 않는다). 회사 전체 대시보드는 `umc` 목록.
+- **격리(물리적+문서적, 3계층)**: `.claude/policies/agent-workspace.json`이 각 워커를 자기 폴더로 한정하고 다른 모든 워커 폴더(`teams/<팀>/<워커>/**`)를 차단한다(N² 엄격 격리 — 같은 팀 형제도 차단). 자기 팀 공용 자원(`teams/<팀>/.claude`)은 읽기 가능. 공유 자산(`.claude/{hooks,policies,settings.json,CLAUDE.md}`, `AGENTS.md`)은 root로 symlink되어 동일성이 자동 보장된다.
+- **스킬 3계층 구획화**: 워커 스킬은 워커 폴더의 real dir, 팀 스킬은 `teams/<팀>/.claude/skills`(워커 간 워크플로우 고정), 프로젝트 스킬은 `.team/skills`(팀 간 자료 전달, 예정). 공유 root 스킬 중 **거버넌스**(`team-init·create-team-agent·agent-clone-setup·set-team-goal·team-derive-author`)는 governance owner(data-curator)에게만 symlink되고, 나머지 공용 스킬은 전원에게 symlink된다.
 - **두 채널**: 미리알림(목록 `umc`, 사람도 보는 백로그·진행상태 — `reminders-team-bridge`)과 받은 편지함(`.team/inbox/`, 에이전트끼리 구조화 메시지 — `team-inbox`).
 - **목표·작업**: 팀 목표는 `set-team-goal`로 `.team/goals/`에 기록하고 Tasks로 분해해 할당한다. 팀 합의 결정·용어·선호는 `.team/memory/`·`.team/word.json`·`.team/user_preferences.md`로 파생한다(`team-derive-author`). 팀 계층 승격/파생은 `.team/policies/team-promotion.json`·`team-derivation.json` 조건으로 distinct-agent 축에서 평가된다.
 - **팀 정의 갱신**: 로스터·정책은 `team-init`이 `team-setup.json` 하나로 재생성한다.
