@@ -6,13 +6,13 @@
 
 ## 목적
 
-팀 공유 자산을 충돌 없이 저작한다. 가장 위험한 무잠금 writer(`register_term`의 비원자 전체 덮어쓰기)를 **owner 직렬화**로 무력화한다 — `.team/word.json`과 공유 선호는 `governance.authoring_owner` 한 명만 쓰고, 비-owner는 거부되어 inbox 제안으로 유도된다. 단일 작성자라 동시성이 없고, 쓰기는 그래도 atomic(tmp+os.replace)이다. 팀 메모리는 fact당 불변 파일이라 여러 저자도 공유 파일을 손상시키지 않는다.
+팀 공유 자산을 충돌 없이 저작한다. 가장 위험한 무잠금 writer(`register_term`의 비원자 전체 덮어쓰기)를 **owner 직렬화**로 무력화한다 — `.project/word.json`과 공유 선호는 `governance.authoring_owner` 한 명만 쓰고, 비-owner는 거부되어 inbox 제안으로 유도된다. 단일 작성자라 동시성이 없고, 쓰기는 그래도 atomic(tmp+os.replace)이다. 팀 메모리는 fact당 불변 파일이라 여러 저자도 공유 파일을 손상시키지 않는다.
 
 ## 계약
 
-- 읽는 입력: 작성자 정체성(`--by`/`CLAUDE_AGENT_NAME`), 공유 store(`--store`/`CLAUDE_TEAM_STORE`/`.team`), `governance.authoring_owner`(team-derivation.json).
-- 만드는 출력: `.team/word.json`(owner만), `.team/memory/<ns>__<agent>__<slug>.json`(불변) + 렌더된 `.team/memory.md`.
-- 쓰면 안 되는 위치: 비-owner는 `.team/word.json`을 쓰지 않는다(거부됨 → inbox 제안). 용어 정의를 추측해 채우지 않는다.
+- 읽는 입력: 작성자 정체성(`--by`/`CLAUDE_AGENT_NAME`), 공유 store(`--store`/`CLAUDE_PROJECT_STORE`/`.project`), `governance.authoring_owner`(team-derivation.json).
+- 만드는 출력: `.project/word.json`(owner만), `.project/memory/<ns>__<agent>__<slug>.json`(불변) + 렌더된 `.project/memory.md`.
+- 쓰면 안 되는 위치: 비-owner는 `.project/word.json`을 쓰지 않는다(거부됨 → inbox 제안). 용어 정의를 추측해 채우지 않는다.
 
 ## 입력
 
@@ -31,12 +31,12 @@
    ```bash
    python scripts/team_derive.py record-memory --key "<키>" --fact "<팀 결정/사실>" [--source "<출처>"]
    ```
-   불변 record 1개 + `.team/memory.md` 자동 렌더.
+   불변 record 1개 + `.project/memory.md` 자동 렌더.
 3. **닫기:** `.claude/hooks/detect_team_derivations.py resolve --kind {term,memory} --key ... --decision promote`.
 
 ## 출력 형식
 
-stdout JSON `{ok, op, result}`. 용어는 `.team/word.json`의 `terms[]`에, 메모리는 `.team/memory/`(불변) + `.team/memory.md`(키별 최신 fold).
+stdout JSON `{ok, op, result}`. 용어는 `.project/word.json`의 `terms[]`에, 메모리는 `.project/memory/`(불변) + `.project/memory.md`(키별 최신 fold).
 
 ## 내부 자원
 
@@ -47,7 +47,7 @@ stdout JSON `{ok, op, result}`. 용어는 `.team/word.json`의 `terms[]`에, 메
 
 - `python3 -m pytest .claude/skills/team-derive-author/scripts/tests/ -q` 통과.
 - 비-owner의 `register-term`은 종료코드 1로 거부된다.
-- `.team/word.json`은 유효 JSON·4필드·중복 term 없음을 유지한다.
+- `.project/word.json`은 유효 JSON·4필드·중복 term 없음을 유지한다.
 
 ## 자주 발생하는 실패 사례
 

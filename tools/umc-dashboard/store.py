@@ -1,4 +1,4 @@
-"""Read-only view over the .team/ shared store (the single source of truth).
+"""Read-only view over the .project/ shared store (the single source of truth).
 
 This module ONLY reads files — it never mutates the store. All writes go through
 the verified CLIs (see adapters.py). Parsing is defensive: a malformed or
@@ -14,10 +14,10 @@ from typing import Any
 
 
 def repo_root(start: Path | None = None) -> Path:
-    """Walk up to the repo root (the dir holding .team/team.json or AGENTS.md)."""
+    """Walk up to the repo root (the dir holding .project/team.json or AGENTS.md)."""
     here = (start or Path(__file__)).resolve()
     for base in (here, *here.parents):
-        if (base / ".team" / "team.json").is_file() or (base / "AGENTS.md").is_file():
+        if (base / ".project" / "team.json").is_file() or (base / "AGENTS.md").is_file():
             return base
     return here.parent
 
@@ -49,7 +49,7 @@ class Subteam:
 
 def load_team(root: Path) -> tuple[list[Worker], list[Subteam]]:
     """Workers (with team + role) and subteams from team.json."""
-    data = _load_json(root / ".team" / "team.json") or {}
+    data = _load_json(root / ".project" / "team.json") or {}
     roles = data.get("roles") or {}
     subteams_raw = data.get("subteams") or []
     subteams = [
@@ -96,7 +96,7 @@ def load_inbox(root: Path, *, include_consumed: bool = True, limit: int = 200) -
     Unread live directly under inbox/<recipient>/; consumed move to
     inbox/<recipient>/.consumed/ (team_inbox ack). We tag each accordingly.
     """
-    inbox = root / ".team" / "inbox"
+    inbox = root / ".project" / "inbox"
     msgs: list[InboxMessage] = []
     if not inbox.is_dir():
         return msgs
@@ -147,7 +147,7 @@ class Goal:
 
 
 def load_goals(root: Path) -> list[Goal]:
-    gdir = root / ".team" / "goals"
+    gdir = root / ".project" / "goals"
     out: list[Goal] = []
     if not gdir.is_dir():
         return out
@@ -203,7 +203,7 @@ def load_candidates(root: Path) -> list[Candidate]:
     """Open promotion/derivation/feedback candidates the detectors have surfaced.
 
     Paths verified against the live store: single-tier under .context/, team-tier
-    per-worker under .team/<kind>/candidates/. The TUI surfaces these so a human can
+    per-worker under .project/<kind>/candidates/. The TUI surfaces these so a human can
     promote/decline — replacing the per-turn hook reminders that only reached the model.
     """
     out: list[Candidate] = []
@@ -211,8 +211,8 @@ def load_candidates(root: Path) -> list[Candidate]:
         (root / ".context" / "promotions" / "candidates.json", "promotion"),
         (root / ".context" / "memory-promotions" / "candidates.json", "derivation"),
         (root / ".context" / "feedback" / "candidates.json", "feedback"),
-        (root / ".team" / "promotions" / "candidates", "team-promotion"),
-        (root / ".team" / "derivations" / "candidates", "team-derivation"),
+        (root / ".project" / "promotions" / "candidates", "team-promotion"),
+        (root / ".project" / "derivations" / "candidates", "team-derivation"),
     ]
     for path, source in search:
         files: list[Path] = []

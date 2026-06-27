@@ -5,11 +5,11 @@ Mirrors how ``agent-clone-setup`` turns ``agent-setup.json`` into a converted pr
 and how ``create-team-agent`` scaffolds one peer — but at the TEAM level. Given a
 single ``team-setup.json``, it writes the shared team state:
 
-    .team/team.json                    roster + Reminders binding + goals dir
-    .team/policies/team-promotion.json team-tier thresholds + governance owner
-    .team/policies/team-derivation.json
-    .team/goals/.gitkeep               (durable goal records land here)
-    .team/inbox/.gitkeep               (runtime channel; contents git-ignored)
+    .project/team.json                    roster + Reminders binding + goals dir
+    .project/policies/team-promotion.json team-tier thresholds + governance owner
+    .project/policies/team-derivation.json
+    .project/goals/.gitkeep               (durable goal records land here)
+    .project/inbox/.gitkeep               (runtime channel; contents git-ignored)
 
 With ``--create-agents`` it also scaffolds every member via create-team-agent, so a
 team goes from one JSON file to a runnable Model Y team in one step.
@@ -149,12 +149,12 @@ def build_team_json(setup: dict[str, Any]) -> dict[str, Any]:
         "version": 1,
         "team": setup["team"],
         "topology": "model-y",
-        "shared_store": ".team",
+        "shared_store": ".project",
         "reminders_list": setup["reminders_list"],
         "members": setup["members"],
         "roles": setup["roles"],
-        "goals_dir": ".team/goals",
-        "inbox": ".team/inbox",
+        "goals_dir": ".project/goals",
+        "inbox": ".project/inbox",
     }
     # Subteams are the logical company -> team -> worker layer. Only emit the key
     # when present so a flat team's team.json stays byte-identical to before.
@@ -169,7 +169,7 @@ def build_promotion_policy(setup: dict[str, Any]) -> dict[str, Any]:
     return {
         "version": 1,
         "agent_ledger": {"tasks": ".context/task-log/tasks.jsonl", "events": ".context/task-log/events.jsonl"},
-        "log": {"candidates_dir": ".team/promotions/candidates", "decisions_dir": ".team/promotions/decisions"},
+        "log": {"candidates_dir": ".project/promotions/candidates", "decisions_dir": ".project/promotions/decisions"},
         "team_skill_promotion": {"min_distinct_agents": n, "min_total_recurrence": 2, "skip_if_skill_exists": True, "max_candidates": 20},
         "team_agent_promotion": {"min_package_size": 2, "min_distinct_agents": n, "skip_if_agent_exists": True, "max_candidates": 20},
         "governance": {"mode": "orchestrator-authors", "authoring_owner": owner},
@@ -186,8 +186,8 @@ def build_derivation_policy(setup: dict[str, Any]) -> dict[str, Any]:
             "team_signals": ".context/memory-log/team-signals.jsonl",
             "memory": ".claude/memory/memory.md",
         },
-        "team_store": {"word": ".team/word.json", "preferences": ".team/user_preferences.md", "memory_dir": ".team/memory"},
-        "log": {"candidates_dir": ".team/derivations/candidates", "decisions_dir": ".team/derivations/decisions"},
+        "team_store": {"word": ".project/word.json", "preferences": ".project/user_preferences.md", "memory_dir": ".project/memory"},
+        "log": {"candidates_dir": ".project/derivations/candidates", "decisions_dir": ".project/derivations/decisions"},
         "term_derivation": {"min_distinct_agents": n, "skip_if_registered": True, "max_candidates": 20},
         "preference_derivation": {"min_distinct_agents": n, "skip_if_recorded": True, "max_candidates": 20},
         "memory_derivation": {"min_distinct_agents": n, "skip_if_recorded": True, "max_candidates": 20},
@@ -263,7 +263,7 @@ def _create_members(team_root: Path, setup: dict[str, Any]) -> list[dict[str, An
 
 
 def init_team(team_root: Path, setup: dict[str, Any], *, create_agents: bool = False) -> dict[str, Any]:
-    store = team_root / ".team"
+    store = team_root / ".project"
     _atomic_write_json(store / "team.json", build_team_json(setup))
     _atomic_write_json(store / "policies/team-promotion.json", build_promotion_policy(setup))
     _atomic_write_json(store / "policies/team-derivation.json", build_derivation_policy(setup))
@@ -291,9 +291,9 @@ def init_team(team_root: Path, setup: dict[str, Any], *, create_agents: bool = F
         "min_distinct_agents": setup["min_distinct_agents"],
         "reminders_list": setup["reminders_list"],
         "files": [
-            ".team/team.json",
-            ".team/policies/team-promotion.json",
-            ".team/policies/team-derivation.json",
+            ".project/team.json",
+            ".project/policies/team-promotion.json",
+            ".project/policies/team-derivation.json",
             ".claude/policies/agent-workspace.json",
         ],
         "agents_created": [a.get("name") for a in agents if a.get("created")],
@@ -376,7 +376,7 @@ def add_subteam(team_root: Path, entry: dict[str, Any], *, create_agents: bool =
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="team_init.py", description="Initialize a team from team-setup.json.")
     sub = parser.add_subparsers(dest="op", required=True)
-    p = sub.add_parser("init", help="Write .team/ definition from a team-setup.json (file or stdin).")
+    p = sub.add_parser("init", help="Write .project/ definition from a team-setup.json (file or stdin).")
     p.add_argument("--input", default=None, help="team-setup.json path (default: stdin).")
     p.add_argument("--team-root", default=None, help="Team root (default: repo root).")
     p.add_argument("--create-agents", action="store_true", help="Also scaffold every member via create-team-agent.")

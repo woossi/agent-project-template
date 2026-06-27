@@ -7,8 +7,8 @@
 - [완료·핵심] 전수 실측 결과 ★영구 산출물 오매칭 0건. paper-scout 적발 6~7건은 fulltext-grounder 자동매칭 런타임 오류이고 Zotero·refs.bib·엑셀엔 미반영(이미 정본 정합).
   - Zotero DB(~/Zotero/zotero.sqlite): 영향 7건 전부 정본 아이템·첨부 실재(bayer2014=1238·ellen2016=1511·firebaugh2016=1542·jung2025=1690·naess2015=1860·yeung2024=2123·li2024kostka=1774/첨부737). ★citationKey(fieldID=9) 저장=0건→DB 교정대상 자체 부재. 백업·quick_check ok·SELECT만(DB 무변경).
   - refs.bib: 6 citekey 전부 정본 제목/연도, file= 필드 0개. 엑셀: 비고=상태메모(경로 아님). 교정 불요.
-- [완료] firebaugh2016 톤 정정: .team/assets/Master.xlsx sheet2 '완만한 축소'→'상당한 축소'(원문 sizable). 백업 후 셀1개 교체·zip OK·291셀 불변.
-- [정보] paper-scout가 Research_Map 공용화(.team/assets/Research_Map.md+xlsx) 인지.
+- [완료] firebaugh2016 톤 정정: .project/assets/Master.xlsx sheet2 '완만한 축소'→'상당한 축소'(원문 sizable). 백업 후 셀1개 교체·zip OK·291셀 불변.
+- [정보] paper-scout가 Research_Map 공용화(.project/assets/Research_Map.md+xlsx) 인지.
 
 ## 최신 완료 (2026-06-27 개인 메모리 압축 — 사용자 지시)
 - [완료] 개인 memory.md 압축: 인프라결정 항목 상세→registry 위임·핵심만 잔류, guard 우회법 3사례→1줄 통합. 2923B→2610B(11%↓). 현작업/재현 단서(UMC·matplotlib·registry·guard·작업경계) 무손실.
@@ -60,7 +60,7 @@
 - (4) 데이터 공유가능성 §D 3단계(🟢집계공개/🟡라벨조건부/🔴원문불가)+가드레일(SHA256·좌표비저장·동집계). R2 연계.
 
 ## 이전 세션 완료분 (1차 Major Revision)
-- A-2 모델명세·A-1 정찰(inference-runner 인계)·image10_v2·image2_v2 층위반전·관통논리 .team/memory·stat-claim-verification 스킬·_data_registry.md·qr E축(qr 완료)·ablation 측정지표 정합(sv).
+- A-2 모델명세·A-1 정찰(inference-runner 인계)·image10_v2·image2_v2 층위반전·관통논리 .project/memory·stat-claim-verification 스킬·_data_registry.md·qr E축(qr 완료)·ablation 측정지표 정합(sv).
 
 ## 대기·후속
 - mw 부록화: §3.2.4 버전범위 교체·신설 Appendix(프롬프트 전문 전사·명세표·데이터공유 진술).

@@ -6,14 +6,14 @@ candidates; this CLI is how the governance OWNER acts on them and closes the loo
 
 Conflict-safety = OWNER SERIALIZATION. The most dangerous shared writer is the
 non-atomic ``register_term`` full-file rewrite, so the team dictionary
-(``.team/word.json``) and the shared preferences doc are written by exactly ONE
-agent — the ``governance.authoring_owner`` from ``.team/policies/team-derivation.json``.
+(``.project/word.json``) and the shared preferences doc are written by exactly ONE
+agent — the ``governance.authoring_owner`` from ``.project/policies/team-derivation.json``.
 A non-owner is refused and told to propose via the inbox. With a single writer
 there is no concurrency, and the write is still done atomically (tmp + os.replace).
 
 Team memory is append-of-immutable: each fact is one file
-``.team/memory/<ns>__<agent>__<slug>.json`` (never edited), folded into a derived
-``.team/memory.md`` view, so even multiple authors never corrupt a shared file.
+``.project/memory/<ns>__<agent>__<slug>.json`` (never edited), folded into a derived
+``.project/memory.md`` view, so even multiple authors never corrupt a shared file.
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ class DeriveAuthorError(RuntimeError):
 
 
 def resolve_store(explicit: str | None) -> Path:
-    return Path(explicit or os.environ.get("CLAUDE_TEAM_STORE") or ".team").expanduser()
+    return Path(explicit or os.environ.get("CLAUDE_PROJECT_STORE") or ".project").expanduser()
 
 
 def resolve_identity(explicit: str | None) -> str:
@@ -118,7 +118,7 @@ def record_memory(store: Path, *, key: str, fact: str, source: str = "", by: str
 
 
 def render_memory(store: Path) -> Path:
-    """Fold immutable memory records into a human-readable .team/memory.md (idempotent)."""
+    """Fold immutable memory records into a human-readable .project/memory.md (idempotent)."""
     mdir = store / "memory"
     records: list[dict[str, Any]] = []
     if mdir.is_dir():
@@ -133,7 +133,7 @@ def render_memory(store: Path) -> Path:
         k = str(rec.get("key", "")).strip()
         if k:
             by_key[k] = rec
-    lines = ["# Team Memory", "", "Accepted team decisions + facts (derived view of .team/memory/*.json).", ""]
+    lines = ["# Team Memory", "", "Accepted team decisions + facts (derived view of .project/memory/*.json).", ""]
     for k in sorted(by_key):
         rec = by_key[k]
         lines.append(f"## {k}")
@@ -156,7 +156,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--by", default=None, help="Author identity (default: $CLAUDE_AGENT_NAME).")
     sub = parser.add_subparsers(dest="op", required=True)
 
-    p_term = sub.add_parser("register-term", help="Register a term into .team/word.json (owner only).")
+    p_term = sub.add_parser("register-term", help="Register a term into .project/word.json (owner only).")
     p_term.add_argument("--term", required=True)
     p_term.add_argument("--ko", required=True)
     p_term.add_argument("--definition", required=True)
@@ -167,7 +167,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_mem.add_argument("--fact", required=True)
     p_mem.add_argument("--source", default="")
 
-    sub.add_parser("render-memory", help="Regenerate .team/memory.md from the immutable records.")
+    sub.add_parser("render-memory", help="Regenerate .project/memory.md from the immutable records.")
     return parser
 
 

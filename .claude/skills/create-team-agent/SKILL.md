@@ -13,7 +13,7 @@ Model Y 구조로 `agents/<name>/`를 만든다 — **개별(사적)** 자산은
 ## 계약
 
 - 읽는 입력: 에이전트 이름, 선택적 role 설명, team root(기본 = repo root). 공유할 root `.claude` 서브트리.
-- 만드는 출력: `agents/<name>/`(아래 레이아웃), `.team/team.json` members 등록.
+- 만드는 출력: `agents/<name>/`(아래 레이아웃), `.project/team.json` members 등록.
 - 쓰면 안 되는 위치: 공유 계약(`AGENTS.md`/`.claude/CLAUDE.md`)을 역할별로 rewrite하지 않는다(동질성 파괴). 기존 에이전트의 사적 자산을 덮지 않는다(`--force`도 seed는 보존).
 
 ## 입력
@@ -69,7 +69,7 @@ agents/<name>/
 
 ## 내부 자원
 
-- `scripts/team_agent.py` — CLI/라이브러리. `create`(스캐폴딩+정체성 규약+공유 symlink+per-skill 스킬 배선(`_wire_skills`)+로스터 등록, 멱등, `--force`로 재배선하되 seed 보존), `sync`(스킬 폴더를 공유 단일소스에 맞춰 재배선 — `_wire_skills` 재사용으로 공유 추가·전용 보존하고 stale symlink prune, `--all`/한 에이전트, `--force`로 통째 symlink 마이그레이션), `list`(폴더↔로스터 drift). 로스터는 `.team/team.json` members를 원자적(`os.replace`)으로 갱신.
+- `scripts/team_agent.py` — CLI/라이브러리. `create`(스캐폴딩+정체성 규약+공유 symlink+per-skill 스킬 배선(`_wire_skills`)+로스터 등록, 멱등, `--force`로 재배선하되 seed 보존), `sync`(스킬 폴더를 공유 단일소스에 맞춰 재배선 — `_wire_skills` 재사용으로 공유 추가·전용 보존하고 stale symlink prune, `--all`/한 에이전트, `--force`로 통째 symlink 마이그레이션), `list`(폴더↔로스터 drift). 로스터는 `.project/team.json` members를 원자적(`os.replace`)으로 갱신.
 - `scripts/tests/test_team_agent.py` — CI 안전 단위 테스트(임시 team root): 구조·시드·symlink 타겟·로스터·멱등·`--force` seed 보존·drift 보고·CLI 왕복, per-skill 배선·전용 보존·통째 symlink 마이그레이션·`sync` 재배선·stale prune·`sync --all`.
 
 ## 품질 점검

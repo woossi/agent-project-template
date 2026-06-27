@@ -6,13 +6,13 @@
     "memory": ".claude/memory/memory.md"
   },
   "team_store": {
-    "word": ".team/word.json",
-    "preferences": ".team/user_preferences.md",
-    "memory_dir": ".team/memory"
+    "word": ".project/word.json",
+    "preferences": ".project/user_preferences.md",
+    "memory_dir": ".project/memory"
   },
   "log": {
-    "candidates_dir": ".team/derivations/candidates",
-    "decisions_dir": ".team/derivations/decisions"
+    "candidates_dir": ".project/derivations/candidates",
+    "decisions_dir": ".project/derivations/decisions"
   },
   "term_derivation": {
     "min_distinct_agents": 2,

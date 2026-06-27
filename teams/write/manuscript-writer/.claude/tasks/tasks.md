@@ -33,7 +33,7 @@ orchestrator가 '논문 파트별 재작성'을 5섹션으로 분해해 위임. 
 - /Users/ujunbin/research/UMC/parts/{body_front_intro,body_ch2,body_model,body_results,body_ch4}.tex (5개 본문)
 - /Users/ujunbin/research/UMC/parts/{figure_index,table_index,citekey_map,_newrefs_map}.md
 - /Users/ujunbin/research/UMC/refs.bib, figures/
-- .team/inbox 수신 메시지 2건(ack 완료), .team/tasks/ 배정 작업 JSON
+- .project/inbox 수신 메시지 2건(ack 완료), .project/tasks/ 배정 작업 JSON
 
 ## 기대 산출물
 - 섹션별 골격·기여 매핑·정합성 검수 노트(.context/handoff/)

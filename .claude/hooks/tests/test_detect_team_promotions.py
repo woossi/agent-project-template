@@ -25,11 +25,11 @@ class _Case(unittest.TestCase):
     def setUp(self):
         self._tmp = TemporaryDirectory()
         self.root = Path(self._tmp.name)
-        (self.root / ".team/policies").mkdir(parents=True)
+        (self.root / ".project/policies").mkdir(parents=True)
         (self.root / ".claude/skills").mkdir(parents=True)
         (self.root / ".claude/agents").mkdir(parents=True)
         # default policy
-        (self.root / ".team/policies/team-promotion.json").write_text(
+        (self.root / ".project/policies/team-promotion.json").write_text(
             json.dumps(dtp.DEFAULTS), encoding="utf-8"
         )
 
@@ -126,7 +126,7 @@ class DecisionTests(_Case):
         self.assertEqual(rc, 0)
         self.assertEqual(self.evaluate()["team_skill"], [])
         # decision is one immutable file per (kind,key); filename carries a key hash.
-        ddir = self.root / ".team/promotions/decisions"
+        ddir = self.root / ".project/promotions/decisions"
         files = list(ddir.glob("team_skill__shared__*.json"))
         self.assertEqual(len(files), 1)
         rec = json.loads(files[0].read_text(encoding="utf-8"))
@@ -149,7 +149,7 @@ class RootAndShardTests(_Case):
         self.agent_tasks("worker-2", [{"signature": "shared"}])
         policy = dtp.load_policy(self.root)
         dtp.write_candidates_shard(self.root, policy, self.evaluate(), "worker-1")
-        shard = self.root / ".team/promotions/candidates/worker-1.json"
+        shard = self.root / ".project/promotions/candidates/worker-1.json"
         self.assertTrue(shard.exists())
         data = json.loads(shard.read_text(encoding="utf-8"))
         self.assertEqual(len(data["team_skill"]), 1)
@@ -184,7 +184,7 @@ class DecisionCollisionTests(_Case):
             "--reason", "y", "--project-root", str(self.root),
         ])
         self.assertEqual((r1, r2), (0, 0))
-        ddir = self.root / ".team/promotions/decisions"
+        ddir = self.root / ".project/promotions/decisions"
         files = sorted(p.name for p in ddir.glob("*.json"))
         self.assertEqual(len(files), 2, f"colliding keys collapsed to one file: {files}")
         decided = dtp.load_team_decisions(ddir)
@@ -194,7 +194,7 @@ class DecisionCollisionTests(_Case):
     def test_same_key_twice_overwrites_last_writer_wins(self):
         dtp.run_resolve(["--kind", "team_skill", "--key", "k", "--decision", "decline", "--project-root", str(self.root)])
         dtp.run_resolve(["--kind", "team_skill", "--key", "k", "--decision", "promote", "--project-root", str(self.root)])
-        ddir = self.root / ".team/promotions/decisions"
+        ddir = self.root / ".project/promotions/decisions"
         self.assertEqual(len(list(ddir.glob("team_skill__*.json"))), 1)  # same key -> one file
         self.assertEqual(dtp.load_team_decisions(ddir)["team_skill"]["k"]["decision"], "promote")
 
@@ -215,13 +215,13 @@ class NoTeamSafetyTests(_Case):
         with TemporaryDirectory() as d:
             rc = dtp.main(["evaluate", "--project-root", d, "--check"])
             self.assertEqual(rc, 0)
-            self.assertFalse((Path(d) / ".team").exists())  # no fake skeleton minted
+            self.assertFalse((Path(d) / ".project").exists())  # no fake skeleton minted
 
     def test_resolve_non_team_dir_returns_1_and_writes_nothing(self):
         with TemporaryDirectory() as d:
             rc = dtp.run_resolve(["--kind", "team_skill", "--key", "x", "--decision", "promote", "--project-root", d])
             self.assertEqual(rc, 1)
-            self.assertFalse((Path(d) / ".team").exists())
+            self.assertFalse((Path(d) / ".project").exists())
 
 
 class OneAgentPackageTaskPathTests(_Case):

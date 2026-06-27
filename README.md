@@ -116,7 +116,7 @@ Conductor 없이 **터미널 Claude**로 각 에이전트를 띄우며, 공유 `
 ```
 <Team 루트 = 이 저장소>
   .claude/                     # 공유 템플릿 1벌 (hooks·policies·skills·계약) — 단일 소스
-  .team/                       # 팀 공유 상태
+  .project/                       # 팀 공유 상태
     team.json                  #   로스터·미리알림 바인딩·목표 디렉토리
     goals/<id>.json            #   목표 (계약 요소 포함)            [durable]
     tasks/<goal>__<slug>.json  #   목표에서 분해된 작업              [durable]
@@ -159,7 +159,7 @@ Conductor 없이 **터미널 Claude**로 각 에이전트를 띄우며, 공유 `
 python .claude/skills/team-init/scripts/team_init.py init --input team-setup.json
 ```
 
-이 한 번으로 `.team/team.json` + `.team/policies/team-{promotion,derivation}.json` + 디렉토리가 생성되고,
+이 한 번으로 `.project/team.json` + `.project/policies/team-{promotion,derivation}.json` + 디렉토리가 생성되고,
 `authoring_owner`(누가 팀 자산을 저작하는지)·`min_distinct_agents`(팀 승격 임계값)가 정책에 전파됩니다.
 `--create-agents`를 붙이면 아래 3절(멤버 에이전트 생성)까지 한 번에 끝납니다. stdin으로도 줄 수 있습니다.
 
@@ -248,7 +248,7 @@ python .claude/hooks/detect_team_derivations.py resolve --kind term --key LISA -
 
 | 스킬/훅 | 역할 |
 | --- | --- |
-| `team-init` | `team-setup.json` → `.team` 정의(team.json·정책·디렉토리) 생성, `--create-agents`로 멤버까지 |
+| `team-init` | `team-setup.json` → `.project` 정의(team.json·정책·디렉토리) 생성, `--create-agents`로 멤버까지 |
 | `create-team-agent` | Model Y peer 스캐폴딩 + 로스터 등록 |
 | `reminders-team-bridge` | 미리알림 ↔ 팀 백로그 양방향(JXA) |
 | `team-inbox` | peer↔peer 다대다 채널(불변 파일·atomic·멱등) |
@@ -260,8 +260,8 @@ python .claude/hooks/detect_team_derivations.py resolve --kind term --key LISA -
 
 ### durable vs runtime
 
-`.team/{goals,tasks,memory,word.json,policies}`와 에이전트 seed는 **추적**합니다.
-`.team/{inbox,promotions,derivations}`와 `agents/*/.context/`는 런타임이라 **git-ignore**됩니다.
+`.project/{goals,tasks,memory,word.json,policies}`와 에이전트 seed는 **추적**합니다.
+`.project/{inbox,promotions,derivations}`와 `agents/*/.context/`는 런타임이라 **git-ignore**됩니다.
 
 ## Memory rule
 

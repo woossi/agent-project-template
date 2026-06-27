@@ -19,7 +19,7 @@ import team_goal as tg  # noqa: E402
 class _Case(unittest.TestCase):
     def setUp(self):
         self._tmp = TemporaryDirectory()
-        self.store = Path(self._tmp.name) / ".team"
+        self.store = Path(self._tmp.name) / ".project"
 
     def tearDown(self):
         self._tmp.cleanup()

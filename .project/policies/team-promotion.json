@@ -5,8 +5,8 @@
     "events": ".context/task-log/events.jsonl"
   },
   "log": {
-    "candidates_dir": ".team/promotions/candidates",
-    "decisions_dir": ".team/promotions/decisions"
+    "candidates_dir": ".project/promotions/candidates",
+    "decisions_dir": ".project/promotions/decisions"
   },
   "team_skill_promotion": {
     "min_distinct_agents": 2,

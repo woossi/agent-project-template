@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for team-init (team-setup.json -> .team definition). CI-safe."""
+"""Tests for team-init (team-setup.json -> .project definition). CI-safe."""
 
 from __future__ import annotations
 
@@ -56,7 +56,7 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(tj["reminders_list"], "umc")
         self.assertEqual(tj["members"], ["orchestrator", "worker-1"])
         self.assertEqual(tj["roles"]["orchestrator"], "lead")
-        self.assertEqual(tj["goals_dir"], ".team/goals")
+        self.assertEqual(tj["goals_dir"], ".project/goals")
 
     def test_min_distinct_agents_propagates(self):
         s = ti.normalize_setup(setup(min_distinct_agents=3))
@@ -98,15 +98,15 @@ class InitTests(unittest.TestCase):
     def test_init_writes_definition_and_dirs(self):
         res = ti.init_team(self.root, ti.normalize_setup(setup()))
         self.assertEqual(res["agents_created"], [])
-        self.assertTrue((self.root / ".team/team.json").exists())
-        self.assertTrue((self.root / ".team/policies/team-promotion.json").exists())
-        self.assertTrue((self.root / ".team/policies/team-derivation.json").exists())
-        self.assertTrue((self.root / ".team/goals/.gitkeep").exists())
-        self.assertTrue((self.root / ".team/inbox/.gitkeep").exists())
+        self.assertTrue((self.root / ".project/team.json").exists())
+        self.assertTrue((self.root / ".project/policies/team-promotion.json").exists())
+        self.assertTrue((self.root / ".project/policies/team-derivation.json").exists())
+        self.assertTrue((self.root / ".project/goals/.gitkeep").exists())
+        self.assertTrue((self.root / ".project/inbox/.gitkeep").exists())
         # the guard's sibling-isolation policy is regenerated too (no manual drift)
         self.assertTrue((self.root / ".claude/policies/agent-workspace.json").exists())
         # written team.json is valid and bound
-        tj = json.loads((self.root / ".team/team.json").read_text(encoding="utf-8"))
+        tj = json.loads((self.root / ".project/team.json").read_text(encoding="utf-8"))
         self.assertEqual(tj["reminders_list"], "umc")
 
     def test_init_regenerates_workspace_policy_preserving_boundaries(self):
@@ -125,7 +125,7 @@ class InitTests(unittest.TestCase):
 
     def test_policies_are_valid_for_hooks(self):
         ti.init_team(self.root, ti.normalize_setup(setup(min_distinct_agents=2)))
-        prom = json.loads((self.root / ".team/policies/team-promotion.json").read_text(encoding="utf-8"))
+        prom = json.loads((self.root / ".project/policies/team-promotion.json").read_text(encoding="utf-8"))
         # shape the detector relies on
         self.assertIn("team_skill_promotion", prom)
         self.assertIn("decisions_dir", prom["log"])
@@ -216,7 +216,7 @@ class AddSubteamTests(unittest.TestCase):
         self.assertIn("manuscript-writer", saved["members"])
         self.assertEqual(saved["subteams"][0]["name"], "write")
         # team.json reflects it and the isolation policy regenerated for the new worker
-        tj = json.loads((self.root / ".team/team.json").read_text(encoding="utf-8"))
+        tj = json.loads((self.root / ".project/team.json").read_text(encoding="utf-8"))
         self.assertEqual(tj["subteams"][0]["name"], "write")
         pol = json.loads((self.root / ".claude/policies/agent-workspace.json").read_text(encoding="utf-8"))
         self.assertIn("manuscript-writer", pol["agents"])
@@ -250,7 +250,7 @@ class CliTests(unittest.TestCase):
         inp.write_text(json.dumps(setup()), encoding="utf-8")
         rc = ti.main(["init", "--input", str(inp), "--team-root", str(self.root)])
         self.assertEqual(rc, 0)
-        self.assertTrue((self.root / ".team/team.json").exists())
+        self.assertTrue((self.root / ".project/team.json").exists())
         self.assertTrue((self.root / "team-setup.json").exists())  # saved back
 
     def test_cli_no_save_input(self):

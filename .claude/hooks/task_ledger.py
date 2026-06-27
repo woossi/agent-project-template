@@ -41,12 +41,12 @@ def _find_repo_root(start: Path) -> Path:
     """Walk up from ``start`` to the team repo root.
 
     The root is the directory that anchors the shared store: it contains
-    ``.team/team.json`` (canonical) or, as a fallback, ``AGENTS.md``. Peers run
+    ``.project/team.json`` (canonical) or, as a fallback, ``AGENTS.md``. Peers run
     hooks from anywhere under the repo (agent folders, skill dirs), so a bare
     cwd is not a reliable anchor. If nothing matches we keep ``start``.
     """
     for base in (start, *start.parents):
-        if (base / ".team" / "team.json").is_file() or (base / "AGENTS.md").is_file():
+        if (base / ".project" / "team.json").is_file() or (base / "AGENTS.md").is_file():
             return base
     return start
 

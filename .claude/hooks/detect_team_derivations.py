@@ -5,7 +5,7 @@ The memory-side sibling of ``detect_team_promotions.py``. The per-agent derivati
 loop (``detect_derivations.py``) asks "did one agent see this enough" and moves it
 into that agent's private ``user_preferences.md`` / ``word.json``. This asks "do
 several peers independently want this shared" and moves it into the TEAM store
-(``.team/word.json`` for terms, a shared preferences doc, ``.team/memory/`` for team
+(``.project/word.json`` for terms, a shared preferences doc, ``.project/memory/`` for team
 decisions). The per-agent loop is left byte-untouched.
 
 Three signal sources, read-only across ``agents/*``:
@@ -22,7 +22,7 @@ Conflict-safe team store, inherited from the reviewed team-promotion detector:
 per-runner candidate shard + one immutable decision file per ``(kind, key)`` (the
 filename carries a hash of the exact key so distinct keys never collide), all via
 atomic ``os.replace``. ``find_team_root`` returns ``None`` outside a team checkout so
-the SessionStart hook never mints a fake ``.team/`` skeleton.
+the SessionStart hook never mints a fake ``.project/`` skeleton.
 """
 from __future__ import annotations
 
@@ -44,13 +44,13 @@ DEFAULTS: dict[str, Any] = {
         "memory": ".claude/memory/memory.md",
     },
     "team_store": {
-        "word": ".team/word.json",
-        "preferences": ".team/user_preferences.md",
-        "memory_dir": ".team/memory",
+        "word": ".project/word.json",
+        "preferences": ".project/user_preferences.md",
+        "memory_dir": ".project/memory",
     },
     "log": {
-        "candidates_dir": ".team/derivations/candidates",
-        "decisions_dir": ".team/derivations/decisions",
+        "candidates_dir": ".project/derivations/candidates",
+        "decisions_dir": ".project/derivations/decisions",
     },
     "term_derivation": {"min_distinct_agents": 2, "skip_if_registered": True, "max_candidates": 20},
     "preference_derivation": {"min_distinct_agents": 2, "skip_if_recorded": True, "max_candidates": 20},
@@ -74,7 +74,7 @@ def project_dir(payload: dict[str, Any]) -> Path:
 def find_team_root(start: Path) -> Path | None:
     cur = start.resolve()
     for _ in range(10):
-        if (cur / ".team").is_dir():
+        if (cur / ".project").is_dir():
             return cur
         if cur.parent == cur:
             break
@@ -94,7 +94,7 @@ def _merge(base: dict[str, Any], override: Any) -> dict[str, Any]:
 
 
 def load_policy(team_root: Path) -> dict[str, Any]:
-    policy_path = team_root / ".team/policies/team-derivation.json"
+    policy_path = team_root / ".project/policies/team-derivation.json"
     try:
         raw = json.loads(policy_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
@@ -385,9 +385,9 @@ def format_surface(candidates: dict[str, Any], governance: dict[str, Any]) -> st
     owner = governance.get("authoring_owner", "orchestrator")
     header = (
         f"Team-derivation conditions were met. Governance: owner {owner}. The owner authors once and closes:\n"
-        "- team_term -> register into .team/word.json (register_term.py --word-file; owner serializes the write).\n"
+        "- team_term -> register into .project/word.json (register_term.py --word-file; owner serializes the write).\n"
         "- team_preference -> add a dated entry to the team preferences doc.\n"
-        "- team_memory -> append an immutable record under .team/memory/.\n"
+        "- team_memory -> append an immutable record under .project/memory/.\n"
         "- close with `.claude/hooks/detect_team_derivations.py resolve` (--decision promote|decline).\n"
     )
     return header + "\n".join(lines)
@@ -464,7 +464,7 @@ def run_evaluate(argv: list[str]) -> int:
     start = Path(args.project_root).expanduser().resolve() if args.project_root else project_dir({})
     team_root = find_team_root(start)
     if team_root is None:
-        print(f"no team root (.team/) found from {start}")
+        print(f"no team root (.project/) found from {start}")
         return 0
     policy = load_policy(team_root)
     candidates = evaluate(team_root, policy)
@@ -490,7 +490,7 @@ def run_resolve(argv: list[str]) -> int:
     start = Path(args.project_root).expanduser().resolve() if args.project_root else project_dir({})
     team_root = find_team_root(start)
     if team_root is None:
-        print(f"no team root (.team/) found from {start}; cannot resolve", file=sys.stderr)
+        print(f"no team root (.project/) found from {start}; cannot resolve", file=sys.stderr)
         return 1
     policy = load_policy(team_root)
     by = args.by or os.environ.get("CLAUDE_AGENT_NAME") or "team"

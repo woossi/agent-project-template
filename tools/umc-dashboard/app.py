@@ -3,7 +3,7 @@
 한 화면에서 8 워커·미리알림 백로그·inbox 흐름·승격 후보를 보고 조작한다.
 8개 tmux 창을 왔다갔다 하던 것을 이 대시보드 하나로 대체.
 
-진실원천은 .team/ store. 쓰기는 전부 검증된 CLI(adapters)·tmux(launcher) 위임.
+진실원천은 .project/ store. 쓰기는 전부 검증된 CLI(adapters)·tmux(launcher) 위임.
 
 조작 키:
   워커(사이드바 선택 후):  l 구동 · f 포커스 · m 메시지 · i 인터럽트
@@ -89,7 +89,7 @@ class Dashboard(App):
         self._instructing: str = ""       # headless 지시 처리 중인 워커(중복 방지)
 
     def _reminders_list_name(self) -> str:
-        data = store._load_json(self.root / ".team" / "team.json") or {}
+        data = store._load_json(self.root / ".project" / "team.json") or {}
         return data.get("reminders_list") or "umc"
 
     def compose(self) -> ComposeResult:

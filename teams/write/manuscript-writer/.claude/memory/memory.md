@@ -1,6 +1,6 @@
 # Memory — agent: manuscript-writer
 
-Private working memory. Team-wide decisions/goals live in the team store (.team/memory, .team/goals).
+Private working memory. Team-wide decisions/goals live in the team store (.project/memory, .project/goals).
 
 ## Durable Facts
 

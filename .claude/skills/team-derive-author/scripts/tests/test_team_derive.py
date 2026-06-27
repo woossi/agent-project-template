@@ -19,7 +19,7 @@ import team_derive as td  # noqa: E402
 class _Case(unittest.TestCase):
     def setUp(self):
         self._tmp = TemporaryDirectory()
-        self.store = Path(self._tmp.name) / ".team"
+        self.store = Path(self._tmp.name) / ".project"
         (self.store / "policies").mkdir(parents=True)
         (self.store / "policies/team-derivation.json").write_text(
             json.dumps({"governance": {"authoring_owner": "orchestrator"}}), encoding="utf-8"

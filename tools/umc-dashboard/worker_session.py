@@ -29,10 +29,10 @@ from pathlib import Path
 
 
 def repo_root(start: Path | None = None) -> Path:
-    """위로 올라가며 .team/team.json 또는 AGENTS.md가 있는 디렉토리를 찾는다."""
+    """위로 올라가며 .project/team.json 또는 AGENTS.md가 있는 디렉토리를 찾는다."""
     cur = (start or Path(__file__)).resolve()
     for d in [cur, *cur.parents]:
-        if (d / ".team" / "team.json").exists() or (d / "AGENTS.md").exists():
+        if (d / ".project" / "team.json").exists() or (d / "AGENTS.md").exists():
             return d
     return Path.cwd()
 

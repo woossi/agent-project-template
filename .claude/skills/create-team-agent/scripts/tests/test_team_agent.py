@@ -18,7 +18,7 @@ import team_agent as ta  # noqa: E402
 
 
 def build_fake_team_root(root: Path) -> None:
-    """Minimal team root: shared .claude subtrees, AGENTS.md, .team/team.json."""
+    """Minimal team root: shared .claude subtrees, AGENTS.md, .project/team.json."""
     claude = root / ".claude"
     for sub in ("hooks", "policies", "skills"):
         (claude / sub).mkdir(parents=True, exist_ok=True)
@@ -30,7 +30,7 @@ def build_fake_team_root(root: Path) -> None:
     (claude / "settings.json").write_text("{}", encoding="utf-8")
     (claude / "CLAUDE.md").write_text("# shared", encoding="utf-8")
     (root / "AGENTS.md").write_text("# contract", encoding="utf-8")
-    team = root / ".team"
+    team = root / ".project"
     team.mkdir(parents=True, exist_ok=True)
     (team / "team.json").write_text(json.dumps({"version": 1, "members": ["orchestrator"]}), encoding="utf-8")
 
@@ -131,7 +131,7 @@ class CreateTests(_Case):
     def test_roster_registration(self):
         res = ta.create_agent(self.root, "worker-2")
         self.assertTrue(res["roster_added"])
-        members = json.loads((self.root / ".team/team.json").read_text(encoding="utf-8"))["members"]
+        members = json.loads((self.root / ".project/team.json").read_text(encoding="utf-8"))["members"]
         self.assertIn("worker-2", members)
         self.assertIn("orchestrator", members)  # preserved
 
@@ -163,7 +163,7 @@ class CreateTests(_Case):
     def test_roster_idempotent_second_create_other_agent(self):
         ta.create_agent(self.root, "worker-2")
         ta.create_agent(self.root, "worker-3")
-        members = json.loads((self.root / ".team/team.json").read_text(encoding="utf-8"))["members"]
+        members = json.loads((self.root / ".project/team.json").read_text(encoding="utf-8"))["members"]
         self.assertEqual(members, ["orchestrator", "worker-2", "worker-3"])
 
 
@@ -171,7 +171,7 @@ class ListTests(_Case):
     def test_list_reports_drift(self):
         ta.create_agent(self.root, "worker-2")
         # roster has an extra member with no folder
-        tf = self.root / ".team/team.json"
+        tf = self.root / ".project/team.json"
         data = json.loads(tf.read_text(encoding="utf-8"))
         data["members"].append("ghost")
         tf.write_text(json.dumps(data), encoding="utf-8")

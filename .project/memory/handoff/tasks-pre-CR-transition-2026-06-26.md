@@ -25,7 +25,7 @@ team-umc 팀의 현재 작업 패킷입니다. 가장 작은 작업 단위이며
 - ★/Users/ujunbin/article(원문 PDF 1063개·Zotero·읽기전용) 작업경계 추가 = orchestrator 직접 저작 완료. agent-workspace.json defaults.allow + AGENTS.md 작업경계 2곳. 형제격리 deny 7개 무손·JSON유효.
 - ★거버넌스 부트스트랩 순환(owner가 root 공유자산 저작 시 guard 차단): 사용자 결정 = 정책 자기수정(.claude/policies·.claude/skills) **영구개방 안 함**. classifier가 'defaults.allow에 policies/skills 넣으면 영구 자기수정 권한=1회우회 승인 범위 초과'로 정당 차단 → orchestrator가 그 보안함의 미고지했음 인정·멈춤·재확인. article(읽기)만 추가, 정책/스킬 저작은 그때그때 1회 우회(stat-claim-verification 방식) 유지. 격리가치 보존.
 - review-gate 판정축: data-curator가 'qr 개인자산(agents/quality-reviewer/.claude/skills/)이라 직접 못 건드림→판정축 사양 완성해 qr 핸드오프(msgid 6248175f), qr이 자기 스킬 편입'으로 경로조정 = **승인**. owner-authors는 root 공유자산 한정, 개인 검수절차는 qr owner.
-- 완료: 승격종결 2건(team-inbox+write-task DECLINE·stat-claim-verification PROMOTE root배치)·.team/memory 관통논리 저작(manuscript-status-of-claims, 전개좌표·(2)6종·SSCR근거 포함).
+- 완료: 승격종결 2건(team-inbox+write-task DECLINE·stat-claim-verification PROMOTE root배치)·.project/memory 관통논리 저작(manuscript-status-of-claims, 전개좌표·(2)6종·SSCR근거 포함).
 
 ★신규 peer 신설 — inference-runner (2026-06-26, 사용자 결정 '병목 해소'):
 - 병목 진단: 진짜 병목=inbox 적체(비동기 큐) 아니라 A-1 임계경로. judgment-synthesizer 재실행+ablation+인간코딩이 data-curator 1명에 집중(governance·그림·registry와 4역할 겹침). A-1 재실행이 dc(큐레이션)·sv(독립검증 이해충돌) 어느 역할에도 안 맞음.
@@ -106,7 +106,7 @@ R&R 공통본문 완성 + R6 검수 (2026-06-26):
 - eastwood2019(Critical Realist Translational Social Epidemiology, 산모우울증·이웃맥락-DOHaD, CR 설명이론구축 3단계+귀추·역행추론+다층 베이지안+동시적 삼각검증 혼합방법) = 우리 방법의 직접 선례. 이미 refs.bib 등록(서지정확)이나 본문 1회뿐(과소).
 - ps에 인용강화 배치안 위임: 4공통점(CR 설명이론·귀추+역행추론·다층베이지안·삼각검증 혼합)↔우리절차 대응 + 차별화(eastwood=단계제시, 우리=예측오차 우선탐색+정보차단으로 자의성 좁힘, fletcher2017과 함께 보강). 배치 §2·§3.3·§1/§5. 과대주장 금지. mw 본문(영문 포함) 반영.
 
-작업 추적 일원화: **진실원 = `.team/tasks/` JSON**(team_goal.py 관리). 이번 세션의 임시 TaskList(#1~#3)는 폐기. 9개 팀 작업 분배 완료:
+작업 추적 일원화: **진실원 = `.project/tasks/` JSON**(team_goal.py 관리). 이번 세션의 임시 TaskList(#1~#3)는 폐기. 9개 팀 작업 분배 완료:
 - paper-scout(2): SSCI Q1 저널 선정[done] · SSCR 체크리스트 재생성[pending]
 - data-curator(3): part 3-3 프롬프트 수정 · 저널 양식·포맷 정렬 · 투고 패키지 작성
 - manuscript-writer(4): 전 섹션 정합성 검수 · 파트별 재작성 · 방법론 기여 Q1 정렬 검수 · 영문 번역
@@ -145,7 +145,7 @@ R&R 공통본문 완성 + R6 검수 (2026-06-26):
 - 사용자 원칙: 에이전트에 '무엇이 잘못됐는지'(증상목록) 말고 '어떤 단일 논리가 글을 관통해야 하는지'(원리+좌표+경계)를 줘라. 진단=사람, 적용=에이전트.
 - ★진단 완료(사람이 끝낸 추상화): 모든 한정·단서는 세 종류 — (1)설계가 요구한 것=긍정선언 (2)데이터가 말못하는 것=사실1회 (3)비판 선제사과 항변=삭제. A(min-max)→(1)승격, B(가교 동일성부인)·C(탐색적윤곽 반복)→(3)삭제, 진짜한계만 (2)보존. 사양: agents/orchestrator/.context/handoff/penetrating-logic-status-of-claims-2026-06-26.md
 - 실측 확인: (3)항변이 한 동작으로 6~7회 반복(intro:29·45·ch2:21·23·25·27·ch4:34). min-max '차선 아님' 부정경유 반복(model:40·ch4:34).
-- ★팀자원화 결정(사용자): 확정 후 .team/memory(원리·좌표·경계 내용) + quality-reviewer review-gate 스킬(매 섹션 판정축) 둘 다에 명시. governance owner=data-curator 저작.
+- ★팀자원화 결정(사용자): 확정 후 .project/memory(원리·좌표·경계 내용) + quality-reviewer review-gate 스킬(매 섹션 판정축) 둘 다에 명시. governance owner=data-curator 저작.
 - 순서(정당성 게이트 선행): ①paper-scout 원고 서술 전반 종합검증(항변삭제·긍정선언이 SSCR 관행상 방어가능한지 근거, [P1] 위임함) → ②orchestrator 사양 확정 → ③data-curator 팀자원 저작 → ④mw/section-writer 5섹션 일관적용·qr 검수.
 - ⑤§5 부분동결: ch4:34 항변덩어리는 사양 확정 전 표면봉합 금지(mw 통지). 나머지 §5는 진행.
 - 이유: 가교 항변삭제=인식론적 입장변경 → 근거 없이 하면 AGENTS.md '근거없이 만들지않는다' 위반·심사리스크. paper-scout 게이트 필수.
@@ -162,7 +162,7 @@ R&R 공통본문 완성 + R6 검수 (2026-06-26):
 - mw가 data-curator 저작을 기다리지 않고 **사용자 직접 리뷰 4건**으로 5섹션 대수술 완료(rewrite-spec 기반). 헤지 26→3(88%↓)·단서B 항변 완전제거(0건)·53계열 분해 제거·폐기물 제거·설계사슬 관통·비식별성 §5.3 집약. 빌드 PASS 25→23p.
 - ★orchestrator 직접 검증: mw 작업이 확정 사양과 **정합 확인**. (2)진짜한계 6종 §5 전수 보존 확인(선택편향 ch4:30+§5.3강화·SKT ch4:30둘째·ICC ch4:32다섯째·동일출처 ch4:32여섯째·플랫폼비대표 ch4:30·min-max절대비판단 ch4:30셋째+34). 옛 ch4:34 항변덩어리→긍정선언('존재론적 지위와 무관하게 검증')으로 전환=정확히 (1)/(2)/(3) 삼분류. mw가 사양 미열람이나 같은 원천(사용자) 리뷰라 수렴.
 - 53계열 본문제거 vs [불확실]유지: **승인**. mw 논리 타당(표 tab:stage_e 126계열 불변·임의보정0, 본문 단정불가 53분해만 제거). '불확실표기 후 제시'보다 '본문 미제시'가 개발사노출 회피에 부합. EA5132EC 보류와 정합.
-- **타이밍 재정렬**: data-curator 저작은 'mw 선행작업을 사후 표준으로 박기'(검수기준·재사용·R6 판정축)로 역할 전환. 여전히 필요(.team/memory+review-gate). qr는 R5→R6(관통논리 적용본 정합+삼분류 동시판정, 특히 ★과소헤지 점검).
+- **타이밍 재정렬**: data-curator 저작은 'mw 선행작업을 사후 표준으로 박기'(검수기준·재사용·R6 판정축)로 역할 전환. 여전히 필요(.project/memory+review-gate). qr는 R5→R6(관통논리 적용본 정합+삼분류 동시판정, 특히 ★과소헤지 점검).
 
 섹션 재작성 진행 (2026-06-26, 후속):
 - ①§3 PASS · ②§4 PASS(R3) · **③서론§1 PASS · ④이론§2 PASS(R4)** — manuscript-review-gate 스킬로 qr 검수. 4/5 섹션 PASS.
@@ -173,7 +173,7 @@ R&R 공통본문 완성 + R6 검수 (2026-06-26):
 - B-10 정정: sv가 부분해소 별건 통지함. 미해결=line130 외부지표 1차출처 인용(mw 문헌작업)뿐. sv 불확실 4건+01_report(B-5/6/7/10) 전부 처리.
 
 이전 세션 정리 내역:
-- inbox store 경로 버그 수습: 잘못된 store 2곳(.claude/skills/team-inbox/.team, agents/paper-scout/.team)에 갇힌 메시지를 root .team로 재발송하고 디렉토리 제거. CLI는 root 실행 또는 `--store` 절대경로(서브커맨드 앞) 필수.
+- inbox store 경로 버그 수습: 잘못된 store 2곳(.claude/skills/team-inbox/.project, agents/paper-scout/.project)에 갇힌 메시지를 root .project로 재발송하고 디렉토리 제거. CLI는 root 실행 또는 `--store` 절대경로(서브커맨드 앞) 필수.
 - 쓰레기 파일 CLAUDE_AGENT_NAME=paper-scout.txt 삭제.
 - SSCR 체크리스트 산출물 유실 확정(전수 find 부재), 미리알림 노트 '완료' 기록 정정.
 - 원고 작업을 data-curator → manuscript-writer 이관(과부하 해소).

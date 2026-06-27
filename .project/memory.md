@@ -1,6 +1,6 @@
 # Team Memory
 
-Accepted team decisions + facts (derived view of .team/memory/*.json).
+Accepted team decisions + facts (derived view of .project/memory/*.json).
 
 ## bpan-thesis-qa-gate-1차평가
 
@@ -16,7 +16,7 @@ By: data-curator · Source: agents/orchestrator/.context/handoff/penetrating-log
 
 ## research-map-6-step-argument-x-bpan-sections
 
-★'6가지 논증 구조'=Research_Map 6단계(한계 6종과 별개의 축). 출처=agents/paper-scout/Research_Literature_Master.xlsx 00_Research_Map. CR 층위논리(real 기제→actual 발현→empirical 관측)를 논문 전개로 옮긴 사슬이며 B판(parts_ko_B/) 사슬(CR→잠재인과기제→행정관측≠생활세계→Bayesian통합→Agent역행추론→잠재기제가설→정책검증)과 거의 1:1 정합. ▶6단계×B판 섹션 배치표(파일:줄 + 인용현황 + 점검판정): [1 연구문제] 잠재 구조가 존재한다 → 서론. 배치=body_front_intro.tex:5. 인용=bhaskar1975,eynon2023. 판정=PASS. [2 메타이론 철학] CR로 잠재 인과기제 실재 타당화+질양 데이터·HLM 정당화(Bhaskar,Danermark) → 2장 존재론. 배치=body_ch2.tex 전체(특히 9·15·16·20-25). 인용=bhaskar1975,schurz2008,fletcher2017,wynn2012williams,eastwood2014,eastwood2019,eynon2023,sen1985,robeyns2005. 판정=PARTIAL — ★Danermark refs.bib 부재(CR 6단계 설명모델 표준출처 누락). [3 HLM-actual] HLM으로 actual 층위(관측 격차구조) 측정 → 3장 모형. 배치=body_model.tex:42-56,body_results.tex:43-71. 인용=raudenbush2002,garner1991. 판정=PASS. [4 에이전트=잠재구조 측정도구] LLM을 질적 증거생성기로 잠재구조 추론증거 생성(측정이론 reliability/validity/measurement error/latent variable 정당화) → 3장 측정/§3.3. 배치=body_model.tex:72-138. 인용=ziems2024,tornberg2025(LLM 신뢰도·타당도). 판정=PARTIAL — ★측정이론 경성 인용 전무(Cronbach/Bollen/Messick류 refs.bib 부재). [5 질·양 증거통합] Bayesian으로 통합(evidence synthesis,Bayesian) → Methods. 배치=body_front_intro.tex:31,body_model.tex:57-100(EB 수축). 인용=raudenbush2002(partial pooling 맥락만). 판정=PARTIAL — ★Bayesian 증거통합 방법론 인용 부재(Garthwaite/Hoeting/O'Hagan류 refs.bib 부재). [6 추론(retroduction)+정책검증] 베이지안으로 잠재 인과기제 역행추론(AI reasoning,retroduction) → Methods/종합. 배치=body_model.tex:57-138,body_results.tex:72-79,body_ch4.tex:1-55. 인용=bhaskar1975·schurz2008·fletcher2017(2장에서),pawson2006,desouza2013,naess2015,fox2026,ylikoski2019,yin2013. 판정=PARTIAL — 결과는 강하나 에이전트 추론양식(귀추/전방향/순차) 정당화 인용 약함(schurz2008 1회). ▶갭 보강 우선순위(manuscript-writer 핸드오프 입력): (P0)단계2 Danermark·단계5 Bayesian증거통합·단계4 측정이론 = refs.bib 미보유 신규확보 대상. (P1)단계6 추론양식 정당화. ▶한계 6종(.team/memory data-curator)과 혼동 금지: 6단계=1~5장 전개 논증축, 한계 6종=§5 데이터 한계 적시(축이 다름).
+★'6가지 논증 구조'=Research_Map 6단계(한계 6종과 별개의 축). 출처=agents/paper-scout/Research_Literature_Master.xlsx 00_Research_Map. CR 층위논리(real 기제→actual 발현→empirical 관측)를 논문 전개로 옮긴 사슬이며 B판(parts_ko_B/) 사슬(CR→잠재인과기제→행정관측≠생활세계→Bayesian통합→Agent역행추론→잠재기제가설→정책검증)과 거의 1:1 정합. ▶6단계×B판 섹션 배치표(파일:줄 + 인용현황 + 점검판정): [1 연구문제] 잠재 구조가 존재한다 → 서론. 배치=body_front_intro.tex:5. 인용=bhaskar1975,eynon2023. 판정=PASS. [2 메타이론 철학] CR로 잠재 인과기제 실재 타당화+질양 데이터·HLM 정당화(Bhaskar,Danermark) → 2장 존재론. 배치=body_ch2.tex 전체(특히 9·15·16·20-25). 인용=bhaskar1975,schurz2008,fletcher2017,wynn2012williams,eastwood2014,eastwood2019,eynon2023,sen1985,robeyns2005. 판정=PARTIAL — ★Danermark refs.bib 부재(CR 6단계 설명모델 표준출처 누락). [3 HLM-actual] HLM으로 actual 층위(관측 격차구조) 측정 → 3장 모형. 배치=body_model.tex:42-56,body_results.tex:43-71. 인용=raudenbush2002,garner1991. 판정=PASS. [4 에이전트=잠재구조 측정도구] LLM을 질적 증거생성기로 잠재구조 추론증거 생성(측정이론 reliability/validity/measurement error/latent variable 정당화) → 3장 측정/§3.3. 배치=body_model.tex:72-138. 인용=ziems2024,tornberg2025(LLM 신뢰도·타당도). 판정=PARTIAL — ★측정이론 경성 인용 전무(Cronbach/Bollen/Messick류 refs.bib 부재). [5 질·양 증거통합] Bayesian으로 통합(evidence synthesis,Bayesian) → Methods. 배치=body_front_intro.tex:31,body_model.tex:57-100(EB 수축). 인용=raudenbush2002(partial pooling 맥락만). 판정=PARTIAL — ★Bayesian 증거통합 방법론 인용 부재(Garthwaite/Hoeting/O'Hagan류 refs.bib 부재). [6 추론(retroduction)+정책검증] 베이지안으로 잠재 인과기제 역행추론(AI reasoning,retroduction) → Methods/종합. 배치=body_model.tex:57-138,body_results.tex:72-79,body_ch4.tex:1-55. 인용=bhaskar1975·schurz2008·fletcher2017(2장에서),pawson2006,desouza2013,naess2015,fox2026,ylikoski2019,yin2013. 판정=PARTIAL — 결과는 강하나 에이전트 추론양식(귀추/전방향/순차) 정당화 인용 약함(schurz2008 1회). ▶갭 보강 우선순위(manuscript-writer 핸드오프 입력): (P0)단계2 Danermark·단계5 Bayesian증거통합·단계4 측정이론 = refs.bib 미보유 신규확보 대상. (P1)단계6 추론양식 정당화. ▶한계 6종(.project/memory data-curator)과 혼동 금지: 6단계=1~5장 전개 논증축, 한계 6종=§5 데이터 한계 적시(축이 다름).
 
 By: paper-scout · Source: paper-scout Research_Literature_Master.xlsx 00_Research_Map 6행 + B판 본문 점검(2026-06-26); orchestrator 승인 01782441953712963000
 
@@ -24,7 +24,7 @@ By: paper-scout · Source: paper-scout Research_Literature_Master.xlsx 00_Resear
 
 역할 경계 재정의(2026-06-27 사용자 결정): 본문 수치·통계량 정본의 '보관·단일출처·일관성·창작변형 금지'는 manuscript-steward 소유(roles (4) 신설), 그 정본이 데이터·코드와 일치하는지 '독립 재현·대조 검증'은 stats-validator 소유. 보관자(steward)≠검증자(stats-validator) 분리로 검증 독립성 유지. 대상 수치 예: 0.279·ICC 0.49%·표본흐름 772/490/156/126·차원별 F1. team-setup.json 두 roles 수정 후 team-init init으로 team.json 재생성 반영. manuscript-writer는 사유 메모리 수치 나열 제거·'mc 정본 단일출처, 의심 시 mc 조회' 규율 포인터로 대체(고신뢰=단정/저신뢰=해석제외 표현 매핑만 writer 잔류).
 
-By: orchestrator · Source: 사용자 결정(2026-06-27). manuscript-writer 요청 메시지 01782528781163678000. team-setup.json·.team/team.json 재생성.
+By: orchestrator · Source: 사용자 결정(2026-06-27). manuscript-writer 요청 메시지 01782528781163678000. team-setup.json·.project/team.json 재생성.
 
 ## work-priority-2026-fall
 

@@ -27,8 +27,8 @@ class _Case(unittest.TestCase):
     def setUp(self):
         self._tmp = TemporaryDirectory()
         self.root = Path(self._tmp.name)
-        (self.root / ".team/policies").mkdir(parents=True)
-        (self.root / ".team/policies/team-derivation.json").write_text(json.dumps(dtd.DEFAULTS), encoding="utf-8")
+        (self.root / ".project/policies").mkdir(parents=True)
+        (self.root / ".project/policies/team-derivation.json").write_text(json.dumps(dtd.DEFAULTS), encoding="utf-8")
 
     def tearDown(self):
         self._tmp.cleanup()
@@ -45,7 +45,7 @@ class _Case(unittest.TestCase):
         p.write_text(text, encoding="utf-8")
 
     def team_word(self, terms: list[str]):
-        (self.root / ".team/word.json").write_text(
+        (self.root / ".project/word.json").write_text(
             json.dumps({"terms": [{"term": t} for t in terms]}), encoding="utf-8"
         )
 
@@ -113,13 +113,13 @@ class DecisionTests(_Case):
         ])
         self.assertEqual(rc, 0)
         self.assertEqual(self.evaluate()["term"], [])
-        files = list((self.root / ".team/derivations/decisions").glob("term__LISA__*.json"))
+        files = list((self.root / ".project/derivations/decisions").glob("term__LISA__*.json"))
         self.assertEqual(len(files), 1)
 
     def test_slug_colliding_keys_both_persist(self):
         dtd.run_resolve(["--kind", "memory", "--key", "a b", "--decision", "decline", "--project-root", str(self.root)])
         dtd.run_resolve(["--kind", "memory", "--key", "a-b", "--decision", "promote", "--project-root", str(self.root)])
-        ddir = self.root / ".team/derivations/decisions"
+        ddir = self.root / ".project/derivations/decisions"
         self.assertEqual(len(list(ddir.glob("memory__*.json"))), 2)
         decided = dtd.load_team_decisions(ddir)
         self.assertEqual(decided["memory"]["a b"]["decision"], "decline")
@@ -149,7 +149,7 @@ class RecordAndSafetyTests(_Case):
         with TemporaryDirectory() as d:
             rc = dtd.main(["evaluate", "--project-root", d, "--check"])
             self.assertEqual(rc, 0)
-            self.assertFalse((Path(d) / ".team").exists())
+            self.assertFalse((Path(d) / ".project").exists())
 
     def test_hook_swallows_bad_stdin(self):
         self.assertEqual(dtd.main([]), 0)

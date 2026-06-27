@@ -8,7 +8,7 @@
     "status_channel": "reminder body/notes",
     "priority_source": "reminder priority (0 none, 1 high, 5 medium, 9 low)"
   },
-  "shared_store_root": ".team",
+  "shared_store_root": ".project",
   "bridge_skill": "reminders-team-bridge",
   "team_entry_shape": {
     "reminders_list": "<list name = team name>",

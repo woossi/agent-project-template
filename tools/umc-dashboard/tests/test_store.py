@@ -1,4 +1,4 @@
-"""store.py 파싱 테스트 — 임시 .team/ 트리, 실 store 미접촉. CI-safe."""
+"""store.py 파싱 테스트 — 임시 .project/ 트리, 실 store 미접촉. CI-safe."""
 from __future__ import annotations
 
 import json
@@ -11,7 +11,7 @@ import store  # noqa: E402
 
 
 def _seed(root: Path) -> None:
-    team = root / ".team"
+    team = root / ".project"
     (team / "inbox" / "alice" / ".consumed").mkdir(parents=True)
     (team / "inbox" / "bob").mkdir(parents=True)
     (team / "goals").mkdir(parents=True)
@@ -84,6 +84,6 @@ def test_malformed_file_does_not_crash():
         root = Path(d)
         _seed(root)
         # half-written tmp file mid atomic-rename
-        (root / ".team" / "inbox" / "bob" / "broken.json").write_text("{ not json")
+        (root / ".project" / "inbox" / "bob" / "broken.json").write_text("{ not json")
         snap = store.read_snapshot(root)  # must not raise
         assert snap.unread_count_for("bob") == 1  # broken one skipped

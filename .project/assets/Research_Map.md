@@ -1,7 +1,7 @@
 # Research_Map (6단계 논증 골격 + 검증된 본문 근거)
 
 - 팀 공용 자산 (paper-scout 작성·본문 verbatim 검증 2026-06-27)
-- 원본 엑셀: .team/assets/Research_Literature_Master.xlsx (시트 00_Research_Map). 인용문은 PDF 본문 직접 추출(verbatim).
+- 원본 엑셀: .project/assets/Research_Literature_Master.xlsx (시트 00_Research_Map). 인용문은 PDF 본문 직접 추출(verbatim).
 - 01_Literature_DB 21문헌 핵심주장 본문 실존 검증 21/21 통과. 상세: agents/paper-scout/.context/agents/fulltext-grounder/literature-db-grounding-check.md
 
 ## 1. 연구문제

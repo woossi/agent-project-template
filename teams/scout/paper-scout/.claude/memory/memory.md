@@ -1,7 +1,7 @@
 # Memory — agent: paper-scout
 
 Private working memory (facts this agent learns while working).
-Team-wide decisions and goals live in the team store (.team/memory, .team/goals).
+Team-wide decisions and goals live in the team store (.project/memory, .project/goals).
 휘발성 작업 사실(신규 ref 키 누적·날짜별 실측·진행 중 미해결)은 `.context/ref-verification-ledger.md`에 외부화. 메모리는 재사용 절차/방법론만 둔다.
 
 ## Durable Facts (재사용 절차)
@@ -13,7 +13,7 @@ Team-wide decisions and goals live in the team store (.team/memory, .team/goals)
 - **PDF/본문 확보 계층**(fetch-paper-fulltext): 로컬 PDF → OA(WebFetch; CC BY면 arXiv 저자본 arxiv.org/html/<id>가 봇친화) → 페이월/Cloudflare(402·403·리다이렉트)는 scrapling stealthy_fetch(solve_cloudflare=true·network_idle·timeout≥60000)로 다수 통과 → Scopus(연세계정, 에이전트 직접로그인 불가→사용자 세션쿠키 scrapling 주입 또는 사용자 폴백). 쿠키 휘발사용·저장금지, 본문 전문 복제 금지(발췌만). ★Cambridge Core는 봇차단(404/400/500)이라 OA여도 arXiv 저자본이 확실.
 - **검증 질문 유형 판별**: '관행·서술방식·방법절차·정확인용'은 abstract로 답 못함→본문 필수(fetch-paper-fulltext). 서지정확성만이면 Crossref로 충분.
 - **PDF→텍스트 추출 환경(설치 완료, 재설치 불요)**: Read 네이티브 PDF(`pages:` 범위) + pdftotext·pdfinfo(poppler, verbatim grep) + PyMuPDF(fitz)·pdfplumber(표·2단 조판) + tesseract 5.5.2 OCR(163 언어팩·kor 포함, 스캔본용). 별도 MCP 불요 — 로컬 CLI가 더 빠르고 가벼움. **인용 근거는 초록이 아니라 정확한 본문 내용 기반**(사용자 결정 2026-06-27, 전수 모드). 번거로운 본문 처리(확보→전수 인용근거 추출→mw 핸드오프)는 서브에이전트 `fulltext-grounder`(.claude/agents/)에 위임 — 인용 키 목록+본문 자리를 입력으로 받아 핸드오프 표(.context/agents/fulltext-grounder/) 산출, 본문 삽입은 mw 소관.
-- **B판 맥락 + 신규성 방어 프레임**: B판 = 석사 학위논문(CR 생성기제 탐색), 이론장 = '6단계 논증=Research_Map'(6단계↔섹션 매핑은 .team/memory `research-map-6-step-argument-x-bpan-sections`). 신규성 귀속 방어 = 기여를 '통합 자체'가 아니라 '정보차단 멀티에이전트 역행추론 절차화'로 좁히고, 차별화 대상을 정직 명시(억지 동일시·과대 귀속 금지). 키 누적·진행 중 항목 = `.context/ref-verification-ledger.md`.
+- **B판 맥락 + 신규성 방어 프레임**: B판 = 석사 학위논문(CR 생성기제 탐색), 이론장 = '6단계 논증=Research_Map'(6단계↔섹션 매핑은 .project/memory `research-map-6-step-argument-x-bpan-sections`). 신규성 귀속 방어 = 기여를 '통합 자체'가 아니라 '정보차단 멀티에이전트 역행추론 절차화'로 좁히고, 차별화 대상을 정직 명시(억지 동일시·과대 귀속 금지). 키 누적·진행 중 항목 = `.context/ref-verification-ledger.md`.
 
 ## 운영 원칙 (회고 채택, 사용자)
 - Derive: preference — 근거 탐색 시 내부 자산(obsidian-vault·작업경계 RAG)을 외부 학술검색보다 먼저 조회한다.

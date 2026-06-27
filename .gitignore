@@ -16,11 +16,11 @@ __pycache__/
 .context/
 
 # Team runtime: inbox messages and per-agent/per-team work context (keep dirs, ignore contents)
-.team/inbox/*/
+.project/inbox/*/
 agents/*/.context/
 teams/*/*/.context/
 teams/*/.context/
 
 # Team promotion runtime (candidates recomputed; decisions are instance state)
-.team/promotions/
-.team/derivations/
+.project/promotions/
+.project/derivations/

@@ -36,7 +36,7 @@ def _find_anchored_store(name: str) -> Path:
     """Resolve a relative store name against the team root, not the cwd.
 
     The CLI is run from anywhere under the repo (agent folders, skill dirs). A
-    bare ``.team`` resolved against the cwd lands in the wrong place, so goals and
+    bare ``.project`` resolved against the cwd lands in the wrong place, so goals and
     tasks get written to or read from a phantom store. For a relative store name
     we walk up from the cwd for a directory containing ``<name>/team.json`` (the
     canonical shared store) and anchor there; otherwise fall back to the
@@ -51,7 +51,7 @@ def _find_anchored_store(name: str) -> Path:
 
 
 def resolve_store(explicit: str | None) -> Path:
-    raw = explicit or os.environ.get("CLAUDE_TEAM_STORE") or ".team"
+    raw = explicit or os.environ.get("CLAUDE_PROJECT_STORE") or ".project"
     path = Path(raw).expanduser()
     if path.is_absolute():
         return path
@@ -258,7 +258,7 @@ def goal_progress(store: Path, goal_id: str) -> dict[str, Any]:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="team_goal.py", description="Team goals (set by user, decomposed into Tasks).")
-    parser.add_argument("--store", default=None, help="Shared store dir (default: $CLAUDE_TEAM_STORE or .team).")
+    parser.add_argument("--store", default=None, help="Shared store dir (default: $CLAUDE_PROJECT_STORE or .project).")
     parser.add_argument("--by", default=None, help="Author (default: $CLAUDE_AGENT_NAME or 'user').")
     sub = parser.add_subparsers(dest="op", required=True)
 

@@ -29,4 +29,4 @@
 ## 다음
 - sv에 z_shift +1.73/1.69 분열 독립검증 의뢰(정본 §9-1 확정용).
 - writer에 정본 위치·인용규율 통지(이미 "mc 조회" 포인터로 전환됨).
-- glossary-B 안정화 후 register-term으로 .team/word.json 파생.
+- glossary-B 안정화 후 register-term으로 .project/word.json 파생.

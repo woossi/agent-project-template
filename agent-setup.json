@@ -10,7 +10,7 @@
   "inputs": [
     "UMC 분석 프로젝트(/Users/ujunbin/project/umc)와 논문화 작업(/Users/ujunbin/research/UMC)의 데이터·산출물",
     "미리알림 umc 목록의 작업 백로그",
-    "팀 목표(.team/goals/)와 받은 편지함(.team/inbox/) 메시지",
+    "팀 목표(.project/goals/)와 받은 편지함(.project/inbox/) 메시지",
     "사용자 요청"
   ],
   "outputs": [
@@ -35,7 +35,7 @@
   ],
   "memory_rules": [
     "개별 작업 사실은 agents/<이름>/.claude/memory/에 둔다",
-    "팀 합의 결정과 목표는 .team/memory/와 .team/goals/에 둔다"
+    "팀 합의 결정과 목표는 .project/memory/와 .project/goals/에 둔다"
   ],
   "initial_notes": [
     "Model Y 팀 구조(공유 1벌 + 정체성 N개)를 유지한다",

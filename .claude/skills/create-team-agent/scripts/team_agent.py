@@ -79,7 +79,7 @@ GOVERNANCE_SHARED = frozenset({
 
 def _governance_owner(team_root: Path) -> str | None:
     """The single worker allowed to hold governance skills (team-promotion.json owner)."""
-    pol = team_root / ".team" / "policies" / "team-promotion.json"
+    pol = team_root / ".project" / "policies" / "team-promotion.json"
     data = _load_json_or_none(pol)
     if isinstance(data, dict):
         gov = data.get("governance")
@@ -220,7 +220,7 @@ def _seed_private_assets(agent_claude: Path, name: str) -> None:
         memory_md.write_text(
             f"# Memory — agent: {name}\n\n"
             "Private working memory (facts this agent learns while working).\n"
-            "Team-wide decisions and goals live in the team store (.team/memory, .team/goals).\n\n"
+            "Team-wide decisions and goals live in the team store (.project/memory, .project/goals).\n\n"
             "## Durable Facts\n",
             encoding="utf-8",
         )
@@ -238,7 +238,7 @@ def _seed_private_assets(agent_claude: Path, name: str) -> None:
             json.dumps(
                 {
                     "schema_version": "1.0",
-                    "description": f"Private terminology for agent {name}. Team-shared terms live in .team/word.json.",
+                    "description": f"Private terminology for agent {name}. Team-shared terms live in .project/word.json.",
                     "terms": [],
                 },
                 ensure_ascii=False,
@@ -259,7 +259,7 @@ def _seed_private_assets(agent_claude: Path, name: str) -> None:
 
 def _subteam_of(team_root: Path, name: str) -> str | None:
     """The subteam a worker belongs to, from team.json's ``subteams`` (single source)."""
-    data = _load_json_or_none(team_root / ".team" / "team.json")
+    data = _load_json_or_none(team_root / ".project" / "team.json")
     if not isinstance(data, dict):
         return None
     for st in data.get("subteams") or []:
@@ -304,7 +304,7 @@ def _wire_shared(team_root: Path, agent_dir: Path, name: str, *, force: bool) ->
 
 
 def _register_in_roster(team_root: Path, name: str) -> bool:
-    team_file = team_root / ".team" / "team.json"
+    team_file = team_root / ".project" / "team.json"
     if team_file.exists():
         data = json.loads(team_file.read_text(encoding="utf-8"))
     else:
@@ -396,7 +396,7 @@ def discover_worker_dirs(team_root: Path) -> dict[str, Path]:
 
 def list_agents(team_root: Path) -> dict[str, Any]:
     folders = sorted(discover_worker_dirs(team_root))
-    team_file = team_root / ".team" / "team.json"
+    team_file = team_root / ".project" / "team.json"
     roster = []
     if team_file.exists():
         roster = json.loads(team_file.read_text(encoding="utf-8")).get("members", [])

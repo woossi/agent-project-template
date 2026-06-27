@@ -15,8 +15,8 @@ How it stays conflict-free and non-invasive (per the team-tier plan, all verifie
   agent-package detector buckets by agent, not by session (the session bucketing of
   the per-agent ``_occurrences`` would collapse N agents into distinct=1).
 - **Per-record immutable team store.** Candidates are written to a per-runner shard
-  (``.team/promotions/candidates/<runner>.json``) and decisions to one immutable file
-  per ``(kind, key)`` (``.team/promotions/decisions/<kind>__<slug>.json``), both via
+  (``.project/promotions/candidates/<runner>.json``) and decisions to one immutable file
+  per ``(kind, key)`` (``.project/promotions/decisions/<kind>__<slug>.json``), both via
   atomic ``os.replace`` — never a single shared JSON array edited by N writers.
 - **Single-source sync-back.** ``skip_if_*_exists`` scans the team root
   ``.claude/skills`` / ``.claude/agents`` (the single source symlinked into every
@@ -45,8 +45,8 @@ DEFAULTS: dict[str, Any] = {
         "events": ".context/task-log/events.jsonl",
     },
     "log": {
-        "candidates_dir": ".team/promotions/candidates",
-        "decisions_dir": ".team/promotions/decisions",
+        "candidates_dir": ".project/promotions/candidates",
+        "decisions_dir": ".project/promotions/decisions",
     },
     "team_skill_promotion": {
         "min_distinct_agents": 2,
@@ -76,16 +76,16 @@ def project_dir(payload: dict[str, Any]) -> Path:
 
 
 def find_team_root(start: Path) -> Path | None:
-    """Nearest ancestor (or self) that holds a ``.team/`` directory, else ``None``.
+    """Nearest ancestor (or self) that holds a ``.project/`` directory, else ``None``.
 
     When run from a peer agent (project root agents/<name>/), walk up to the team
     root; when run from the team root itself, return it. Returning ``None`` when no
-    ``.team/`` exists is load-bearing: it stops the SessionStart hook from minting a
-    fake ``.team/`` skeleton (and self-pollinating the search) in a non-team clone.
+    ``.project/`` exists is load-bearing: it stops the SessionStart hook from minting a
+    fake ``.project/`` skeleton (and self-pollinating the search) in a non-team clone.
     """
     cur = start.resolve()
     for _ in range(10):
-        if (cur / ".team").is_dir():
+        if (cur / ".project").is_dir():
             return cur
         if cur.parent == cur:
             break
@@ -105,7 +105,7 @@ def _merge(base: dict[str, Any], override: Any) -> dict[str, Any]:
 
 
 def load_policy(team_root: Path) -> dict[str, Any]:
-    policy_path = team_root / ".team/policies/team-promotion.json"
+    policy_path = team_root / ".project/policies/team-promotion.json"
     try:
         raw = json.loads(policy_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
@@ -457,7 +457,7 @@ def run_evaluate(argv: list[str]) -> int:
     start = Path(args.project_root).expanduser().resolve() if args.project_root else project_dir({})
     team_root = find_team_root(start)
     if team_root is None:
-        print(f"no team root (.team/) found from {start}")
+        print(f"no team root (.project/) found from {start}")
         return 0
     policy = load_policy(team_root)
     candidates = evaluate(team_root, policy)
@@ -483,7 +483,7 @@ def run_resolve(argv: list[str]) -> int:
     start = Path(args.project_root).expanduser().resolve() if args.project_root else project_dir({})
     team_root = find_team_root(start)
     if team_root is None:
-        print(f"no team root (.team/) found from {start}; cannot resolve", file=sys.stderr)
+        print(f"no team root (.project/) found from {start}; cannot resolve", file=sys.stderr)
         return 1
     policy = load_policy(team_root)
     by = args.by or os.environ.get("CLAUDE_AGENT_NAME") or "team"

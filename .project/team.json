@@ -2,7 +2,7 @@
   "version": 1,
   "team": "team-umc",
   "topology": "model-y",
-  "shared_store": ".team",
+  "shared_store": ".project",
   "reminders_list": "umc",
   "members": [
     "data-curator",
@@ -24,8 +24,8 @@
     "manuscript-steward": "논문 작성 자원 관리 에이전트: 논문 본문 글 자체의 일관성을 유지하는 것을 목표로 한다. (1) 학술적 개념어의 일관적 사용을 위한 공유 자원(용어 사전·표기 규약)을 관리한다. (2) 논문 내부 그림 자료의 추가·제거 여부와 본문 내 배치 일관성을 판단·관리한다(그림 생성·파일은 data-curator 소유, 본문 일관성 판단은 steward 소유). (3) 논문의 구조·용어·작성 방식을 공유 자원에서 본 에이전트의 전문화된 영역으로 귀속하여 관리한다. (4) 본문 수치·통계량 정본의 단일 출처를 보관하고 일관성을 유지한다(2026-06-27 사용자 결정으로 이관). 예: 0.279·ICC 0.49%·표본흐름 772/490/156/126·차원별 F1 등. 다른 peer가 본문 수치를 쓸 때 steward 정본이 기준이며 창작·변형은 금지다. 경계 분할 — manuscript-writer는 섹션 글의 집필·재작성을 소유하고, manuscript-steward는 그 글들을 가로지르는 개념어·용어·구조·표현·수치정본의 일관성을 소유한다(집필=writer, 일관성·정본보관=steward). 수치 정본의 데이터·코드 일치 '독립 재현 검증'은 stats-validator가 소유한다(정본 보관=steward, 독립 검증=stats-validator). 학술적 용어의 다른 대안 탐색이 필요하면 paper-scout에 검색을 요청할 수 있다.",
     "inference-runner": "분석 추론 재실행 전담 에이전트: 논문화에 필요한 분석 파이프라인을 재실행하여 산출물을 생산한다. 핵심은 정보차단 멀티에이전트 역행추론(judgment-synthesizer 단계 C–E)의 디지털 사막 223건 재실행과, 정보차단 장치(guard_typology)를 켠 구성 대 끈 구성의 비차단 ablation 실행으로 확증편향 감소를 입증할 산출물을 만드는 것이다. EB 수축 등 분석 모형의 재실행도 필요 시 소유한다. 경계 분할 — inference-runner는 분석 파이프라인 재실행과 산출물 '생산'을 소유하고, 그 산출물의 독립 검증·수치 대조·인간코딩 IRR 설계는 stats-validator가, 산출물의 큐레이션·레지스트리·그림은 data-curator가, 원천 데이터 압축·스키마는 data-engineer가 맡는다. 생산자와 검증자를 분리해 검증 독립성을 지킨다."
   },
-  "goals_dir": ".team/goals",
-  "inbox": ".team/inbox",
+  "goals_dir": ".project/goals",
+  "inbox": ".project/inbox",
   "subteams": [
     {
       "name": "data",

@@ -1,7 +1,7 @@
 # UMC 팀 관제 대시보드 (Textual TUI)
 
 8개 tmux 창을 왔다갔다 하며 워커를 관리하던 것을 **한 터미널 화면**으로 모은다.
-`.team/` 공유 store와 미리알림을 읽어 4분할로 보여준다.
+`.project/` 공유 store와 미리알림을 읽어 4분할로 보여준다.
 
 ## 단계 (0·1·2 모두 구현됨)
 
@@ -37,7 +37,7 @@ tools/umc-dashboard/.venv/bin/python tools/umc-dashboard/app.py
 
 ## 설계 원칙
 
-- **store가 진실원천**: `.team/`을 읽고, 쓰기는 검증된 기존 CLI(`reminders_bridge.py`·`team_inbox.py`·`detect_*.py`·`team_agent.py`)를 그대로 호출. 팀 로직 재구현 0.
+- **store가 진실원천**: `.project/`을 읽고, 쓰기는 검증된 기존 CLI(`reminders_bridge.py`·`team_inbox.py`·`detect_*.py`·`team_agent.py`)를 그대로 호출. 팀 로직 재구현 0.
 - **얇은 뷰**: 위젯은 표시·버튼만, 로직은 CLI에 남긴다.
 - **방어적 파싱**: atomic rename 중 반쯤 쓰인 파일을 만나도 크래시 대신 스킵.
 
@@ -45,7 +45,7 @@ tools/umc-dashboard/.venv/bin/python tools/umc-dashboard/app.py
 
 ```
 app.py            Textual App, 4분할 레이아웃 + 자동 새로고침
-store.py          .team/ 읽기·파싱 (읽기 전용, 진실원천)
+store.py          .project/ 읽기·파싱 (읽기 전용, 진실원천)
 adapters.py       검증된 CLI subprocess 래퍼 (runner 주입 가능)
 widgets/          AgentGrid · BacklogBoard · InboxTimeline · CandidateQueue
 tests/            store 파싱 + adapters CLI 위임 (가짜 runner, 실데이터 미접촉)

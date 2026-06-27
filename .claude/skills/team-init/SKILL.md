@@ -2,7 +2,7 @@
 
 ## 사용 시점
 
-새 팀을 정의하거나 팀 정의를 갱신할 때 — `team-setup.json` 하나로 `.team/` 공유 상태(로스터·미리알림 바인딩·승격/파생 정책·디렉토리)를 한 번에 작성한다. `agent-clone-setup`의 *json→전환*, `create-team-agent`의 *스캐폴딩*을 팀 레벨로 합친 진입점이다.
+새 팀을 정의하거나 팀 정의를 갱신할 때 — `team-setup.json` 하나로 `.project/` 공유 상태(로스터·미리알림 바인딩·승격/파생 정책·디렉토리)를 한 번에 작성한다. `agent-clone-setup`의 *json→전환*, `create-team-agent`의 *스캐폴딩*을 팀 레벨로 합친 진입점이다.
 
 ## 목적
 
@@ -11,8 +11,8 @@
 ## 계약
 
 - 읽는 입력: `team-setup.json`(파일 `--input` 또는 stdin). 필수 `team`, `members`. 선택 `reminders_list`, `roles`, `authoring_owner`(기본 `members[0]`), `min_distinct_agents`(기본 2).
-- 만드는 출력: `.team/team.json`, `.team/policies/team-promotion.json`, `.team/policies/team-derivation.json`, `.team/{goals,inbox}/.gitkeep`, 그리고 guard가 읽는 `.claude/policies/agent-workspace.json`(형제 격리 `agents` 맵을 로스터에서 재생성, 작업 경계 `defaults`는 기존 값 보존). 정규화 입력을 `team-setup.json`으로 저장(끄려면 `--no-save-input`). stdout JSON 요약.
-- 쓰면 안 되는 위치: 개별 에이전트 자산을 직접 만들지 않는다(그건 `create-team-agent`/`--create-agents`가 한다). 런타임(`.team/inbox` 내용 등)은 만들지 않는다.
+- 만드는 출력: `.project/team.json`, `.project/policies/team-promotion.json`, `.project/policies/team-derivation.json`, `.project/{goals,inbox}/.gitkeep`, 그리고 guard가 읽는 `.claude/policies/agent-workspace.json`(형제 격리 `agents` 맵을 로스터에서 재생성, 작업 경계 `defaults`는 기존 값 보존). 정규화 입력을 `team-setup.json`으로 저장(끄려면 `--no-save-input`). stdout JSON 요약.
+- 쓰면 안 되는 위치: 개별 에이전트 자산을 직접 만들지 않는다(그건 `create-team-agent`/`--create-agents`가 한다). 런타임(`.project/inbox` 내용 등)은 만들지 않는다.
 
 ## 입력
 
@@ -42,7 +42,7 @@
 2. **멤버까지 한 번에 생성(선택):** `--create-agents`를 붙이면 각 멤버를 `create-team-agent`로 스캐폴딩한다.
 3. **확인:** `python .claude/skills/create-team-agent/scripts/team_agent.py list`로 폴더↔로스터 정합을 본다.
 
-`authoring_owner`/`min_distinct_agents`는 정책에 그대로 반영되며, 이후 `.team/policies/team-*.json`에서 조정한다.
+`authoring_owner`/`min_distinct_agents`는 정책에 그대로 반영되며, 이후 `.project/policies/team-*.json`에서 조정한다.
 
 ## 출력 형식
 
@@ -50,7 +50,7 @@
 { "ok": true, "op": "init", "result": {
   "team": "research-umc", "members": ["orchestrator","worker-1"],
   "authoring_owner": "orchestrator", "min_distinct_agents": 2, "reminders_list": "umc",
-  "files": [".team/team.json", ".team/policies/team-promotion.json", ".team/policies/team-derivation.json", ".claude/policies/agent-workspace.json"],
+  "files": [".project/team.json", ".project/policies/team-promotion.json", ".project/policies/team-derivation.json", ".claude/policies/agent-workspace.json"],
   "agents_created": [] } }
 ```
 
@@ -64,7 +64,7 @@
 ## 품질 점검
 
 - `python3 -m pytest .claude/skills/team-init/scripts/tests/ -q` 통과.
-- 생성된 `.team/policies/team-*.json`은 `detect_team_promotions.py`/`detect_team_derivations.py`가 읽는 키를 갖는다.
+- 생성된 `.project/policies/team-*.json`은 `detect_team_promotions.py`/`detect_team_derivations.py`가 읽는 키를 갖는다.
 - `authoring_owner`는 반드시 `members`에 속한다(아니면 거부).
 
 ## 자주 발생하는 실패 사례
