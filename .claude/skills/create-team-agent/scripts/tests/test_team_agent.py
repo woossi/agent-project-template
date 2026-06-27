@@ -188,7 +188,7 @@ class SyncTests(_Case):
         (self.root / ".claude/skills/new-shared").mkdir()
         (self.root / ".claude/skills/new-shared/SKILL.md").write_text("# 스킬: new-shared", encoding="utf-8")
         self.assertFalse((skills / "new-shared").exists())
-        out = ta.sync_agent(self.root, self.root / "agents/worker-2")
+        out = ta.sync_agent(self.root, self.root / "agents/worker-2", "worker-2")
         self.assertEqual(out["wired"]["skills/new-shared"], "created")
         self.assertTrue((skills / "new-shared").is_symlink())
 
@@ -198,7 +198,7 @@ class SyncTests(_Case):
         self.assertTrue((skills / "team-inbox").is_symlink())
         import shutil
         shutil.rmtree(self.root / ".claude/skills/team-inbox")  # shared skill removed at source
-        out = ta.sync_agent(self.root, self.root / "agents/worker-2")
+        out = ta.sync_agent(self.root, self.root / "agents/worker-2", "worker-2")
         self.assertIn("team-inbox", out["pruned"])
         self.assertFalse((skills / "team-inbox").exists())
         self.assertTrue((skills / "write-task").is_symlink())  # live one kept
@@ -208,7 +208,7 @@ class SyncTests(_Case):
         skills = self.root / "agents/worker-2/.claude/skills"
         (skills / "my-private").mkdir()
         (skills / "my-private/SKILL.md").write_text("# 스킬: my-private", encoding="utf-8")
-        ta.sync_agent(self.root, self.root / "agents/worker-2")
+        ta.sync_agent(self.root, self.root / "agents/worker-2", "worker-2")
         self.assertTrue((skills / "my-private").is_dir() and not (skills / "my-private").is_symlink())
 
     def test_sync_all_via_cli(self):

@@ -70,10 +70,27 @@ def project_dir(payload: dict[str, Any]) -> Path:
     root = _find_repo_root(start)
     agent = os.environ.get("CLAUDE_AGENT_NAME") or ""
     if agent:
-        agent_root = root / "agents" / agent
-        if agent_root.is_dir():
+        agent_root = _agent_root(root, agent)
+        if agent_root is not None:
             return agent_root
     return root
+
+
+def _agent_root(root: Path, agent: str) -> Path | None:
+    """The worker's folder under ``root``, supporting both topologies.
+
+    Prefers the 2-tier location ``teams/<team>/<agent>/`` (any team), falls back to the
+    flat ``agents/<agent>/``. Returns None if neither exists. Kept byte-identical to the
+    copy in detect_promotions.py — both hooks must resolve a worker the same way.
+    """
+    teams_dir = root / "teams"
+    if teams_dir.is_dir():
+        for team in teams_dir.iterdir():
+            cand = team / agent
+            if cand.is_dir():
+                return cand
+    flat = root / "agents" / agent
+    return flat if flat.is_dir() else None
 
 
 def load_log_paths(root: Path) -> dict[str, str]:

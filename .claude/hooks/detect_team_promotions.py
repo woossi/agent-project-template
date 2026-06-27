@@ -164,11 +164,42 @@ def _covered_by_agent(skills: list[str], texts: list[str]) -> bool:
     return any(all(skill in text for skill in skills) for text in texts)
 
 
-def list_agents(team_root: Path) -> list[str]:
+def _is_worker_dir(p: Path) -> bool:
+    """A roll-up worker is a folder carrying a private LEDGER (.context/task-log or
+    .context/memory-log). That is the exact surface this roll-up reads, and it cleanly
+    excludes non-worker folders that hold only handoff notes under .context (e.g. an
+    orchestrator scratch folder) as well as team folders (whose .claude sits at the team
+    root and whose entry name is dot-prefixed / skipped)."""
+    if not p.is_dir() or p.name.startswith("."):
+        return False
+    ctx = p / ".context"
+    return (ctx / "task-log").is_dir() or (ctx / "memory-log").is_dir()
+
+
+def worker_dirs(team_root: Path) -> dict[str, Path]:
+    """Map worker NAME -> folder across both topologies (teams/<team>/<w> and agents/<w>).
+
+    Worker names are globally unique, so name is a safe key. See _is_worker_dir for the
+    identification rule (ledger-bearing folder)."""
+    found: dict[str, Path] = {}
+    teams_dir = team_root / "teams"
+    if teams_dir.is_dir():
+        for team in sorted(teams_dir.iterdir(), key=lambda p: p.name):
+            if not team.is_dir() or team.name.startswith("."):
+                continue
+            for child in sorted(team.iterdir(), key=lambda p: p.name):
+                if _is_worker_dir(child):
+                    found.setdefault(child.name, child)
     agents_dir = team_root / "agents"
-    if not agents_dir.is_dir():
-        return []
-    return sorted(p.name for p in agents_dir.glob("*") if p.is_dir())
+    if agents_dir.is_dir():
+        for child in sorted(agents_dir.iterdir(), key=lambda p: p.name):
+            if _is_worker_dir(child):
+                found.setdefault(child.name, child)
+    return found
+
+
+def list_agents(team_root: Path) -> list[str]:
+    return sorted(worker_dirs(team_root))
 
 
 def load_agent_ledgers(team_root: Path, policy: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -176,8 +207,7 @@ def load_agent_ledgers(team_root: Path, policy: dict[str, Any]) -> tuple[list[di
     rel = policy["agent_ledger"]
     tasks: list[dict[str, Any]] = []
     events: list[dict[str, Any]] = []
-    for agent in list_agents(team_root):
-        adir = team_root / "agents" / agent
+    for agent, adir in sorted(worker_dirs(team_root).items()):
         for rec in load_jsonl(adir / rel["tasks"]):
             rec = dict(rec)
             rec["_agent"] = agent

@@ -51,6 +51,60 @@ def load_setup(input_path: str | None) -> dict[str, Any]:
     return data
 
 
+def normalize_subteams(data: dict[str, Any], members: list[str]) -> list[dict[str, Any]]:
+    """Validate and normalize the optional ``subteams`` field (company -> team -> worker).
+
+    Subteams are a LOGICAL grouping layer on top of the flat roster — they do NOT
+    change sibling isolation (that stays per-worker N^2). Each subteam binds a set of
+    member workers to a Reminders list and a team orchestrator. The strict scope-split
+    rule is enforced here: every subteam member must be in the roster, the orchestrator
+    must be one of that subteam's members, and a worker belongs to at most one subteam
+    (no overlap — the company splits roles across teams without ambiguity).
+
+    Absent/empty ``subteams`` returns ``[]`` and the team stays flat (back-compat).
+    """
+    raw = data.get("subteams")
+    if raw in (None, [], {}):
+        return []
+    if not isinstance(raw, list):
+        raise TeamInitError("subteams must be a list of {name, members, reminders_list?, orchestrator?} objects")
+
+    member_set = set(members)
+    seen_workers: dict[str, str] = {}
+    seen_names: set[str] = set()
+    out: list[dict[str, Any]] = []
+    for entry in raw:
+        if not isinstance(entry, dict):
+            raise TeamInitError("each subteam must be an object")
+        name = str(entry.get("name") or "").strip()
+        if not name:
+            raise TeamInitError("each subteam needs a non-empty 'name'")
+        if name in seen_names:
+            raise TeamInitError(f"duplicate subteam name '{name}'")
+        seen_names.add(name)
+
+        sub_members = entry.get("members")
+        if not isinstance(sub_members, list) or not sub_members or not all(isinstance(m, str) and m.strip() for m in sub_members):
+            raise TeamInitError(f"subteam '{name}' needs 'members': a non-empty list of worker names")
+        sub_members = [m.strip() for m in sub_members]
+        for w in sub_members:
+            if w not in member_set:
+                raise TeamInitError(f"subteam '{name}' member '{w}' is not in the roster {members}")
+            if w in seen_workers:
+                raise TeamInitError(f"worker '{w}' is in two subteams ('{seen_workers[w]}' and '{name}'); scope split forbids overlap")
+            seen_workers[w] = name
+
+        orch = str(entry.get("orchestrator") or "").strip() or sub_members[0]
+        if orch not in sub_members:
+            raise TeamInitError(f"subteam '{name}' orchestrator '{orch}' must be one of its members {sub_members}")
+
+        reminders_list = entry.get("reminders_list")
+        reminders_list = str(reminders_list).strip() if isinstance(reminders_list, str) and reminders_list.strip() else None
+
+        out.append({"name": name, "members": sub_members, "orchestrator": orch, "reminders_list": reminders_list})
+    return out
+
+
 def normalize_setup(data: dict[str, Any]) -> dict[str, Any]:
     team = str(data.get("team") or "").strip()
     if not team:
@@ -77,6 +131,8 @@ def normalize_setup(data: dict[str, Any]) -> dict[str, Any]:
     reminders_list = data.get("reminders_list")
     reminders_list = str(reminders_list).strip() if isinstance(reminders_list, str) and reminders_list.strip() else None
 
+    subteams = normalize_subteams(data, members)
+
     return {
         "team": team,
         "members": members,
@@ -84,11 +140,12 @@ def normalize_setup(data: dict[str, Any]) -> dict[str, Any]:
         "authoring_owner": owner,
         "min_distinct_agents": min_agents,
         "reminders_list": reminders_list,
+        "subteams": subteams,
     }
 
 
 def build_team_json(setup: dict[str, Any]) -> dict[str, Any]:
-    return {
+    out = {
         "version": 1,
         "team": setup["team"],
         "topology": "model-y",
@@ -99,6 +156,11 @@ def build_team_json(setup: dict[str, Any]) -> dict[str, Any]:
         "goals_dir": ".team/goals",
         "inbox": ".team/inbox",
     }
+    # Subteams are the logical company -> team -> worker layer. Only emit the key
+    # when present so a flat team's team.json stays byte-identical to before.
+    if setup.get("subteams"):
+        out["subteams"] = setup["subteams"]
+    return out
 
 
 def build_promotion_policy(setup: dict[str, Any]) -> dict[str, Any]:
@@ -133,18 +195,34 @@ def build_derivation_policy(setup: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def build_agent_workspace_policy(setup: dict[str, Any], existing: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Regenerate the guard's sibling-isolation policy from the roster.
+def _worker_path(setup: dict[str, Any], name: str) -> str:
+    """The repo-relative folder of a worker: teams/<team>/<name> if it's in a subteam,
+    else flat agents/<name>. Drives the isolation deny patterns so they point at the
+    worker's REAL location regardless of topology."""
+    for st in setup.get("subteams") or []:
+        if isinstance(st, dict) and name in (st.get("members") or []):
+            return f"teams/{st['name']}/{name}"
+    return f"agents/{name}"
 
-    The ``agents`` map is 100% derivable from the members (each peer denies every other
-    peer's ``agents/<other>/**``), so team-init owns it — hand-maintaining it is what let
-    it go stale and silently break isolation. ``defaults`` (the project work boundaries,
-    which are NOT in team-setup.json) are preserved from the existing policy so this
-    regeneration never drops a configured allow path.
+
+def build_agent_workspace_policy(setup: dict[str, Any], existing: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Regenerate the guard's worker-isolation policy from the roster.
+
+    The ``agents`` map is 100% derivable from the members: each worker denies every OTHER
+    worker's folder (full N^2 isolation — same-team peers are isolated too, per the strict
+    scope-split rule). Deny patterns target each worker's REAL path via _worker_path, so a
+    flat tree yields ``agents/<other>/**`` and a 2-tier tree yields ``teams/<team>/<other>/**``.
+
+    Because patterns target worker FOLDERS (not team roots), a worker's own team shared
+    resources (``teams/<team>/.claude`` and ``.context``) are NOT denied — they fall outside
+    every sibling's worker-folder pattern and stay readable.
+
+    ``defaults`` (the project work boundaries, NOT in team-setup.json) are preserved from the
+    existing policy so regeneration never drops a configured allow path.
     """
     members = setup["members"]
     agents = {
-        name: {"deny": [f"agents/{other}/**" for other in members if other != name]}
+        name: {"deny": [f"{_worker_path(setup, other)}/**" for other in members if other != name]}
         for name in members
     }
     base = existing if isinstance(existing, dict) else {}
@@ -224,6 +302,77 @@ def init_team(team_root: Path, setup: dict[str, Any], *, create_agents: bool = F
 
 # ---------------- CLI ----------------
 
+def setup_to_input(setup: dict[str, Any]) -> dict[str, Any]:
+    """Serialize a normalized setup back to a team-setup.json input shape.
+
+    Only emit ``subteams`` when non-empty so a flat team's saved input stays
+    byte-identical to the pre-subteam format (back-compat for existing repos).
+    """
+    out = {
+        "team": setup["team"], "members": setup["members"], "roles": setup["roles"],
+        "authoring_owner": setup["authoring_owner"], "min_distinct_agents": setup["min_distinct_agents"],
+        "reminders_list": setup["reminders_list"],
+    }
+    if setup.get("subteams"):
+        out["subteams"] = setup["subteams"]
+    return out
+
+
+def add_subteam(team_root: Path, entry: dict[str, Any], *, create_agents: bool = False) -> dict[str, Any]:
+    """Incrementally add ONE subteam to the existing team definition.
+
+    Reads the current ``team-setup.json``, appends the new subteam (adding any of
+    its members that are not yet in the roster), then re-runs the full normalize +
+    init so all derived files (team.json, isolation policy, optional agent scaffolds)
+    stay consistent. This is the flexible "grow the company by one team" path — no
+    need to hand-rewrite the whole setup JSON.
+    """
+    setup_path = team_root / "team-setup.json"
+    if not setup_path.exists():
+        raise TeamInitError(f"no team-setup.json at {setup_path}; run 'init' first")
+    data = json.loads(setup_path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise TeamInitError("existing team-setup.json is not a JSON object")
+
+    if not isinstance(entry, dict):
+        raise TeamInitError("subteam to add must be an object")
+    name = str(entry.get("name") or "").strip()
+    if not name:
+        raise TeamInitError("subteam to add needs a non-empty 'name'")
+
+    existing_subteams = data.get("subteams") if isinstance(data.get("subteams"), list) else []
+    if any(isinstance(s, dict) and str(s.get("name") or "").strip() == name for s in existing_subteams):
+        raise TeamInitError(f"subteam '{name}' already exists")
+
+    sub_members = entry.get("members")
+    if not isinstance(sub_members, list) or not sub_members or not all(isinstance(m, str) and m.strip() for m in sub_members):
+        raise TeamInitError(f"subteam '{name}' needs 'members': a non-empty list of worker names")
+    sub_members = [m.strip() for m in sub_members]
+
+    # Grow the roster with any brand-new workers this subteam introduces (order-stable).
+    members = [m.strip() for m in data.get("members", []) if isinstance(m, str) and m.strip()]
+    roles = dict(data.get("roles") or {})
+    new_roles = entry.get("roles") if isinstance(entry.get("roles"), dict) else {}
+    for w in sub_members:
+        if w not in members:
+            members.append(w)
+        if w in new_roles:
+            roles[w] = str(new_roles[w])
+
+    data["members"] = members
+    data["roles"] = roles
+    data["subteams"] = existing_subteams + [{
+        k: v for k, v in entry.items() if k in ("name", "members", "orchestrator", "reminders_list")
+    }]
+
+    setup = normalize_setup(data)
+    _atomic_write_json(setup_path, setup_to_input(setup))
+    result = init_team(team_root, setup, create_agents=create_agents)
+    result["added_subteam"] = name
+    result["subteams"] = [s["name"] for s in setup["subteams"]]
+    return result
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="team_init.py", description="Initialize a team from team-setup.json.")
     sub = parser.add_subparsers(dest="op", required=True)
@@ -233,6 +382,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--create-agents", action="store_true", help="Also scaffold every member via create-team-agent.")
     p.add_argument("--save-input", dest="save_input", action="store_true", default=True)
     p.add_argument("--no-save-input", dest="save_input", action="store_false", help="Do not write team-setup.json back.")
+
+    a = sub.add_parser("add-subteam", help="Incrementally add ONE subteam (company grows by a team).")
+    a.add_argument("--input", default=None, help="JSON for the single subteam {name, members, reminders_list?, orchestrator?, roles?} (default: stdin).")
+    a.add_argument("--team-root", default=None, help="Team root (default: repo root).")
+    a.add_argument("--create-agents", action="store_true", help="Scaffold any brand-new workers this subteam introduces.")
     return parser
 
 
@@ -240,13 +394,16 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     team_root = Path(args.team_root).expanduser() if args.team_root else default_team_root()
     try:
+        if args.op == "add-subteam":
+            entry = load_setup(args.input)
+            result = add_subteam(team_root, entry, create_agents=args.create_agents)
+            json.dump({"ok": True, "op": "add-subteam", "result": result}, sys.stdout, ensure_ascii=False, indent=2)
+            sys.stdout.write("\n")
+            return 0
+
         setup = normalize_setup(load_setup(args.input))
         if args.save_input:
-            _atomic_write_json(team_root / "team-setup.json", {
-                "team": setup["team"], "members": setup["members"], "roles": setup["roles"],
-                "authoring_owner": setup["authoring_owner"], "min_distinct_agents": setup["min_distinct_agents"],
-                "reminders_list": setup["reminders_list"],
-            })
+            _atomic_write_json(team_root / "team-setup.json", setup_to_input(setup))
         result = init_team(team_root, setup, create_agents=args.create_agents)
     except TeamInitError as exc:
         json.dump({"ok": False, "error": str(exc)}, sys.stdout, ensure_ascii=False)
