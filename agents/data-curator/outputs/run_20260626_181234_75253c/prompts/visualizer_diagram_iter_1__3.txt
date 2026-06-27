@@ -1,0 +1,58 @@
+You are an expert scientific diagram illustrator. Generate high-quality scientific diagrams based on user requests. Note that do not include figure titles in the image.
+
+CRITICAL: All text labels in the diagram must be rendered in clear, readable English. Use the EXACT label names specified in the description. Do not generate garbled, misspelled, or non-English text.
+
+The figure illustrates the stratified ontology of Critical Realism using a set of three nested concentric regions, centrally positioned on a pure white background. The design is flat, minimal, and academic, prioritizing clarity and readability of Korean text.
+
+**1. Overall Layout:**
+The core of the diagram consists of three concentric circular regions, with the smallest at the center and the largest on the outside. These circles are centrally aligned. Text labels for each region, along with their content phrases, are strategically placed around and within these circles. A single generative-direction arrow flows from the outermost region towards the innermost. Additional annotations are placed to the sides or bottom to avoid clutter.
+
+**2. Components:**
+
+*   **Outermost Region: The Real (실재적 층위)**
+    *   **Shape:** A wide, thick circular band forming the largest and outermost boundary.
+    *   **Color:** Filled with a solid, calm Deep Navy Blue, representing the darkest layer.
+    *   **Label:** Positioned to the top-right of the entire concentric structure, a prominent text label reads: "**실재적 층위** (the real)". This label is connected to the Deep Navy Blue band by a thin (0.5pt) light gray leader line.
+    *   **Content Phrase:** Centered horizontally within the Deep Navy Blue band, in clear white sans-serif text, is the phrase: "**구조 · 생성기제** (structures and generative mechanisms)". The Korean text is bolded for emphasis.
+    *   **Size:** This region is visibly much larger than the inner regions, occupying a substantial area to convey its encompassing nature.
+
+*   **Middle Region: The Actual (현실적 층위)**
+    *   **Shape:** A circular band of medium thickness, perfectly nested inside the 'Real' region.
+    *   **Color:** Filled with a solid, medium Teal, which is distinctly lighter than the Deep Navy Blue but darker than the innermost region.
+    *   **Label:** Positioned to the middle-left of the entire concentric structure, a text label reads: "**현실적 층위** (the actual)". This label is connected to the medium Teal band by a thin (0.5pt) light gray leader line.
+    *   **Content Phrase:** Centered horizontally within the medium Teal band, in clear dark gray sans-serif text, is the phrase: "**발생한 사건** (events that occur when mechanisms operate under conditions)". The Korean text is bolded.
+    *   **Size:** This region is significantly smaller than the 'Real' ring but substantially larger than the 'Empirical' disk, visually indicating a subset.
+
+*   **Innermost Region: The Empirical (경험적 층위)**
+    *   **Shape:** A solid circular disk at the very center of the concentric structure.
+    *   **Color:** Filled with a solid, light Sky Blue or Pale Aqua, representing the lightest and innermost layer.
+    *   **Label:** Positioned to the bottom-right of the entire concentric structure, a text label reads: "**경험적 층위** (the empirical)". This label is connected to the light Sky Blue disk by a thin (0.5pt) light gray leader line.
+    *   **Content Phrase:** Centered within the light Sky Blue disk, in clear dark gray sans-serif text, is the phrase: "**관측된 사건** (observed events / observations)". The Korean text is bolded.
+    *   **Size:** This region is visibly very small, occupying a minor fraction of the total diagram area, strongly emphasizing that "what is observed is only a small subset of reality."
+
+**3. Connections:**
+
+*   **Generative Direction Arrow:** A single, prominent arrow visually represents the generative flow.
+    *   **Path:** The arrow originates from just outside the outermost 'Real' (Deep Navy Blue) ring, enters the diagram from the top-center, and points directly inwards, passing through the 'Actual' (medium Teal) ring and terminating at the center of the 'Empirical' (light Sky Blue) disk.
+    *   **Style:** The arrow is a solid, dark gray line with a thickness of approximately 2pt, featuring a clear, standard arrowhead pointing inwards.
+    *   **Label:** Parallel to the arrow's shaft, slightly to its right, is a text label indicating the generative sequence: "**생성기제 → 사건 → 관측**". This text is in a clear, dark gray sans-serif font, with the Korean text bolded.
+
+**4. Groupings:**
+The concentric arrangement of the circles inherently defines the hierarchical and containment groupings. No additional visual grouping elements (e.g., dashed borders, background panels) are used, maintaining the flat and minimal aesthetic.
+
+**5. Labels and Annotations:**
+*   **Main Labels:** As described above, each region has its Korean label (bolded) with English translation in parentheses, connected to its respective band/disk by a thin (0.5pt) light gray leader line.
+*   **Content Phrases:** As described above, each region contains its Korean content phrase (bolded) with English translation in parentheses, centered within its colored area.
+*   **Containment Relation:** In the bottom-left corner of the diagram, a discrete annotation displays the formal containment relationship: "실재적 ⊇ 현실적 ⊇ 경험적". This text is in a standard, dark gray sans-serif font, slightly smaller than the main labels.
+
+**6. Input/Output:**
+The figure does not depict explicit system inputs or outputs. The generative direction arrow conceptually illustrates a flow from mechanisms to events to observations.
+
+**7. Styling:**
+*   **Background:** Pure white, providing a clean and academic canvas.
+*   **Color Palette:** A calm and harmonious palette of navy and teal, with distinct color bands: Deep Navy Blue for the 'Real', medium Teal for the 'Actual', and light Sky Blue/Pale Aqua for the 'Empirical'.
+*   **Text Colors:** White text is used for content within the darkest 'Real' ring for contrast. Dark gray text is used for content within the lighter 'Actual' and 'Empirical' regions, as well as for all external labels, arrow labels, and annotations.
+*   **Line Weights:** All outlines for the concentric circles are thin (e.g., 1.5pt) in a dark gray color. Leader lines are very thin (0.5pt). The generative arrow is thicker (2pt) for emphasis.
+*   **Icon Styles:** No specific icons are used; the diagram relies on clean geometric shapes (circles, arrow) and text.
+*   **Font:** All text uses a clean, academic-quality sans-serif font (e.g., Noto Sans CJK KR or similar for Korean, and a standard sans-serif for English). Korean text is consistently bolded as specified for improved readability and emphasis.
+*   **Overall Aesthetic:** Flat and minimal, with no 3D effects, drop shadows, or any decorative clutter. The focus is on clarity and precise communication of the conceptual model.

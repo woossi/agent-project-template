@@ -1,0 +1,7 @@
+{
+  "key": "role-boundary-numeric-canon-2026-06-27",
+  "fact": "역할 경계 재정의(2026-06-27 사용자 결정): 본문 수치·통계량 정본의 '보관·단일출처·일관성·창작변형 금지'는 manuscript-steward 소유(roles (4) 신설), 그 정본이 데이터·코드와 일치하는지 '독립 재현·대조 검증'은 stats-validator 소유. 보관자(steward)≠검증자(stats-validator) 분리로 검증 독립성 유지. 대상 수치 예: 0.279·ICC 0.49%·표본흐름 772/490/156/126·차원별 F1. team-setup.json 두 roles 수정 후 team-init init으로 team.json 재생성 반영. manuscript-writer는 사유 메모리 수치 나열 제거·'mc 정본 단일출처, 의심 시 mc 조회' 규율 포인터로 대체(고신뢰=단정/저신뢰=해석제외 표현 매핑만 writer 잔류).",
+  "source": "사용자 결정(2026-06-27). manuscript-writer 요청 메시지 01782528781163678000. team-setup.json·.team/team.json 재생성.",
+  "by": "orchestrator",
+  "ts_ns": 1782529003724403000
+}

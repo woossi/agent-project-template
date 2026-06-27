@@ -6,7 +6,9 @@
     "CLAUDE_AGENT_WORKSPACE_POLICY": ".claude/policies/agent-workspace.json"
   },
   "enableAllProjectMcpServers": false,
-  "enabledMcpjsonServers": [],
+  "enabledMcpjsonServers": [
+    "scrapling"
+  ],
   "disabledMcpjsonServers": [],
   "extraKnownMarketplaces": {
     "claude-code-plugins": {
@@ -24,7 +26,10 @@
     "frontend-design@claude-code-plugins": true
   },
   "permissions": {
-    "allow": [],
+    "allow": [
+      "Bash(python3 .claude/skills/reminders-team-bridge/scripts/reminders_bridge.py:*)",
+      "Bash(python3 \"$CLAUDE_PROJECT_DIR/.claude/skills/reminders-team-bridge/scripts/reminders_bridge.py\":*)"
+    ],
     "deny": []
   },
   "hooks": {

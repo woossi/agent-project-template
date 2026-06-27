@@ -10,7 +10,9 @@ Team-wide decisions and goals live in the team store (.team/memory, .team/goals)
 - 활성 산출물(2026-06-25 rename): 영문 보고서 `docs/umc_report_en_20260614.docx`, 국문 `docs/umc_report_ko.md`, 발표 `ppt/umc_presentation_en_20260618.pptx`. 경로 권위 registry는 `config/umc_project_paths.json`.
 - ppt 보존 필수: `High-Five_20260507.pptx`(데이터소스 권위본), `HighFive_Step3_Submission.pptx`(config step3 등록).
 - 정리 격리분은 삭제하지 않고 `<프로젝트>/tmp/_cleanup_<YYYYMMDD>/`로 이동하고 `MANIFEST.tsv`+README로 복원 가능하게 둔다.
-- `.team/` 공유 store(goals/inbox 등)는 workspace guard가 Read 도구를 차단하므로 Bash(`cat`)로 읽는다. 작업 경계 내 외부 경로(`/Users/ujunbin/project/umc`)는 Read 가능.
+- guard는 root 공유 자산(`.team/`·root `.claude/{skills,memory,...}`)에 Read/Edit를 차단 → Bash(`cat`)로 읽고, 공유 store 쓰기는 전용 CLI(team_inbox 등)로만. 작업 경계 내 외부 경로(`/Users/ujunbin/project/umc`)는 Read 가능.
+- Zotero DB=`~/Zotero/zotero.sqlite`(작업경계 밖). 수정 전 Zotero 종료 확인+타임스탬프 백업(codex/dc 공통 패턴 `*.{codex,dc}-backup-YYYYMMDD-*`)·`PRAGMA quick_check`. ★이 DB는 better-bibtex citationKey(fieldID=9)를 저장 안 함(=0건) → citekey↔PDF 매핑은 DB가 아니라 refs.bib(단 `file=` 필드 없음)·다운스트림 도구에 있음. 첨부경로=`itemAttachments.path`(`storage:...`). citekey→PDF 검증은 refs.bib title/연도 대조가 1차 기준(파일명 근사매칭 단독 신뢰 금지).
+- **★[인프라 결정] 논문 그림 표준 경로 = matplotlib.** figure-designer paperbanana 이미지 백엔드 전면 차단(Gemini 쿼터0·OpenAI SDK미설치·OpenRouter 오류) → 이미지 산출 위임 불능. 회피=figure-designer엔 *설계 명세만* 요청 후 matplotlib 직접 렌더(스크립트 `.context/fig-rebuild/src/` 보존). 키/SDK 해소 시 재검토. 상세·재발방지 절차는 `_data_registry.md` fig_cr_strata 항목.
 
 ## 선호 (Derive: preference)
 

@@ -1,0 +1,147 @@
+I am working on a task: given the 'Methodology' section of a paper, and the caption of the desired figure, automatically generate a corresponding illustrative diagram. I will input the text of the 'Methodology' section, the figure caption, and your output should be a detailed description of an illustrative figure that effectively represents the methods described in the text.
+
+To help you understand the task better, and grasp the principles for generating such figures, I will also provide you with several examples. You should learn from these examples to provide your figure description.
+
+** IMPORTANT: **
+Your description should be as detailed as possible. Semantically, clearly describe each element and their connections. Formally, include various details such as background style (typically pure white or very light pastel), colors, line thickness, icon styles, etc. Remember: vague or unclear specifications will only make the generated figure worse, not better.
+
+Your description should cover:
+1. **Overall layout**: General flow direction (left-to-right or top-to-bottom), major sections/phases
+2. **Components**: Each box, module, or element with its exact label
+3. **Connections**: Arrows, data flows, and their directions
+4. **Groupings**: How components are grouped or sectioned (colored regions, dashed borders)
+5. **Labels and annotations**: Text labels, mathematical notations
+6. **Input/Output**: What enters and exits the system
+7. **Styling**: Background fills, color palettes (in natural language, e.g., "soft sky blue", "warm peach" — never hex codes), line weights, icon styles
+
+## Methodology Section
+Conceptual diagram for Section 2.1 "Critical Realism" of a Korean Master's thesis. Stratified ontology of Critical Realism. Show THREE NESTED CONCENTRIC regions (a subset/containment model), NOT three side-by-side boxes.
+
+Outermost and LARGEST region = the Real (Korean label 실재적 층위, English "the real"); content phrase inside the band: 구조 · 생성기제 (structures and generative mechanisms), which exist independently of observation.
+
+Middle region fully inside the Real = the Actual (Korean 현실적 층위, English "the actual"); content phrase: 발생한 사건 (events that occur when mechanisms operate under conditions).
+
+Innermost and SMALLEST region fully inside the Actual = the Empirical (Korean 경험적 층위, English "the empirical"); content phrase: 관측된 사건 (observed events / observations), the subset we actually observe.
+
+Containment relation: 실재적 ⊇ 현실적 ⊇ 경험적. Make outer regions visibly much larger than inner ones so the message "what is observed is only a small subset of reality" reads at a glance.
+
+One generative-direction arrow crossing all three strata from OUTSIDE to INSIDE: 생성기제 → 사건 → 관측 (mechanism generates events, part of which is observed), pointing inward.
+
+Use concentric circles: the Real as a big outer ring, the Actual as a medium ring inside it, the Empirical as a small inner disk. Place each Korean label (with English in parentheses) and its short content phrase clearly within or beside its band; use leader lines so outer-ring labels do not overlap inner content.
+
+Style: flat, minimal, academic publication quality. Calm navy and teal palette, navy outer band shading to lighter teal/blue inner. No 3D, no drop shadows, no decorative clutter, thin clean outlines, white background. Korean text readability is the priority. Do NOT include any abduction terminology.
+
+
+## Figure Caption
+비판적 실재론의 층화된 존재론. 세 층위는 동심 포함관계를 이룬다(실재적 ⊇ 현실적 ⊇ 경험적). 가장 바깥의 실재적 층위(the real)는 구조와 생성기제를, 중간의 현실적 층위(the actual)는 발생한 사건을, 가장 안쪽의 경험적 층위(the empirical)는 관측된 사건을 가리킨다. 바깥에서 안으로 향하는 화살표는 생성기제 → 사건 → 관측의 발생 방향을 나타낸다.
+
+## Reference Examples
+### Example 1
+**Caption**: Figure 1: (a) Illustration of the activation distribution for the key cache, exemplified by Llama 3.1- 8B-Instruct (Layer 0, Head 0). The key cache exhibits channel-wise outliers, where the magnitudes of a few channels significantly larger than others across tokens. We observe that these outliers generally appear in only one of the two dimensions rotated together by RoPE. (b) When viewing these two dimensions in a two-dimensional plane, although the individual $\mathbf { X } ^ { - }$ or y-axis may contain outliers, they collectively form stable circular patterns, making quantization of the original outliers easier. Each blue dot represents a mapped two-dimensional vector, with transparency indicating frequency. (c) PolarQuant using $r = 2$ bits to quantize radii and $t = 3$ bits to quantize polar angles. The colorful arrows indicate sub-vectors formed by pairs of dimensions in the keys; the quantized results are shown with colorful dashed arrows. The quantization error is represented by the grey dashed arrow. 
+**Source Context**: # 3 Method
+
+We begin by presenting the key findings of the activation patterns in the key cache (Section 3.1). These insights serve as the foundation for our proposed quantization approach, PolarQuant (Section 3.2).
+
+# 3.1 Motivation
+
+As discussed earlier, outliers in key vectors pose a dilemma for key cache quantization. Our solution to this challenge arises from a key observation:
+
+Observation: When mapping the paired dimensions with outliers to polar coordinates, the resulting $2 D$ vectors s
+**Aspect Ratio**: 2.27
+**Diagram**: [See reference image 1 above]
+
+### Example 2
+**Caption**: Figure 1: An illustration of the two paradigms for FBN modeling. Top: Conceptual diagrams illustrating the core theoretical differences. The top-left provides a concrete example of a high-order (XOR) interaction to demonstrate how pairwise models fail to capture patterns that high-order models can identify. The top-right contrasts the scope of Local Constraints (acting on single nodes or edges) versus Global Constraints (acting on the entire network). Bottom: Comparison between the previous pairwise paradigm with our proposed GCM framework, which treats the adjacency matrix as a single, learnable object holistically shaped by global objectives. 
+**Source Context**: # 5 Methodology
+
+We introduce the proposed GCM in this section. It consists of three modules: (i) a prototype-based graph generator with Gumbel–Sigmoid relaxation, (ii) a batch-wise binarization algorithm (BBA) that enforces hard edge sparsity, and (iii) a multi-objective training loss aligned with task labels, subject identity, and sparsity priors. Appendix $\mathbf { E }$ summarizes pseudocode for GCM and BBA.
+
+Prototype Graph and Continuous Relaxation. We learn a binarized functional brain ne
+**Aspect Ratio**: 1.49
+**Diagram**: [See reference image 2 above]
+
+### Example 3
+**Caption**: Figure 2: Overview of our HoliTom method. HoliTom compresses video LLMs across three scopes; the first two are outer-LLM pruning. Temporal Merging maximizes temporal compression via global redundancy-aware segmentation, merging similar tokens into their first occurrence. Spatial Merging further reduces redundancy by applying tailored spatial compression based on the characteristics of remaining temporal variations. Inner-LLM Merging leverages attention within the LLM to identify key tokens and merges less important, similar tokens, streamlining information within the LLM. 
+**Source Context**: # 3 Method
+
+# 3.1 Background on Video LLMs Inference
+
+The inference process of video LLMs involves three key stages: before LLM, prefilling, and decoding.
+
+(1) Before LLM. Given an input video with $B$ frames, a vision encoder processes each frame to produce $N _ { v }$ embedding vectors. These are projected into the text embedding space, yielding visual tokens $H _ { v } \in \mathbb R ^ { B N _ { v } \times d }$ , where $d$ represents the dimension of the hidden state space. A text prompt T = {
+**Aspect Ratio**: 1.83
+**Diagram**: [See reference image 3 above]
+
+### Example 4
+**Caption**: Figure 1: We propose a taxonomy of five knowledge statuses based on the consistency and correctness of LLM knowledge modes. We illustrate the taxonomy using an LLM’s parametric knowledge modes $\mathcal { { Y } } _ { p }$ in a three-option classification task. This formulation also applies to contextual knowledge modes $\mathcal { { Y } } _ { q }$ and generalizes to open-ended questions or classification tasks with more options. 
+**Source Context**: # 3 LLM Knowledge Status and How to Characterize it
+
+# 3.1 LLM Knowledge Status: Consistency and Correctness
+
+When analyzing an LLM’s knowledge, we focus on two key dimensions:
+
+1. Consistency: How consistent are the model’s knowledge modes? That is, does it exhibit a single coherent belief or multiple conflicting ones? 2. Correctness: Does the set of the model’s knowledge modes include the correct answer?
+
+To formalize this, consider a question-answer pair $( x , y ^ { * } )$ . We define the pa
+**Aspect Ratio**: 2.22
+**Diagram**: [See reference image 4 above]
+
+### Example 5
+**Caption**: Figure 1: Method overview figure. (a) Our auto-encoder transforms a hierarchy of language-aligned features into hyperbolic space. (b) Then, we supervise a NeRF model to predict the hierarchical hyperbolic features together with color and density. (c) Lastly, during inference, we can traverse in a continuous manner the scene hierarchy by following a geodesic path in hyperbolic space and perform open-vocabulary queries for a given text prompt. 
+**Source Context**: # 4 Method
+
+Our hierarchical framework OpenHype takes as input a collection of images representing the scene with the associated camera parameters, and trains a NeRF model to produce 3D consistent hierarchical semantic features Fig. 1. However, contrary to existing approaches, OpenHype features are hyperbolic embeddings and thus allow for continuous hierarchy traversal along geodesic paths. As illustrated in Fig. 1 (a), OpenHype utilizes an auto-encoder that transforms language-aligned features,
+**Aspect Ratio**: 2.37
+**Diagram**: [See reference image 5 above]
+
+### Example 6
+**Caption**: Figure 3: The overview of OptiTree. (1) OptiTree constructs a modeling tree for subproblem decomposition and stores the modeling thoughts for subproblems in the tree nodes. (2) OptiTree leverages tree search to identify the subproblems and construct modeling thoughts by integrating the subproblems’ thoughts. (3) We update the modeling tree to ensure its scalability and reliability. 
+**Source Context**: # 4 OptiTree: Hierarchical Thought Generation with Tree Search
+
+The overall framework of OptiTree is illustrated in Figure 3. The core is to organize modeling knowledge through a hierarchical tree structure that captures both prevalent decomposition patterns and thoughts for various problems (Section 4.2). We utilize tree search for efficient retrieval of subproblems along with their hierarchical modeling thoughts, adaptively integrating these thoughts to construct comprehensive global modeling 
+**Aspect Ratio**: 1.77
+**Diagram**: [See reference image 6 above]
+
+### Example 7
+**Caption**: Figure 3: Overview of the Cauvis. The top part illustrates the Cross Attention mechanism and the Fourier Transformation. The bottom part shows the detailed structure of Cauvis, including Cross-Attention Prompts and Dual-Branch Adapter. The Cauvis module is integrated into each layer of the backbone. Blue for frozen parameters, orange for fine-tuning parameters.
+**Source Context**: # 4 Methods
+
+We present Cauvis, which includes Cross-Attention Prompts (Section 4.1) and Dual-Branch Adapter (Section 4.2), as shown in Fig. 3. It uses learnable parameters to dynamically adjust the fusion ratio of pre-trained knowledge and visual prompts.
+
+# 4.1 Cross-Attention Prompts
+
+We propose Cross-Attention Prompts to address limitations of existing methods in causal reasoning and domain generalization. Our framework (illustrated in Fig. 1) uses cross-attention to link prompts with featur
+**Aspect Ratio**: 2.04
+**Diagram**: [See reference image 7 above]
+
+### Example 8
+**Caption**: Figure 3: (a) We propose 3DLLM-MEM, a memory-enhanced 3D embodied agent that gradually forms its long-term memory while executing tasks. Multiple timesteps are shown together but in different colors, with each timestep’s memory including the prior one. The task is “prepare a simple breakfast” as shown in Figure 2. (b) Overview of our memory fusion mechanism. 
+**Source Context**: # 3 3D Long-Term Spatial-Temporal Memory Model (3DLLM-MEM)
+
+# 3.1 Preliminary
+
+Recent work on 3D Large Language Models (3D-LLMs) has showcased robust capabilities. We choose LLaVA-3D (Zhu et al., 2024) as the base model to build our long-term memory 3D-LLM.
+
+LLaVA-3D directly builds on 2D-LLM with multi-view images as input and utilizing the 3D position embeddings to bring the 2D patches within a 3D spatial context to construct 3D patches. For each frame image, a CLIP encoder splits the image $\
+**Aspect Ratio**: 2.25
+**Diagram**: [See reference image 8 above]
+
+
+Based on the methodology section, figure caption, and learning from the style and structure of the reference examples above, generate a comprehensive and detailed textual description of the methodology diagram.
+
+Note: Do not include figure titles (e.g., "Figure 1: ...") in the diagram description. The caption should remain separate from the diagram content.
+
+## Aspect Ratio Recommendation
+
+After your detailed description, on a **new line**, output exactly one line in this format:
+```
+RECOMMENDED_RATIO: <ratio>
+```
+where `<ratio>` is one of: 1:1, 2:3, 3:2, 3:4, 4:3, 9:16, 16:9, 21:9.
+
+Choose the best aspect ratio based on:
+- The **content structure**: pipelines and sequential flows → wide (16:9, 21:9); deep hierarchies or vertical stacks → tall (2:3, 9:16); balanced architectures → square-ish (1:1, 4:3, 3:4)
+- The **reference examples' aspect ratios** listed above (if available)
+- The **number of components** and their spatial arrangement
+
+For example, a left-to-right encoder-decoder pipeline would be 16:9, while a top-to-bottom tree structure would be 2:3.

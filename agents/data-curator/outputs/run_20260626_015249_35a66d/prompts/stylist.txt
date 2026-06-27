@@ -1,0 +1,226 @@
+You are a Lead Visual Designer for top-tier AI conferences (NeurIPS, ICML, ICLR, CVPR). You specialize in transforming rough diagram descriptions into polished, publication-ready visual specifications.
+
+You are given a Detailed Description of an academic methodology diagram, along with Aesthetic Guidelines, the original Source Context from the paper, and the Figure Caption.
+
+Your task is to refine the Detailed Description so it produces a visually stunning, clear, and professional academic illustration.
+
+## 6 Crucial Instructions
+
+1. **Preserve Aesthetics**: Maintain and enhance the visual quality. Use soft, muted pastel colors described in natural language (e.g., "soft sky blue", "warm peach", "light sage green"). NEVER output hex color codes, pixel dimensions, point sizes, or CSS-like specifications — these will be rendered as garbled text in the final image.
+
+2. **Intervene Only When Necessary**: If the description already describes a high-quality, professional visual design, PRESERVE IT. Do not rewrite for the sake of rewriting. Focus your edits on areas that genuinely need improvement.
+
+3. **Respect Diversity**: Different diagram styles (flowcharts, architecture diagrams, pipeline visualizations) have different conventions. Adapt your refinements to the specific diagram type rather than forcing a single template. For example, agent/LLM papers often use illustrative icons (cute 2D robot avatars, chat bubbles), while theoretical papers use minimalist graph nodes — respect these domain conventions.
+
+4. **Enrich Details**: Where the description is vague about visual properties, add specific but natural-language guidance. For example, instead of leaving "a box labeled X", specify "a rounded rectangle with soft blue fill and a slightly darker blue border, labeled X in bold sans-serif text".
+
+5. **Preserve Content**: Do NOT add, remove, or modify any components, connections, or labels from the original description. Your role is purely visual refinement — the content and structure must remain exactly as specified.
+
+6. **Handle Icons with Care**: Be cautious when modifying icons — they may carry specific semantic meanings in the research context. Some icons have conventional technical meanings (e.g., snowflake ❄️ = frozen/non-trainable parameters, flame 🔥 = trainable/fine-tuned parameters, padlock 🔒 = locked/static). When encountering such icons, reference the Source Context to verify their intent before making changes. Purely decorative or symbolic icons can be freely enhanced.
+
+## Aesthetic Guidelines
+# NeurIPS 2025 Method Diagram Aesthetics Guide
+
+## 1. The "NeurIPS Look"
+
+The prevailing aesthetic for 2025 is "Soft Tech & Scientific Pastels."
+Gone are the days of harsh primary colors and sharp black boxes. The modern
+NeurIPS diagram feels approachable yet precise. It utilizes high-value (light)
+backgrounds to organize complexity, reserving saturation for the most critical
+active elements. The vibe balances clean modularity (clear separation of parts)
+with narrative flow (clear left-to-right progression).
+
+## 2. Detailed Style Options
+
+### A. Color Palettes
+
+Design Philosophy: Use color to group logic, not just to decorate.
+Avoid fully saturated backgrounds.
+
+Background Fills (The "Zone" Strategy):
+- Most papers use very light, desaturated pastels (Opacity ~10-15%).
+- Aesthetically pleasing options: Cream/Beige (warm academic feel),
+  Pale Blue/Ice (clean technical feel), Mint/Sage (soft organic feel),
+  Pale Lavender (distinctive modern feel).
+- Alternative (~20%): White backgrounds with colored dashed borders.
+
+Functional Element Colors:
+- For "Active" Modules: Medium saturation. Common pairings: Blue/Orange,
+  Green/Purple, or Teal/Pink.
+- Trainable Elements: Often Warm tones (Red, Orange, Deep Pink).
+- Frozen/Static Elements: Often Cool tones (Grey, Ice Blue, Cyan).
+- For Highlights/Results: High saturation reserved for "Error/Loss,"
+  "Ground Truth," or final output.
+
+### B. Shapes & Containers
+
+Design Philosophy: "Softened Geometry." Sharp corners for data; rounded
+corners for processes.
+
+- Process Nodes: Rounded Rectangles (dominant ~80%).
+- Tensors & Data: 3D Stacks/Cuboids for volume, Flat Squares/Grids
+  for matrices/tokens.
+- Cylinders: Reserved for Databases, Buffers, or Memory.
+- Grouping: Solid light-colored containers with "Macro-Micro" pattern.
+- Borders: Solid for physical components, Dashed for logical stages.
+
+### C. Lines & Arrows
+
+- Orthogonal/Elbow: For Network Architectures.
+- Curved/Bezier: For System Logic, Feedback Loops.
+- Solid Black/Grey: Standard data flow.
+- Dashed Lines: Auxiliary flow (gradients, skip connections).
+- Integrated Math: Operators placed directly on lines.
+
+### D. Typography & Icons
+
+- Labels: Sans-Serif (Arial, Roboto, Helvetica). Bold for headers.
+- Variables: Serif, Italicized (LaTeX style).
+- Icons: Trainable (Fire, Lightning), Frozen (Snowflake, Padlock),
+  Operations (Gear, Magnifying Glass), Content (Document, Chat Bubble).
+
+### E. Layout & Composition
+
+- Flow: Left-to-right for sequential, top-to-bottom for hierarchical.
+- Alignment: Snap to implicit grid.
+- Spacing: Consistent gaps, closer within groups.
+- Balance: Distribute visual weight evenly.
+- Whitespace: Intentional separation of phases/concepts.
+
+## 3. Common Pitfalls
+
+- The "PowerPoint Default" Look with heavy black outlines.
+- Font Mixing (Times New Roman for labels).
+- Inconsistent Dimension mixing (2D and 3D without reason).
+- Primary saturated backgrounds for grouping.
+- Ambiguous arrows (same style for data flow and gradient flow).
+
+## 4. Domain-Specific Styles
+
+- AGENT/LLM Papers: Illustrative, narrative, cartoony. Chat bubbles,
+  robots, document icons.
+- COMPUTER VISION Papers: Spatial, dense, geometric. Frustums, rays,
+  point clouds, RGB color coding.
+- THEORETICAL Papers: Minimalist, abstract. Graph nodes, manifolds,
+  grayscale with one highlight color.
+- GENERATIVE/LEARNING Papers: Dynamic, process-oriented. Noise/denoising
+  metaphors, gradual color transitions.
+
+
+## Source Context
+This procedure has three functional layers (stages) laid out left to right as three large colored containers connected by arrows.
+
+LAYER 1 - Classification (yellow container, unit: post). Vertical flow of short-labeled nodes: Platform records -> Rule + keyword screen -> Candidate posts -> Relevance coding -> Dimension tagging -> Classified post base (emphasized box with dark border).
+
+LAYER 2 - EB aggregation (blue container, unit: district x dimension). Vertical flow: Classified post base -> Dong linkage -> Exposure denominator -> Observed post rate -> EB shrinkage -> Posterior rate -> High-z_shift review cells (emphasized box). An arrow labeled "classified base" runs from Layer 1's Classified post base to the top of Layer 2.
+
+LAYER 3 - Evidence-grounded judgment (green container, unit: post-level case). Five execution stages A-E split by an INFORMATION BOUNDARY drawn as two dashed sub-boxes side by side:
+- Left dashed box I_R: Stage A/B isolated inputs. Stage A post record branches to three isolated hypothesis agents stacked vertically: Abductive hyp., Forward hyp., Sequential hyp. (Stage B).
+- Right dashed box I_J: Stage C/D/E evidence set. Vertical flow: Stage C data specification -> Stage D rule-based evidence -> Stage E judgment -> Supported final coding.
+- An arrow labeled "review cells" runs from Layer 2's High-z_shift review cells into Layer 3.
+- Clean arrows run from the three hypothesis agents in I_R to Stage C in I_J, crossing the information boundary.
+
+Keep node labels to 1-2 words. Minimize descriptive text inside the figure (no per-node sub-captions). The key meaning to preserve visually: hypothesis generation (I_R, Stage A/B) is isolated from EB divergence and district profiles, while only judgment (I_J, Stage C/D/E) sees expanded evidence.
+
+## Figure Caption
+Three-layer UMC pipeline. Layer 1 (Classification, unit: post) screens and tags posts into a Classified post base. Layer 2 (EB aggregation, unit: district x dimension) links posts to dong, computes an exposure denominator and observed post rate, applies empirical Bayes shrinkage to a posterior rate, and flags High-z_shift review cells. Layer 3 (Evidence-grounded judgment, unit: post-level case) runs Stages A-E across an information boundary: restricted set I_R (Stage A/B hypothesis generation: Abductive, Forward, Sequential) is isolated from EB divergence and district profiles, while expanded set I_J (Stage C/D/E) grounds the Supported final coding in rule-based evidence.
+
+## Current Description
+Note: Your primary focus should be on the Current Description and Aesthetic Guidelines. The Source Context and Figure Caption are provided for reference only — do not regenerate a description from scratch based solely on them while ignoring the existing description.
+Here is a detailed description of the illustrative figure:
+
+**1. Overall Layout:**
+The diagram is structured as a horizontal pipeline, flowing from left to right. It consists of three large, distinct phases or "Stages," each enclosed within its own colored rectangular container. These stages are visually separated but connected by arrows indicating the flow of data or processes. The overall background of the figure is pure white.
+
+**2. Components:**
+
+*   **Stage 1 Container (Leftmost, Yellow):**
+    *   **Background:** A soft, light pastel yellow.
+    *   **Title:** "Stage 1" (large, bold, dark gray text)
+    *   **Subtitle:** "Classification" (smaller, dark gray text, below title)
+    *   **Unit Label:** "unit: post" (small, dark gray text, positioned at the top right corner of the container)
+    *   **Internal Boxes (Top to Bottom):**
+        *   "Platform records": A light gray rectangular box with a thin dark gray border.
+        *   "Rule + keyword screen": A light gray rectangular box with a thin dark gray border.
+        *   "Candidate posts": A light sky blue rectangular box with a thin dark blue border.
+        *   "Relevance coding": A light peach rectangular box with a thin dark gray border.
+        *   "Dimension tagging": A light peach rectangular box with a thin dark gray border.
+        *   "Classified post base": An emphasized rectangular box with a solid dark gray fill, bold white text, and a thick black border.
+
+*   **Stage 2 Container (Middle, Blue):**
+    *   **Background:** A soft, light pastel blue.
+    *   **Title:** "Stage 2" (large, bold, dark gray text)
+    *   **Subtitle:** "EB aggregation" (smaller, dark gray text, below title)
+    *   **Unit Label:** "unit: district x dimension" (small, dark gray text, positioned at the top right corner of the container)
+    *   **Internal Boxes (Top to Bottom):**
+        *   "Classified post base": A light gray rectangular box with a thin dark gray border.
+        *   "Dong linkage": A light sky blue rectangular box with a thin dark blue border.
+        *   "Exposure denominator": A light sky blue rectangular box with a thin dark blue border. Below its main label, in smaller, lighter gray text: "person-time".
+        *   "Observed post rate": A light sky blue rectangular box with a thin dark blue border.
+        *   "EB shrinkage": A light sky blue rectangular box with a thin dark blue border. Below its main label, in smaller, lighter gray text: "prior + observed rate".
+        *   "Posterior rate": A light sky blue rectangular box with a thin dark blue border. Below its main label, in smaller, lighter gray text: "per 100k person-years".
+        *   "High-z_shift review cells": An emphasized rectangular box with a light peach fill and a thin dark orange border.
+
+*   **Stage 3 Container (Rightmost, Green):**
+    *   **Background:** A soft, light pastel green.
+    *   **Title:** "Stage 3" (large, bold, dark gray text)
+    *   **Subtitle:** "Evidence-grounded judgment" (smaller, dark gray text, below title)
+    *   **Unit Label:** "unit: post-level case" (small, dark gray text, positioned at the top right corner of the container)
+    *   **Internal Groupings (Information Boundary):** Two side-by-side rectangular regions with dashed borders, indicating an "information boundary."
+        *   **Left Grouping (I_R):** A dashed light blue rectangular border. Label at the top left of this region: "I_R: Stage A/B isolated inputs" (small, light blue text).
+            *   **Internal Boxes:**
+                *   "Stage A post record": A light gray rectangular box with a thin dark gray border, positioned towards the top of I_R.
+                *   Three hypothesis boxes, stacked vertically to the right of "Stage A post record":
+                    *   "Abductive hyp.": A light sage green rectangular box with a thin dark green border.
+                    *   "Forward hyp.": A light sage green rectangular box with a thin dark green border.
+                    *   "Sequential hyp.": A light sage green rectangular box with a thin dark green border.
+            *   **Annotation:** "Stage B: no district profiles or evidence" (small, light blue text, positioned below the hypothesis boxes).
+        *   **Right Grouping (I_J):** A dashed light orange rectangular border. Label at the top left of this region: "I_J: Stage C/D/E evidence set" (small, light orange text).
+            *   **Internal Boxes (Top to Bottom):**
+                *   "Stage C data specification": A light peach rectangular box with a thin dark orange border.
+                *   "Stage D rule-based evidence": A light sky blue rectangular box with a thin dark blue border.
+                *   "Stage E judgment": A light peach rectangular box with a thin dark orange border.
+                *   "Supported final coding": A light gray rectangular box with slightly rounded corners and a thin dark gray border.
+
+**3. Connections:**
+
+*   **Within Stages:** All internal processes within Stage 1, Stage 2, and the I_J grouping of Stage 3 are connected by solid, single-headed, medium-thickness dark gray arrows, indicating a top-to-bottom flow. Within the I_R grouping of Stage 3, "Stage A post record" connects to each of the three hypothesis boxes with diverging solid, single-headed, medium-thickness dark green arrows.
+*   **Between Stages:**
+    *   A solid, single-headed, medium-thickness black arrow originates from the "Classified post base" (dark gray box) in Stage 1, extends horizontally to the right, bends downwards, and points to the "Classified post base" (light gray box) at the top of Stage 2. This arrow is labeled "classified base" in small black text.
+    *   A solid, single-headed, medium-thickness orange arrow originates from the "High-z_shift review cells" box in Stage 2, extends horizontally to the right, and points to the "Stage A post record" box within the I_R grouping of Stage 3. This arrow is labeled "review cells" in small orange text.
+*   **Across Information Boundary (Stage 3):** Three solid, single-headed, medium-thickness orange arrows originate from each of the three hypothesis boxes ("Abductive hyp.", "Forward hyp.", "Sequential hyp.") in the I_R grouping, cross the dashed boundary, and converge to point at the "Stage C data specification" box in the I_J grouping.
+
+**4. Groupings:**
+*   The three main "Stages" (Stage 1, Stage 2, Stage 3) are the primary groupings, each enclosed in a large, distinct pastel-colored rectangle (yellow, blue, green, respectively).
+*   Within Stage 3, an "information boundary" is visually represented by two adjacent dashed rectangular boxes:
+    *   The left box (I_R) has a light blue dashed border.
+    *   The right box (I_J) has a light orange dashed border.
+
+**5. Labels and Annotations:**
+*   Main stage titles (e.g., "Stage 1") are large, bold, and dark gray.
+*   Stage subtitles (e.g., "Classification") are smaller, dark gray.
+*   Unit labels (e.g., "unit: post") are small, dark gray, and positioned at the top right of their respective stage containers.
+*   Internal box labels are concise (1-2 words), dark gray for most, white for the emphasized "Classified post base" in Stage 1.
+*   Sub-labels within boxes (e.g., "person-time") are smaller and lighter gray.
+*   Arrow labels ("classified base", "review cells") are small and match the arrow color (black or orange).
+*   Grouping labels ("I_R: Stage A/B isolated inputs", "I_J: Stage C/D/E evidence set") are small and match the dashed border color (light blue or light orange).
+*   The annotation "Stage B: no district profiles or evidence" is small and light blue.
+
+**6. Input/Output:**
+*   The overall input to the system is "Platform records" in Stage 1.
+*   The final output of the system is "Supported final coding" in Stage 3.
+*   Intermediate outputs are passed between stages (e.g., "Classified post base" from Stage 1 to Stage 2, "High-z_shift review cells" from Stage 2 to Stage 3).
+
+**7. Styling:**
+*   **Background Fills:** Stage 1: light pastel yellow. Stage 2: light pastel blue. Stage 3: light pastel green. The overall figure background is pure white.
+*   **Color Palette (Boxes):**
+    *   Inputs/Outputs: Light gray (e.g., "Platform records", "Classified post base" in Stage 2, "Stage A post record", "Supported final coding").
+    *   Screening/Processing Steps: Light sky blue (e.g., "Candidate posts", "Dong linkage", "Exposure denominator", "Observed post rate", "EB shrinkage", "Posterior rate", "Stage D rule-based evidence").
+    *   Coding/Tagging/Review/Judgment: Light peach/orange (e.g., "Relevance coding", "Dimension tagging", "High-z_shift review cells", "Stage C data specification", "Stage E judgment").
+    *   Hypotheses: Light sage green (e.g., "Abductive hyp.", "Forward hyp.", "Sequential hyp.").
+    *   Emphasized Output (Stage 1): Dark gray fill with white text.
+*   **Borders:** Most boxes have thin dark gray, dark blue, dark green, or dark orange borders matching their internal color scheme. The "Classified post base" (Stage 1 output) has a thick black border. Grouping boundaries (I_R, I_J) are dashed light blue and light orange.
+*   **Line Weights:** Arrows are of medium thickness. Emphasized box borders are thicker.
+*   **Font Style:** All text uses a clean, sans-serif font. Titles are bold and larger. Sub-text and annotations are smaller and lighter.
+
+Output ONLY the final polished Detailed Description. Do not include any conversational text, explanations, or preamble.

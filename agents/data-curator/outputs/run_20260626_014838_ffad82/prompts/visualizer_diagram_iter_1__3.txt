@@ -1,0 +1,75 @@
+You are an expert scientific diagram illustrator. Generate high-quality scientific diagrams based on user requests. Note that do not include figure titles in the image.
+
+CRITICAL: All text labels in the diagram must be rendered in clear, readable English. Use the EXACT label names specified in the description. Do not generate garbled, misspelled, or non-English text.
+
+The diagram illustrates a three-layer UMC pipeline, flowing from left to right across three distinct stages: Classification, EB Aggregation, and Evidence-grounded Judgment. Each stage is enclosed within a large, elegantly rounded rectangle with a unique, very light pastel background and a slightly darker, solid border. The overall background of the figure is crisp white. All main text labels use a modern sans-serif font in dark charcoal, with sub-labels in smaller, italicized, subtle light gray sans-serif text.
+
+**1. Overall Layout:**
+The diagram is structured horizontally, with three major stages arranged sequentially from left to right. Within each stage, the processing flow is predominantly top-to-bottom.
+
+**2. Styling (General):**
+*   **Background:** Crisp white.
+*   **Font:** Modern sans-serif; main labels in bold or regular dark charcoal; sub-labels in smaller, italicized, subtle light gray.
+*   **Line Thickness:** Consistent, medium-weight lines for primary data flow arrows and main stage borders. Thinner, delicate lines for internal component borders. Dashed lines for logical groupings.
+
+**3. Stage 1: Classification**
+*   **Grouping:** Enclosed in a large, elegantly rounded rectangle with a very light, desaturated **pale goldenrod** background (reminiscent of parchment) and a slightly darker, solid **goldenrod** border.
+    *   **Header:** Prominent header 'Stage 1' in bold, dark charcoal sans-serif text, aligned left. A subtle, vertical **pale goldenrod** accent bar runs alongside the header.
+    *   **Subtitle:** Subtitle 'Classification' in regular dark charcoal sans-serif text below the header.
+    *   **Unit Label:** Unit of analysis 'unit: post' in smaller, italicized, subtle light gray sans-serif text, positioned in the top-right corner.
+*   **Components (all softly rounded rectangles with delicate, thin light silver-gray borders and a crisp white fill, unless specified):**
+    1.  **Platform records:** Topmost, a softly rounded rectangle with a gentle **warm peach** fill and a slightly darker **peach** border, labeled 'Platform records'. This represents the system input.
+    2.  **Rule + keyword screen:** A softly rounded rectangle with a gentle **warm peach** fill and a slightly darker **peach** border, labeled 'Rule + keyword screen'.
+    3.  **Candidate posts:** A softly rounded rectangle with a serene **cool sky blue** fill and a slightly darker **sky blue** border, labeled 'Candidate posts'.
+    4.  **Relevance coding:** A softly rounded rectangle with a gentle **warm peach** fill and a slightly darker **peach** border, labeled 'Relevance coding'.
+    5.  **Dimension tagging:** A softly rounded rectangle with a gentle **warm peach** fill and a slightly darker **peach** border, labeled 'Dimension tagging'.
+    6.  **Classified post base:** Bottommost, marking the output of Stage 1, a softly rounded rectangle with a clean **white** fill and a prominent, medium-weight **dark slate gray** border, labeled 'Classified post base'.
+*   **Connections:** All internal connections are elegant, solid **dark charcoal gray** arrows, flowing smoothly top-to-bottom sequentially between components.
+
+**4. Stage 2: EB Aggregation**
+*   **Grouping:** Enclosed in a large, elegantly rounded rectangle with a very light, desaturated **serene pale blue** background and a slightly darker, solid **sky blue** border.
+    *   **Header:** Prominent header 'Stage 2' in bold, dark charcoal sans-serif text, aligned left. A subtle, vertical **serene pale blue** accent bar runs alongside the header.
+    *   **Subtitle:** Subtitle 'EB aggregation' in regular dark charcoal sans-serif text below the header.
+    *   **Unit Label:** Unit of analysis 'unit: district x dimension' in smaller, italicized, subtle light gray sans-serif text, positioned in the top-right corner.
+*   **Components (all softly rounded rectangles with delicate, thin light silver-gray borders and a crisp white fill, unless specified):**
+    1.  **Classified post base:** Topmost, representing the input to Stage 2, a softly rounded rectangle with a very light **misty gray** fill and a slightly darker **slate gray** border, labeled 'Classified post base'.
+    2.  **Dong linkage:** A softly rounded rectangle with a serene **cool sky blue** fill and a slightly darker **sky blue** border, labeled 'Dong linkage'.
+    3.  **Exposure denominator:** A softly rounded rectangle with a serene **cool sky blue** fill and a slightly darker **sky blue** border, labeled 'Exposure denominator'. A sub-label 'person-time' in smaller, italicized, subtle light gray sans-serif text is placed below it.
+    4.  **Observed post rate:** A softly rounded rectangle with a serene **cool sky blue** fill and a slightly darker **sky blue** border, labeled 'Observed post rate'.
+    5.  **EB shrinkage:** A softly rounded rectangle with a serene **cool sky blue** fill and a slightly darker **sky blue** border, labeled 'EB shrinkage'. A sub-label 'prior + observed rate' in smaller, italicized, subtle light gray sans-serif text is placed below it.
+    6.  **Posterior rate:** A softly rounded rectangle with a serene **cool sky blue** fill and a slightly darker **sky blue** border, labeled 'Posterior rate'. A sub-label 'per 100k person-years' in smaller, italicized, subtle light gray sans-serif text is placed below it.
+    7.  **High-z_shift review cells:** Bottommost, marking the output of Stage 2, a softly rounded rectangle with a gentle **warm peach** fill and a slightly darker **peach** border, labeled 'High-z_shift review cells'.
+*   **Connections:**
+    *   All primary internal connections are elegant, solid **dark charcoal gray** arrows, flowing smoothly top-to-bottom sequentially.
+    *   An auxiliary solid **dark charcoal gray** arrow connects 'Classified post base' to 'Exposure denominator'.
+
+**5. Stage 3: Evidence-grounded Judgment**
+*   **Grouping:** Enclosed in a large, elegantly rounded rectangle with a very light, desaturated **soft mint green** background and a slightly darker, solid **sage green** border.
+    *   **Header:** Prominent header 'Stage 3' in bold, dark charcoal sans-serif text, aligned left. A subtle, vertical **soft mint green** accent bar runs alongside the header.
+    *   **Subtitle:** Subtitle 'Evidence-grounded judgment' in regular dark charcoal sans-serif text below the header.
+    *   **Unit Label:** Unit of analysis 'unit: post-level case' in smaller, italicized, subtle light gray sans-serif text, positioned in the top-right corner.
+*   **Internal Groupings (dashed-line rounded-corner rectangles):**
+    *   **I_R: Stage A/B isolated inputs:** On the left, a softly rounded dashed rectangle with a **light, cool blue** dashed border, enclosing 'I_R: Stage A/B isolated inputs'.
+        *   **Text Label within I_R:** An explanatory label 'Stage B: no district profiles or evidence' in smaller, **medium blue** sans-serif text is placed at the bottom within this grouping.
+    *   **I_J: Stage C/D/E evidence set:** On the right, a softly rounded dashed rectangle with a **warm, soft orange** dashed border, enclosing 'I_J: Stage C/D/E evidence set'.
+*   **Components within I_R (all softly rounded rectangles with delicate, thin light silver-gray borders and a crisp white fill):**
+    1.  **Stage A post record:** A central softly rounded rectangle with a very light **misty gray** fill and a slightly darker **slate gray** border, labeled 'Stage A post record'.
+    2.  **Abductive hyp.:** A softly rounded rectangle with a refreshing **light mint green** fill and a slightly darker **mint green** border, labeled 'Abductive hyp.'.
+    3.  **Forward hyp.:** A softly rounded rectangle with a refreshing **light mint green** fill and a slightly darker **mint green** border, labeled 'Forward hyp.'.
+    4.  **Sequential hyp.:** A softly rounded rectangle with a refreshing **light mint green** fill and a slightly darker **mint green** border, labeled 'Sequential hyp.'.
+*   **Components within I_J (all softly rounded rectangles with delicate, thin light silver-gray borders and a crisp white fill, unless specified):**
+    1.  **Stage C data specification:** Topmost, a softly rounded rectangle with a gentle **warm peach** fill and a slightly darker **peach** border, labeled 'Stage C data specification'.
+    2.  **Stage D rule-based evidence:** A softly rounded rectangle with a serene **cool sky blue** fill and a slightly darker **sky blue** border, labeled 'Stage D rule-based evidence'.
+    3.  **Stage E judgment:** A softly rounded rectangle with a gentle **warm peach** fill and a slightly darker **peach** border, labeled 'Stage E judgment'.
+    4.  **Supported final coding:** Bottommost, representing the system output, a softly rounded rectangle with a very light **misty gray** fill and a prominent, medium-weight **dark slate gray** border, labeled 'Supported final coding'.
+*   **Connections:**
+    *   From 'Stage A post record', three elegant, solid **soft sage green** arrows fan out to 'Abductive hyp.', 'Forward hyp.', and 'Sequential hyp.'.
+    *   A sequence of elegant, solid **medium blue** arrows connects 'Stage C data specification' to 'Stage D rule-based evidence' to 'Stage E judgment' to 'Supported final coding', flowing top-to-bottom sequentially.
+
+**6. Cross-Stage Connections:**
+*   A prominent, thick, solid **dark charcoal gray** arrow, labeled 'classified base' in bold dark charcoal sans-serif text, extends horizontally from the 'Classified post base' (Stage 1 output) to the 'Classified post base' (Stage 2 input).
+*   A prominent, thick, solid **warm terracotta orange** arrow, labeled 'review cells' in bold warm terracotta orange sans-serif text, extends horizontally from 'High-z_shift review cells' (Stage 2 output) to 'Stage A post record' (Stage 3 input, within I_R).
+*   Three prominent, thick, solid **warm terracotta orange** arrows extend horizontally from 'Abductive hyp.', 'Forward hyp.', and 'Sequential hyp.' (within I_R), elegantly crossing the dashed information boundary, and converging to point at 'Stage C data specification' (within I_J).
+
+
+Note: this plan was guided by a user-provided reference sketch; follow the description above faithfully.

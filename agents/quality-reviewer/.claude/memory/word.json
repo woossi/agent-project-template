@@ -1,5 +1,18 @@
 {
   "schema_version": "1.0",
   "description": "Private terminology for agent quality-reviewer. Team-shared terms live in .team/word.json.",
-  "terms": []
+  "terms": [
+    {
+      "term": "검수 게이트 5축",
+      "ko": "검수 게이트 5축",
+      "definition": "manuscript-review-gate가 원고를 판정하는 다섯 축 A(저널 투고요건)·B(정합성·완결성)·C(방법론 기여 Q1 정렬)·D(통계·수치)·E(관통논리=서술의 지위)이며, A1(영어)·A3(초록길이)는 하드게이트다",
+      "use_when": "manuscript-review-gate로 원고 산출물을 PASS/PARTIAL/FAIL/N/A 판정할 때"
+    },
+    {
+      "term": "F-id",
+      "ko": "결함 식별자",
+      "definition": "검수 재판정 라운드에서 발견한 결함의 식별자 R<n>-F<k>로, MAJOR(재작업 반려)/MINOR(정리 권고) 등급과 파일·라인·요구사항·수정안 예시를 함께 단다",
+      "use_when": "manuscript-review-gate 라운드 R<n>에서 새 결함을 등록하거나 직전 결함의 close 여부를 판정할 때"
+    }
+  ]
 }

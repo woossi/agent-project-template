@@ -1,0 +1,29 @@
+You are an expert scientific diagram illustrator. Generate high-quality scientific diagrams based on user requests. Note that do not include figure titles in the image.
+
+CRITICAL: All text labels in the diagram must be rendered in clear, readable English. Use the EXACT label names specified in the description. Do not generate garbled, misspelled, or non-English text.
+
+The figure depicts a set of three perfectly concentric circles, progressively smaller from the outermost to the innermost, all centered on a pure white background. The overall style is flat, minimal, and academic, with no shadows or gradients.
+
+1.  **Overall Layout**: The diagram is composed of three concentric circles, arranged from largest (outermost) to smallest (innermost), creating a visual representation of containment. The entire composition is centered on the canvas.
+
+2.  **Components**:
+    *   **Outermost Circle ("the Real")**: This is the largest circle. Its border is a solid, medium-weight line in a deep, muted blue. The interior of this circle has a very subtle, almost translucent fill of soft, pale seafoam green, evoking a sense of expansive space. It is labeled "the Real" in a bold, clean sans-serif font (e.g., Roboto or Helvetica) in the same deep, muted blue, positioned centrally within the circle to maintain visual balance.
+    *   **Middle Circle ("the Actual")**: Nested perfectly inside the outermost circle, this circle is smaller. Its border is a solid, medium-weight line in the same deep, muted blue. The interior has a slightly richer, yet still very light, pastel fill of soft, muted teal, subtly distinct from the outermost circle's fill. It is labeled "the Actual" in the same bold, sans-serif font and deep, muted blue, positioned centrally within its boundary.
+    *   **Innermost Circle ("the Empirical")**: This is the smallest circle, nested perfectly inside the middle circle. Its border is a solid, medium-weight line in the same deep, muted blue. The interior has the most prominent (yet still very light) pastel fill of a soft, slightly deeper teal, clearly indicating the deepest level of containment. It is labeled "the Empirical" in the same bold, sans-serif font and deep, muted blue, positioned centrally within its boundary.
+
+3.  **Connections**:
+    *   A single, solid arrow, of consistent medium weight, in the deep, muted blue, originates from a point on the circumference of the outermost circle. It points directly inward towards the precise center of the concentric circles, visually indicating a conceptual flow or hierarchical relationship from the broader "Real" concept towards the more specific "Empirical" concept. The arrowhead is a clean, simple triangular shape, proportional to the line weight.
+
+4.  **Groupings**: The components are naturally grouped by their concentric arrangement, visually representing the "subset containment" model described. There are no additional colored regions or dashed borders for grouping beyond the circles themselves.
+
+5.  **Labels and Annotations**:
+    *   Each circle is clearly labeled with its corresponding concept: "the Real", "the Actual", and "the Empirical". All labels are rendered in a bold, clean sans-serif academic font (e.g., Roboto or Helvetica) in the deep, muted blue. The font size should be optimized for readability, with "the Real" label being slightly larger than "the Actual" and "the Empirical" to visually emphasize its encompassing nature.
+
+6.  **Input/Output**: The diagram primarily illustrates a hierarchical relationship and conceptual flow (from Real to Actual to Empirical) rather than a system with explicit inputs and outputs. The inward arrow symbolizes this progression or derivation.
+
+7.  **Styling**:
+    *   **Background**: Pure white.
+    *   **Color Palette**: The primary colors are a deep, muted blue for all outlines, text, and the arrow. The interior fills of the circles use a palette of very light, desaturated pastel greens and teals. Specifically, the outermost circle has a soft, pale seafoam green fill, the middle circle has a soft, muted teal fill, and the innermost circle has a soft, slightly deeper teal fill. These fills progressively deepen in saturation (while remaining very light) from the outermost to the innermost circle, subtly indicating increasing specificity.
+    *   **Line Weights**: All lines (circle borders, arrow shaft) are of a consistent medium weight, contributing to the diagram's flat, minimal, and precise aesthetic.
+    *   **Icon Styles**: No distinct icons are used; the diagram relies on simple geometric shapes (circles) and an arrow.
+    *   **Shadows**: Explicitly, there are no shadows anywhere in the diagram.

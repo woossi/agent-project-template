@@ -1,0 +1,59 @@
+You are an expert scientific diagram illustrator. Generate high-quality scientific diagrams based on user requests. Note that do not include figure titles in the image.
+
+CRITICAL: All text labels in the diagram must be rendered in clear, readable English. Use the EXACT label names specified in the description. Do not generate garbled, misspelled, or non-English text.
+
+The figure illustrates the stratified ontology of Critical Realism using three nested concentric circles, representing a hierarchy of subset containment. The diagram is centered on a pure white background, maintaining a flat, minimal, and academic aesthetic with no 3D effects or shadows.
+
+**1. Overall Layout:**
+The diagram features three concentric circles, with the largest circle outermost and the smallest innermost, all perfectly centered. The overall conceptual flow, representing generation, moves from the outside (Real) inwards (Empirical).
+
+**2. Components:**
+
+*   **Outermost Circle (The Real):**
+    *   **Shape:** The largest circle, forming the outermost band of the diagram.
+    *   **Fill Color:** A soft, muted indigo blue.
+    *   **Border:** A thin, crisp white border.
+    *   **Concept Label:** Positioned directly above the outermost circle, centered horizontally: "The Real (실재적 층위, the real)". This text is in a dark grey, bold, sans-serif font.
+    *   **Content Label:** Placed horizontally within the indigo blue band of the circle: "구조 · 생성기제" (Structure · Generative Mechanism). This text is in a white, medium-weight, sans-serif font.
+
+*   **Middle Circle (The Actual):**
+    *   **Shape:** A medium-sized circle, perfectly contained within the outermost indigo blue circle, forming the middle band.
+    *   **Fill Color:** A gentle aquamarine, representing an intermediate shade between the outer indigo and inner teal.
+    *   **Border:** A thin, crisp white border.
+    *   **Concept Label:** Positioned directly above the middle circle, centered horizontally: "The Actual (현실적 층위, the actual)". This text is in a dark grey, bold, sans-serif font.
+    *   **Content Label:** Placed horizontally within the aquamarine band of the circle: "발생한 사건" (Occurred Events). This text is in a white, medium-weight, sans-serif font.
+
+*   **Innermost Circle (The Empirical):**
+    *   **Shape:** The smallest circle, perfectly contained within the middle aquamarine circle, forming the innermost band.
+    *   **Fill Color:** A pale, clear teal.
+    *   **Border:** A thin, crisp white border.
+    *   **Concept Label:** Positioned directly above the innermost circle, centered horizontally: "The Empirical (경험적 층위, the empirical)". This text is in a dark grey, bold, sans-serif font.
+    *   **Content Label:** Placed horizontally within the clear teal band of the circle: "관측된 사건" (Observed Events). This text is in a white, medium-weight, sans-serif font.
+
+**3. Connections (Generative Flow):**
+A single, continuous, thick, dark grey arrow illustrates the generative flow from outside to inside.
+*   The arrow originates from the top-right quadrant of the "구조 · 생성기제" content label within the outermost indigo blue circle.
+*   It curves smoothly inwards, crossing the boundaries of the circles.
+*   The arrow ends in the top-right quadrant of the "관측된 사건" content label within the innermost clear teal circle.
+*   Along this generative arrow, three distinct, smaller, sans-serif, dark grey text labels are placed to describe the flow:
+    *   "생성기제" (Generative Mechanism): Positioned near the start of the arrow, within the outermost circle's segment.
+    *   "→ 사건" (→ Events): Positioned in the middle segment of the arrow, within the middle circle's segment.
+    *   "→ 관측" (→ Observation): Positioned near the end of the arrow, within the innermost circle's segment.
+    *   These labels collectively read "생성기제 → 사건 → 관측" along the arrow's path.
+
+**4. Groupings:**
+The concentric circles inherently represent the hierarchical grouping and subset containment, with each inner circle being a subset of the outer one.
+
+**5. Labels and Annotations:**
+*   **Relation Annotation:** Placed horizontally on the top-left side of the diagram, outside the circles: "Relation: 실재적 ⊇ 현실적 ⊇ 경험적". This text is in a dark grey, sans-serif font.
+*   **Message Annotation:** Placed horizontally on the bottom-left side of the diagram, outside the circles: "Message: observed is only a subset of reality." This text is in a dark grey, sans-serif font.
+
+**6. Input/Output:**
+This conceptual diagram does not depict explicit inputs or outputs to a system, but rather illustrates the layered nature and generative process within Critical Realism.
+
+**7. Styling:**
+*   **Background:** Pure white.
+*   **Overall Aesthetic:** Flat, minimal, and academic. No 3D effects, gradients, or shadows are used.
+*   **Colors:** Soft, muted pastel blues and teals are used for circle fills, and dark grey/white for text and arrows, ensuring high contrast and readability.
+*   **Fonts:** All text uses a clean, readable sans-serif font. Korean labels are primary, with English translations in parentheses where specified.
+*   **Line Weights:** Borders are thin, while the generative flow arrow is thicker to emphasize its dynamic nature.

@@ -4,25 +4,31 @@
 완료
 
 ## 목표
-SSCR 투고 체크리스트 재생성(.context 산출물)
-- 팀 태스크: SSCR 투고 체크리스트화 (umc 미리알림, orchestrator 정식 지시)
-- criterion: SSCR(SAGE, SSCI Q1) 공식 투고요건을 원고 프로파일에 매핑한 체크리스트를 실파일로 .context/에 생성하고 경로 통지
-- 배경: 이전 노트 '완료' 기록의 산출물 파일이 트리에 부재 → 미완 재분류 → 재생성
+ms 요청: B판 2장(body_ch2.tex) 인용 31건의 원문근거를 검증해 CSV 뒤 3열(원문근거_PDF확보·근거페이지/인용구·비고)을 채운다 + 핵심어휘 3개(준규칙성·생활세계 흔적·지역역량) 정의 출처 확인.
+
+## 입력
+- CSV: /Users/ujunbin/research/UMC/.context/ch2-citations-for-ps.csv (31행, 앞 7열 채워짐)
+- 배치 입력: .context/agents/fulltext-grounder/ch2-batch{A,B,C}.json
+- 로컬 PDF: /Users/ujunbin/article/ — ★커버리지 매우 낮음, 매칭된 것 대부분 오매칭(제목 검증 필수) → 주 경로는 OA/scrapling 외부 확보(27건 DOI 보유).
+
+## ★검증 규칙
+- 각 인용이 CSV '2장_인용맥락' 주장을 실제 뒷받침하는지 원문 verbatim 대조. PDF확보/근거페이지/인용구 채움.
+- 로컬 PDF는 제목·DOI 1차 대조로 동일논문 확정 후만 사용(오매칭 차단). 없으면 OA(Crossref link)→scrapling.
+- 못 구하면 비고 '원문 미확보' 정직표기(창작·추정 금지).
+- DOI 없는 4건(bhaskar1975·sen1985·raudenbush2002 단행본, itu2025 기관보고서)=서지 2차확인만.
+- ms 강조 핵심: bhaskar1975·danermark2019·eastwood2014/2019·perkins1987·gill2005·vangrootel2017 우선.
+
+## 사용할 스킬·서브에이전트
+- fulltext-grounder(3배치 병렬, 이번 세션은 general-purpose로 대행), fetch-paper-fulltext, scholarly-evidence-search.
 
 ## 산출물
-- 체크리스트(실파일): agents/paper-scout/.context/sscr-submission-checklist.md
-- 출처: SAGE Author Instructions(SSC), 2026-06-25 직접 조회
-- 핵심 요건: 10,000단어 한도(참고문헌 포함)·초록 150-200·키워드≥5·APA7·double-anonymized·AI사용공개(LLM코딩 131,792건)·Title Page 분리·윤리/COI/Funding/Data 진술·300dpi·ORCID·Sage Track
-- G2 방법론 기여 방어 체크리스트 보존(LLM분류 검증/멀티에이전트/EB수축/메타틀 근거 매핑)
-- orchestrator 답장 통지 완료, umc 노트 annotate+complete 완료
+- .context/agents/fulltext-grounder/ch2-grounding-batch{A,B,C}.md (배치별 핸드오프 표)
+- 종합 후 CSV 갱신 또는 .context/handoff/로 회신. 핵심어 3개 정의 출처 별도 정리.
 
-## 정정 사항
-- 이전 노트 'single anonymized' → 공식 확인 결과 double-anonymized로 정정(본 문서 정본)
-- 이전 노트 '완료' 오기록 → 실파일 재생성으로 해소
+## 완료 기준
+- 31건 전부 PDF확보 여부·근거페이지/인용구·비고 채워짐. 미확보 정직표기.
+- 핵심어 3개 (표준정의 1문장·출처 file:page·본연구 용법 관계) 회신.
 
 ## 남은 위험
-- 10,000단어 한도가 다방법 원고에 압박 — 분량카운트+보조분석 supplementary 이관 검토(manuscript-writer)
-- AI 사용 공개 누락 시 데스크리젝트 위험 — Methods에 LLM코딩 절차·검증 명시 필요
-- IRB 해당여부는 PI 확인 영역(2차·집계데이터)
-- 방어근거 게재지·연도·JCR 실값 재확인 필요(불확실 표시 유지)
-- 후속(data-curator): '선정 저널 양식·투고요건 대조 및 원고 포맷 정렬' 입력으로 사용
+- 로컬 커버리지 낮아 외부 확보 의존 → 페이월·OA 실패 가능(scrapling 폴백, 그래도 안되면 사용자 Scopus 폴백 후보).
+- CSV 갱신·본문 삽입은 검증 후 단계. 본문 인용삽입은 mw 소관.

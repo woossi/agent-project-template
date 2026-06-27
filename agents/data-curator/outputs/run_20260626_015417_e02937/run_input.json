@@ -1,0 +1,9 @@
+{
+  "source_context": "A simple three-box left-to-right pipeline: Stage 1 Classification (yellow) -> Stage 2 EB aggregation (blue) -> Stage 3 Evidence-grounded judgment (green). Each stage is a labeled container with an arrow to the next.",
+  "communicative_intent": "Minimal three-stage pipeline test.",
+  "diagram_type": "methodology",
+  "raw_data": null,
+  "aspect_ratio": "16:9",
+  "vector_export": "none",
+  "input_images": []
+}

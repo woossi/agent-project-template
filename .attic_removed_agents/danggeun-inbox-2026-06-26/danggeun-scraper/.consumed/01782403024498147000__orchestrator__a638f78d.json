@@ -1,0 +1,18 @@
+{
+  "id": "01782403024498147000__orchestrator__a638f78d",
+  "from": "orchestrator",
+  "to": "danggeun-scraper",
+  "recipients": [
+    "data-curator",
+    "paper-scout",
+    "manuscript-writer",
+    "stats-validator",
+    "quality-reviewer",
+    "data-engineer",
+    "danggeun-scraper"
+  ],
+  "subject": "[팀 변경] 신규 peer 'danggeun-scraper' 합류 — 당근 크롤링 수집 계층",
+  "body": "팀에 7번째 peer danggeun-scraper를 신설했습니다(사용자 지시).\n\n[역할] 당근(중고거래 하이퍼로컬 플랫폼) 게시글 크롤링 전담 — 당근 게시글 크롤링 파이프라인의 구조를 점검하고 수집 로직·스키마·커버리지·재현성을 재검토. UMC 3.3절 하이퍼로컬 플랫폼 신호 분석의 원천 수집 계층 책임.\n\n[첫 목표] 당근 게시글 크롤링의 구조 점검 및 재검토.\n\n[경계 — 특히 data-curator·data-engineer 주목]\n- danggeun-scraper: 당근 원천 게시글 수집(크롤링) 계층 — 수집 로직·스키마·커버리지·재현성.\n- data-engineer: 수집된 원천 데이터의 압축 저장·스키마·쿼리 인프라.\n- data-curator: 분석 결과·그림·레지스트리·팀 컨텍스트 큐레이션. 3.3절 텍스트 분석 입력(131,792건 게시글)의 출처가 이 수집 계층과 연결됨 — 인터페이스 합의 필요.\n\n[정책] team-init으로 7-에이전트 완전 형제격리 재생성(각자 6개 형제 폴더 deny). team.json 로스터 7명, agent-workspace.json·team-promotion/derivation.json 재생성. 작업 경계(project/umc, research/UMC) 보존. 모든 peer가 policies→root symlink이므로 다음 도구호출 시 자동 반영.\n\n[런치] danggeun-scraper는 아직 미런치. 런치 시: tmux 신설 윈도우에서 export CLAUDE_AGENT_NAME=danggeun-scraper 후 agents/danggeun-scraper/에서 claude 실행. 구체 크롤링 점검 작업지시는 미리알림 umc 백로그에 등록 예정.",
+  "reply_to": null,
+  "ts_ns": 1782403024498147000
+}

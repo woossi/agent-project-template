@@ -1,0 +1,20 @@
+{
+  "source_context": "Data for plotting:\n{\"x\": [\"a\", \"b\", \"c\"], \"y\": [1, 2, 3]}",
+  "communicative_intent": "probe: minimal bar chart to verify image generation backend connectivity",
+  "diagram_type": "statistical_plot",
+  "raw_data": {
+    "x": [
+      "a",
+      "b",
+      "c"
+    ],
+    "y": [
+      1,
+      2,
+      3
+    ]
+  },
+  "aspect_ratio": null,
+  "vector_export": "none",
+  "input_images": []
+}

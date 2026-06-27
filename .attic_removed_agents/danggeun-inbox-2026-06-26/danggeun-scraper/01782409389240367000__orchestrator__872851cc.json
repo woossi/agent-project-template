@@ -1,0 +1,12 @@
+{
+  "id": "01782409389240367000__orchestrator__872851cc",
+  "from": "orchestrator",
+  "to": "danggeun-scraper",
+  "recipients": [
+    "danggeun-scraper"
+  ],
+  "subject": "[확인] 크롤링 동결·future work handoff 접수 — §5 입력으로 mw에 전달함",
+  "body": "동결 반영·future work handoff 확인. 표적/전국 크롤러·보고서08 보존+미실행 고정, ToS 게이트 유지, §3.3 현 정의 유지 — 전부 지시대로입니다.\n\nhandoff_future_work_comments.md를 manuscript-writer ⑤§5 한계·향후연구 입력 [1]로 전달했습니다(규모 ~37만 게시글·~187만 댓글 추정·ToS+분석단위변경으로 보류·약/추정 톤). §5 본문은 mw가 작성합니다.\n\n크롤링 작업 동결 유지. B/C 스키마 합의(de·dc) 회신은 기존 raw 한정으로 오면 처리하되 추가 수집 없음. 다음 지시까지 대기. 수고하셨습니다.",
+  "reply_to": "01782408870401140000__danggeun-scraper__664d358c",
+  "ts_ns": 1782409389240367000
+}

@@ -1,0 +1,133 @@
+I am working on a task: given the 'Methodology' section of a paper, and the caption of the desired figure, automatically generate a corresponding illustrative diagram. I will input the text of the 'Methodology' section, the figure caption, and your output should be a detailed description of an illustrative figure that effectively represents the methods described in the text.
+
+To help you understand the task better, and grasp the principles for generating such figures, I will also provide you with several examples. You should learn from these examples to provide your figure description.
+
+** IMPORTANT: **
+Your description should be as detailed as possible. Semantically, clearly describe each element and their connections. Formally, include various details such as background style (typically pure white or very light pastel), colors, line thickness, icon styles, etc. Remember: vague or unclear specifications will only make the generated figure worse, not better.
+
+Your description should cover:
+1. **Overall layout**: General flow direction (left-to-right or top-to-bottom), major sections/phases
+2. **Components**: Each box, module, or element with its exact label
+3. **Connections**: Arrows, data flows, and their directions
+4. **Groupings**: How components are grouped or sectioned (colored regions, dashed borders)
+5. **Labels and annotations**: Text labels, mathematical notations
+6. **Input/Output**: What enters and exits the system
+7. **Styling**: Background fills, color palettes (in natural language, e.g., "soft sky blue", "warm peach" — never hex codes), line weights, icon styles
+
+## Methodology Section
+## Restructured Methodology for Diagram Generation
+
+### System Overview
+The system is a three-layer UMC pipeline, processing information sequentially through Layer 1 (Classification), Layer 2 (EB aggregation), and Layer 3 (Evidence-grounded judgment).
+
+### System Input and Output
+*   **System Input**: Platform records
+*   **System Output**: Supported final coding
+
+### Grouping: Layer 1: Classification
+*   **Unit of Analysis**: post
+*   **Description**: Screens and tags candidate posts for UMC relevance and dimension.
+*   **Sequential Operations**:
+    1.  **Component**: Rule + keyword screen
+        *   **Input**: Platform records
+        *   **Output**: Candidate posts
+    2.  **Component**: Relevance coding
+        *   **Input**: Candidate posts
+        *   **Output**: Posts with relevance codes
+    3.  **Component**: Dimension tagging
+        *   **Input**: Posts with relevance codes
+        *   **Output**: Classified post base
+*   **Layer Output**: Classified post base (data type: classified posts)
+
+### Grouping: Layer 2: EB Aggregation
+*   **Unit of Analysis**: district x dimension
+*   **Description**: Aggregates classified posts, computes rates, and applies empirical Bayes shrinkage.
+*   **Input**: Classified post base (from Layer 1)
+*   **Sequential Operations**:
+    1.  **Component**: Dong linkage
+        *   **Input**: Classified post base
+        *   **Output**: Posts linked to dong (administrative units)
+    2.  **Component**: Exposure denominator calculation
+        *   **Input**: Posts linked to dong
+        *   **Output**: Exposure denominator (for rate calculation)
+    3.  **Component**: Observed post rate calculation
+        *   **Input**: Posts linked to dong, Exposure denominator
+        *   **Output**: Observed post rate
+    4.  **Component**: EB shrinkage (Empirical Bayes shrinkage rate model)
+        *   **Input**: Observed post rate, Administrative prior (implied)
+        *   **Mathematical Operation**: Combines administrative prior with platform observations using an empirical Bayes shrinkage rate model.
+        *   **Output**: Posterior rate
+    5.  **Component**: High-z_shift review cells flagging
+        *   **Input**: Posterior rate
+        *   **Output**: High-z_shift review cells
+*   **Layer Output**: High-z_shift review cells (data type: cells flagged for review)
+
+### Grouping: Layer 3: Evidence-grounded Judgment
+*   **Unit of Analysis**: post-level case
+*   **Description**: Runs five execution stages (A-E) across an information boundary to produce a final coding.
+*   **Input**: High-z_shift review cells (from Layer 2)
+*   **Key Relationship**: Information Boundary (drawn as two dashed boxes) separates I_R and I_J. This boundary blocks confirmation bias.
+*   **Key Relationship**: High-divergence (high z_shift) cells trigger post-level hypotheses but do not determine the final judgment.
+
+#### Sub-Grouping: I_R: Stage A/B Isolated Inputs (Restricted Information Set)
+*   **Description**: Hypothesis generation stage with restricted information access.
+*   **Input**: Stage A post record (triggered by High-z_shift review cells)
+*   **Parallel Operations (Stage B)**:
+    1.  **Component**: Abductive hypothesis agent
+        *   **Input**: Stage A post record (post text/metadata/dimension codes)
+        *   **Restriction**: Does NOT see EB divergence or district profiles.
+        *   **Output**: Abductive hypothesis
+    2.  **Component**: Forward hypothesis agent
+        *   **Input**: Stage A post record (post text/metadata/dimension codes)
+        *   **Restriction**: Does NOT see EB divergence or district profiles.
+        *   **Output**: Forward hypothesis
+    3.  **Component**: Sequential hypothesis agent
+        *   **Input**: Stage A post record (post text/metadata/dimension codes)
+        *   **Restriction**: Does NOT see EB divergence or district profiles.
+        *   **Output**: Sequential hypothesis
+*   **Output**: Set of generated hypotheses (from Abductive, Forward, Sequential agents)
+
+#### Sub-Grouping: I_J: Stage C/D/E Evidence Set (Expanded Judgment Set)
+*   **Description**: Judgment stage with expanded evidence access.
+*   **Input**: Hypotheses (from I_R, crossing the information boundary – "hypothesis hand-off")
+*   **Key Relationship**: Only judgment (I_J, Stage C/D/E) sees expanded evidence.
+*   **Sequential Operations**:
+    1.  **Component**: Stage C data specification
+        *   **Input**: Hypotheses
+        *   **Output**: Data specification based on hypotheses
+    2.  **Component**: Stage D rule-based evidence
+        *   **Input**: Data specification
+        *   **Output**: Rule-based evidence
+    3.  **Component**: Stage E judgment
+        *   **Input**: Rule-based evidence
+        *   **Output**: Supported final coding
+*   **Layer Output**: Supported final coding (data type: final classified post coding)
+
+## Figure Caption
+This multi-layered flowchart illustrates the three-layer UMC pipeline, depicting a top-to-bottom flow. Layer 1 (Classification) processes platform records to a "Classified post base," which feeds into Layer 2 (EB aggregation) to compute rates, apply empirical Bayes shrinkage, and identify "High-z_shift review cells." These review cells then initiate Layer 3 (Evidence-grounded judgment), which is critically divided by an "Information Boundary" (dashed boxes): a restricted set (I_R) handles Stage A/B hypothesis generation (Abductive, Forward, Sequential) without EB divergence, while an expanded set (I_J) processes Stage C/D/E rule-based evidence to produce a "Supported final coding," emphasizing the controlled information flow for bias prevention.
+
+## Reference Examples
+(No reference examples available. Generate based on source context alone.)
+
+Based on the methodology section, figure caption, and learning from the style and structure of the reference examples above, generate a comprehensive and detailed textual description of the methodology diagram.
+
+Note: Do not include figure titles (e.g., "Figure 1: ...") in the diagram description. The caption should remain separate from the diagram content.
+
+## Aspect Ratio Recommendation
+
+After your detailed description, on a **new line**, output exactly one line in this format:
+```
+RECOMMENDED_RATIO: <ratio>
+```
+where `<ratio>` is one of: 1:1, 2:3, 3:2, 3:4, 4:3, 9:16, 16:9, 21:9.
+
+Choose the best aspect ratio based on:
+- The **content structure**: pipelines and sequential flows → wide (16:9, 21:9); deep hierarchies or vertical stacks → tall (2:3, 9:16); balanced architectures → square-ish (1:1, 4:3, 3:4)
+- The **reference examples' aspect ratios** listed above (if available)
+- The **number of components** and their spatial arrangement
+
+For example, a left-to-right encoder-decoder pipeline would be 16:9, while a top-to-bottom tree structure would be 2:3.
+
+
+## User-Provided Reference/Sketch
+The final 1 attached image(s), after the reference example images, are user-provided reference/sketch images (e.g. a hand-drawn sketch, whiteboard photo, or a prior version of the figure). Use them as guidance for the layout and content of the target diagram while staying faithful to the source text.

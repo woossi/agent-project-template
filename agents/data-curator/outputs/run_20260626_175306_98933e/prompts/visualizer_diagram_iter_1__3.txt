@@ -1,0 +1,69 @@
+You are an expert scientific diagram illustrator. Generate high-quality scientific diagrams based on user requests. Note that do not include figure titles in the image.
+
+CRITICAL: All text labels in the diagram must be rendered in clear, readable English. Use the EXACT label names specified in the description. Do not generate garbled, misspelled, or non-English text.
+
+The figure should be laid out on a clean, pure white background. The central focus will be a set of three nested concentric circles, slightly left-aligned to allow space for annotations on the right. A prominent title will be placed at the top.
+
+**Overall Layout:**
+The diagram is structured with a main title at the top, and the core conceptual model, consisting of three nested concentric circles, positioned centrally, slightly biased to the left. An important generative arrow will cut through these circles, pointing inward. A textual annotation detailing set inclusion will be placed to the right of the concentric circles.
+
+**Components:**
+
+1.  **Main Title:**
+    *   **Label:** "Critical Realism's Stratified Ontology (비판적 실재론의 층화된 존재론)"
+    *   **Style:** Centered at the very top of the figure, in a bold, dark charcoal grey sans-serif font, noticeably larger than other text labels.
+
+2.  **Ontological Stratum: The Real (실재적 층위)**
+    *   **Shape:** The outermost and largest of the three concentric circles.
+    *   **Border:** A solid, moderately thick dark charcoal grey line.
+    *   **Fill:** A very light, soft sky blue color.
+    *   **Main Label:** "The Real (실재적 층위)" positioned prominently at the top-center of this circle, in a bold, dark charcoal grey sans-serif font.
+    *   **Content Label:** "구조 · 생성기제" (structures and generative mechanisms) placed centrally within this circle, in a dark charcoal grey sans-serif font. The size of this circle should be visually much larger than the other two, emphasizing its encompassing nature.
+
+3.  **Ontological Stratum: The Actual (현실적 층위)**
+    *   **Shape:** The middle concentric circle, perfectly centered within 'The Real'. Its diameter should be approximately 60-70% of 'The Real' circle's diameter.
+    *   **Border:** A solid, moderately thick dark charcoal grey line.
+    *   **Fill:** A soft, warm peach color.
+    *   **Main Label:** "The Actual (현실적 층위)" positioned at the top-center of this circle, in a bold, dark charcoal grey sans-serif font.
+    *   **Content Label:** "발생한 사건" (events that occur) placed centrally within this circle, in a dark charcoal grey sans-serif font.
+
+4.  **Ontological Stratum: The Empirical (경험적 층위)**
+    *   **Shape:** The innermost and smallest concentric circle, perfectly centered within 'The Actual'. Its diameter should be approximately 30-40% of 'The Actual' circle's diameter, making it significantly smaller than both outer circles.
+    *   **Border:** A solid, moderately thick dark charcoal grey line.
+    *   **Fill:** A pale, soft lavender color.
+    *   **Main Label:** "The Empirical (경험적 층위)" positioned at the top-center of this circle, in a bold, dark charcoal grey sans-serif font.
+    *   **Content Label:** "관측된 사건" (observed events / observations) placed centrally within this circle, in a dark charcoal grey sans-serif font.
+
+**Connections:**
+
+1.  **Generative Direction Arrow:**
+    *   **Style:** A single, bold, solid arrow, pointing directly inward towards the center of the concentric circles.
+    *   **Color:** Rich forest green.
+    *   **Thickness:** Substantially thick.
+    *   **Path:** The arrow's tail should originate conceptually from outside 'The Real' stratum. It should then pass through 'The Real', then 'The Actual', and its arrowhead should clearly terminate within 'The Empirical' stratum.
+    *   **Label:** "Generative Direction" in a bold, dark charcoal grey sans-serif font placed slightly above or to the side of the arrow. Below this, a smaller text: "Mechanisms → Events → Observations" in dark charcoal grey, regular sans-serif font, using a standard textual arrow symbol.
+
+**Groupings:**
+The three concentric circles naturally form a single cohesive "Stratified Ontology Model". No explicit bounding box is needed around them, as their nested arrangement visually defines the grouping.
+
+**Labels and Annotations:**
+
+1.  **Set Inclusion Annotation:**
+    *   **Location:** To the right of the concentric circles, vertically centered with the middle ('The Actual') circle.
+    *   **Shape:** A very light grey rectangular box with softly rounded corners and a fine dark charcoal grey border.
+    *   **Text:** "Set Inclusion:" in dark charcoal grey, bold sans-serif font, followed on a new line by "실재적 ⊇ 현실적 ⊇ 경험적" in dark charcoal grey, regular sans-serif font.
+
+**Input/Output (Conceptual):**
+The conceptual input ("구조 · 생성기제") and output ("관측된 사건") are implicitly represented by the content labels within the respective strata and the direction of the generative arrow. No separate input/output boxes are required.
+
+**Styling:**
+
+*   **Background:** Pure white.
+*   **Color Palette:**
+    *   Circle Fills: Soft sky blue (Real), warm peach (Actual), pale lavender (Empirical).
+    *   Borders & Text: Dark charcoal grey for maximum readability.
+    *   Generative Arrow: Rich forest green.
+    *   Annotation Box: Very light grey fill with a fine dark charcoal grey border.
+*   **Line Styles:** All lines are solid.
+*   **Font:** A clean, legible sans-serif font should be used consistently throughout the diagram for all labels and text.
+*   **Emphasis:** The significant size difference between the concentric circles is crucial to visually convey the "generative depth" and that observed events are a small subset of reality.

@@ -1,0 +1,9 @@
+{
+  "source_context": "Connectivity check: verify the PaperBanana backend has a valid API key after restart.",
+  "communicative_intent": "A minimal test box labeled OK.",
+  "diagram_type": "methodology",
+  "raw_data": null,
+  "aspect_ratio": "1:1",
+  "vector_export": "none",
+  "input_images": []
+}

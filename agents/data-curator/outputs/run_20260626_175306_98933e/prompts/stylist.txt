@@ -1,0 +1,259 @@
+You are a Lead Visual Designer for top-tier AI conferences (NeurIPS, ICML, ICLR, CVPR). You specialize in transforming rough diagram descriptions into polished, publication-ready visual specifications.
+
+You are given a Detailed Description of an academic methodology diagram, along with Aesthetic Guidelines, the original Source Context from the paper, and the Figure Caption.
+
+Your task is to refine the Detailed Description so it produces a visually stunning, clear, and professional academic illustration.
+
+## 6 Crucial Instructions
+
+1. **Preserve Aesthetics**: Maintain and enhance the visual quality. Use soft, muted pastel colors described in natural language (e.g., "soft sky blue", "warm peach", "light sage green"). NEVER output hex color codes, pixel dimensions, point sizes, or CSS-like specifications — these will be rendered as garbled text in the final image.
+
+2. **Intervene Only When Necessary**: If the description already describes a high-quality, professional visual design, PRESERVE IT. Do not rewrite for the sake of rewriting. Focus your edits on areas that genuinely need improvement.
+
+3. **Respect Diversity**: Different diagram styles (flowcharts, architecture diagrams, pipeline visualizations) have different conventions. Adapt your refinements to the specific diagram type rather than forcing a single template. For example, agent/LLM papers often use illustrative icons (cute 2D robot avatars, chat bubbles), while theoretical papers use minimalist graph nodes — respect these domain conventions.
+
+4. **Enrich Details**: Where the description is vague about visual properties, add specific but natural-language guidance. For example, instead of leaving "a box labeled X", specify "a rounded rectangle with soft blue fill and a slightly darker blue border, labeled X in bold sans-serif text".
+
+5. **Preserve Content**: Do NOT add, remove, or modify any components, connections, or labels from the original description. Your role is purely visual refinement — the content and structure must remain exactly as specified.
+
+6. **Handle Icons with Care**: Be cautious when modifying icons — they may carry specific semantic meanings in the research context. Some icons have conventional technical meanings (e.g., snowflake ❄️ = frozen/non-trainable parameters, flame 🔥 = trainable/fine-tuned parameters, padlock 🔒 = locked/static). When encountering such icons, reference the Source Context to verify their intent before making changes. Purely decorative or symbolic icons can be freely enhanced.
+
+## Aesthetic Guidelines
+# NeurIPS 2025 Method Diagram Aesthetics Guide
+
+## 1. The "NeurIPS Look"
+
+The prevailing aesthetic for 2025 is "Soft Tech & Scientific Pastels."
+Gone are the days of harsh primary colors and sharp black boxes. The modern
+NeurIPS diagram feels approachable yet precise. It utilizes high-value (light)
+backgrounds to organize complexity, reserving saturation for the most critical
+active elements. The vibe balances clean modularity (clear separation of parts)
+with narrative flow (clear left-to-right progression).
+
+## 2. Detailed Style Options
+
+### A. Color Palettes
+
+Design Philosophy: Use color to group logic, not just to decorate.
+Avoid fully saturated backgrounds.
+
+Background Fills (The "Zone" Strategy):
+- Most papers use very light, desaturated pastels (Opacity ~10-15%).
+- Aesthetically pleasing options: Cream/Beige (warm academic feel),
+  Pale Blue/Ice (clean technical feel), Mint/Sage (soft organic feel),
+  Pale Lavender (distinctive modern feel).
+- Alternative (~20%): White backgrounds with colored dashed borders.
+
+Functional Element Colors:
+- For "Active" Modules: Medium saturation. Common pairings: Blue/Orange,
+  Green/Purple, or Teal/Pink.
+- Trainable Elements: Often Warm tones (Red, Orange, Deep Pink).
+- Frozen/Static Elements: Often Cool tones (Grey, Ice Blue, Cyan).
+- For Highlights/Results: High saturation reserved for "Error/Loss,"
+  "Ground Truth," or final output.
+
+### B. Shapes & Containers
+
+Design Philosophy: "Softened Geometry." Sharp corners for data; rounded
+corners for processes.
+
+- Process Nodes: Rounded Rectangles (dominant ~80%).
+- Tensors & Data: 3D Stacks/Cuboids for volume, Flat Squares/Grids
+  for matrices/tokens.
+- Cylinders: Reserved for Databases, Buffers, or Memory.
+- Grouping: Solid light-colored containers with "Macro-Micro" pattern.
+- Borders: Solid for physical components, Dashed for logical stages.
+
+### C. Lines & Arrows
+
+- Orthogonal/Elbow: For Network Architectures.
+- Curved/Bezier: For System Logic, Feedback Loops.
+- Solid Black/Grey: Standard data flow.
+- Dashed Lines: Auxiliary flow (gradients, skip connections).
+- Integrated Math: Operators placed directly on lines.
+
+### D. Typography & Icons
+
+- Labels: Sans-Serif (Arial, Roboto, Helvetica). Bold for headers.
+- Variables: Serif, Italicized (LaTeX style).
+- Icons: Trainable (Fire, Lightning), Frozen (Snowflake, Padlock),
+  Operations (Gear, Magnifying Glass), Content (Document, Chat Bubble).
+
+### E. Layout & Composition
+
+- Flow: Left-to-right for sequential, top-to-bottom for hierarchical.
+- Alignment: Snap to implicit grid.
+- Spacing: Consistent gaps, closer within groups.
+- Balance: Distribute visual weight evenly.
+- Whitespace: Intentional separation of phases/concepts.
+
+## 3. Common Pitfalls
+
+- The "PowerPoint Default" Look with heavy black outlines.
+- Font Mixing (Times New Roman for labels).
+- Inconsistent Dimension mixing (2D and 3D without reason).
+- Primary saturated backgrounds for grouping.
+- Ambiguous arrows (same style for data flow and gradient flow).
+
+## 4. Domain-Specific Styles
+
+- AGENT/LLM Papers: Illustrative, narrative, cartoony. Chat bubbles,
+  robots, document icons.
+- COMPUTER VISION Papers: Spatial, dense, geometric. Frustums, rays,
+  point clouds, RGB color coding.
+- THEORETICAL Papers: Minimalist, abstract. Graph nodes, manifolds,
+  grayscale with one highlight color.
+- GENERATIVE/LEARNING Papers: Dynamic, process-oriented. Noise/denoising
+  metaphors, gradual color transitions.
+
+
+## Source Context
+## Restructured Methodology: Critical Realism's Stratified Ontology
+
+**Overall System: Critical Realism's Stratified Ontology (비판적 실재론의 층화된 존재론)**
+This conceptual model describes three nested, concentric ontological strata of reality. Its purpose is to illustrate the generative depth of reality, emphasizing that empirically observed events constitute only a subset of actual events, which are themselves generated by underlying structures and generative mechanisms.
+
+---
+
+**Components:**
+
+*   **Ontological Stratum: The Real (실재적 층위)**
+    *   **Description:** The outermost and largest region of reality. This stratum encompasses entities, structures, and generative mechanisms that exist independently of whether they are observed or not.
+    *   **Content Label:** "구조 · 생성기제" (structures and generative mechanisms)
+    *   **Visual Characteristic:** Represented as the largest concentric region.
+
+*   **Ontological Stratum: The Actual (현실적 층위)**
+    *   **Description:** The middle region of reality, fully contained within The Real. This stratum comprises the events that occur when generative mechanisms operate under specific conditions.
+    *   **Content Label:** "발생한 사건" (events that occur)
+    *   **Visual Characteristic:** Represented as a medium concentric region, fully enclosed by The Real.
+
+*   **Ontological Stratum: The Empirical (경험적 층위)**
+    *   **Description:** The innermost and smallest region of reality, fully contained within The Actual. This stratum represents the subset of events that are actually observed by humans.
+    *   **Content Label:** "관측된 사건" (observed events / observations)
+    *   **Visual Characteristic:** Represented as the smallest concentric region, fully enclosed by The Actual.
+
+---
+
+**Groupings:**
+
+*   **Stratified Ontology Model:**
+    *   **Members:** The Real (실재적 층위), The Actual (현실적 층위), and The Empirical (경험적 층위).
+    *   **Arrangement:** These three strata form a single, cohesive model depicted as three nested concentric regions (circles or rounded rectangles).
+    *   **Containment Hierarchy:** The Real forms the outermost layer, The Actual is fully contained within The Real, and The Empirical is fully contained within The Actual, forming the innermost layer.
+    *   **Visual Emphasis:** To convey the "generative depth" message that "only a small subset is observed," the outer rings (The Real and The Actual) must be visibly much larger than the inner ring (The Empirical).
+
+---
+
+**Data Flow (Generative Direction):**
+
+*   **Flow Path:** A single causal/generative directional arrow explicitly crosses the three strata from OUTSIDE to INSIDE.
+*   **Source:** Structures and Generative Mechanisms (originating within The Real).
+*   **Intermediate Step:** Generation of Events that Occur (manifesting within The Actual).
+*   **Destination:** Observation of Events (a subset of which are accessible within The Empirical).
+*   **Directional Arrow Labeling:** The flow "mechanism → event → observation" must be clearly readable, pointing inward.
+*   **Meaning:** Generative mechanisms produce events, and a subset of those events is subsequently observed.
+
+---
+
+**Input/Output (Conceptual):**
+
+*   **System Input (Conceptual):** The inherent existence and operation of "구조 · 생성기제" (structures and generative mechanisms) within "실재적 층위" (The Real).
+*   **System Output (Conceptual):** The "관측된 사건" (observed events / observations) that are accessible within "경험적 층위" (The Empirical).
+
+---
+
+**Key Relationships:**
+
+*   **Containment Relationship:**
+    *   **Description:** A fundamental set/subset containment model, where each inner stratum is entirely encompassed by the one immediately outside it.
+    *   **Explicit Relation:** The Real contains The Actual, which in turn contains The Empirical.
+*   **Generative Depth (발생적 깊이):**
+    *   **Description:** The core message of the model, highlighting that what is empirically observed is fundamentally only a SUBSET of the full reality (structures, mechanisms, and all actual events).
+    *   **Visual Reinforcement:** The significant difference in size between the outer and inner concentric regions is crucial for conveying this principle instantly.
+*   **Causal/Generative Link:** The direct causal connection where the operation of generative mechanisms leads to the occurrence of events, a portion of which then become observable.
+
+---
+
+**Sequential vs Parallel Operations:**
+
+*   **Sequential Generation:** The process of generation, from mechanisms to events to observations, is conceptualized as a sequential, directional flow.
+*   **Parallel Existence:** The three ontological strata (The Real, The Actual, The Empirical) are understood to exist simultaneously as distinct, yet nested, layers of reality.
+
+---
+
+**Mathematical Operations:**
+
+*   **Set Inclusion:** 실재적 ⊇ 현실적 ⊇ 경험적 (The Real is a superset of The Actual, which is a superset of The Empirical).
+
+## Figure Caption
+Figure 1 presents a conceptual diagram of Critical Realism's stratified ontology, depicting three nested concentric regions. The outermost 'Real' stratum (실재적 층위), representing '구조 · 생성기제,' fully contains the 'Actual' stratum (현실적 층위) of '발생한 사건,' which in turn fully contains the innermost 'Empirical' stratum (경험적 층위) of '관측된 사건.' This visual hierarchy, with significantly larger outer rings, emphasizes that observed events are only a small subset of reality. A prominent arrow flows inward, from the 'Real' through the 'Actual' to the 'Empirical,' depicting the generative direction from mechanisms to events to observations.
+
+## Current Description
+Note: Your primary focus should be on the Current Description and Aesthetic Guidelines. The Source Context and Figure Caption are provided for reference only — do not regenerate a description from scratch based solely on them while ignoring the existing description.
+The figure should be laid out on a clean, pure white background. The central focus will be a set of three nested concentric circles, slightly left-aligned to allow space for annotations on the right. A prominent title will be placed at the top.
+
+**Overall Layout:**
+The diagram is structured with a main title at the top, and the core conceptual model, consisting of three nested concentric circles, positioned centrally, slightly biased to the left. An important generative arrow will cut through these circles, pointing inward. A textual annotation detailing set inclusion will be placed to the right of the concentric circles.
+
+**Components:**
+
+1.  **Main Title:**
+    *   **Label:** "Critical Realism's Stratified Ontology (비판적 실재론의 층화된 존재론)"
+    *   **Style:** Centered at the very top of the figure, in a bold, dark grey sans-serif font, slightly larger than other text labels.
+
+2.  **Ontological Stratum: The Real (실재적 층위)**
+    *   **Shape:** The outermost and largest of the three concentric circles.
+    *   **Border:** A solid, medium-thickness (e.g., 2.5pt) dark grey line.
+    *   **Fill:** A very light, soft sky blue color.
+    *   **Main Label:** "The Real (실재적 층위)" positioned prominently at the top-center of this circle, in a bold, dark grey sans-serif font.
+    *   **Content Label:** "구조 · 생성기제" (structures and generative mechanisms) placed centrally within this circle, in a dark grey sans-serif font. The size of this circle should be visually much larger than the other two, emphasizing its encompassing nature.
+
+3.  **Ontological Stratum: The Actual (현실적 층위)**
+    *   **Shape:** The middle concentric circle, perfectly centered within 'The Real'. Its diameter should be approximately 60-70% of 'The Real' circle's diameter.
+    *   **Border:** A solid, medium-thickness (e.g., 2.5pt) dark grey line.
+    *   **Fill:** A soft, warm peach color.
+    *   **Main Label:** "The Actual (현실적 층위)" positioned at the top-center of this circle, in a bold, dark grey sans-serif font.
+    *   **Content Label:** "발생한 사건" (events that occur) placed centrally within this circle, in a dark grey sans-serif font.
+
+4.  **Ontological Stratum: The Empirical (경험적 층위)**
+    *   **Shape:** The innermost and smallest concentric circle, perfectly centered within 'The Actual'. Its diameter should be approximately 30-40% of 'The Actual' circle's diameter, making it significantly smaller than both outer circles.
+    *   **Border:** A solid, medium-thickness (e.g., 2.5pt) dark grey line.
+    *   **Fill:** A pale, soft lavender color.
+    *   **Main Label:** "The Empirical (경험적 층위)" positioned at the top-center of this circle, in a bold, dark grey sans-serif font.
+    *   **Content Label:** "관측된 사건" (observed events / observations) placed centrally within this circle, in a dark grey sans-serif font.
+
+**Connections:**
+
+1.  **Generative Direction Arrow:**
+    *   **Style:** A single, bold, solid arrow, pointing directly inward towards the center of the concentric circles.
+    *   **Color:** Rich forest green.
+    *   **Thickness:** Thick (e.g., 4pt).
+    *   **Path:** The arrow's tail should originate conceptually from outside 'The Real' stratum. It should then pass through 'The Real', then 'The Actual', and its arrowhead should clearly terminate within 'The Empirical' stratum.
+    *   **Label:** "Generative Direction" in a bold, dark grey sans-serif font placed slightly above or to the side of the arrow. Below this, a smaller text and arrow icon: "Mechanisms → Events → Observations" in dark grey, regular font.
+
+**Groupings:**
+The three concentric circles naturally form a single cohesive "Stratified Ontology Model". No explicit bounding box is needed around them, as their nested arrangement visually defines the grouping.
+
+**Labels and Annotations:**
+
+1.  **Set Inclusion Annotation:**
+    *   **Location:** To the right of the concentric circles, vertically centered with the middle ('The Actual') circle.
+    *   **Shape:** A light grey rectangular box with slightly rounded corners and a thin (e.g., 1pt) dark grey border.
+    *   **Text:** "Set Inclusion:" in dark grey, bold sans-serif font, followed on a new line by "실재적 ⊇ 현실적 ⊇ 경험적" in dark grey, regular sans-serif font.
+
+**Input/Output (Conceptual):**
+The conceptual input ("구조 · 생성기제") and output ("관측된 사건") are implicitly represented by the content labels within the respective strata and the direction of the generative arrow. No separate input/output boxes are required.
+
+**Styling:**
+
+*   **Background:** Pure white.
+*   **Color Palette:**
+    *   Circle Fills: Soft sky blue (Real), warm peach (Actual), pale lavender (Empirical).
+    *   Borders & Text: Dark grey or black for maximum readability.
+    *   Generative Arrow: Rich forest green.
+    *   Annotation Box: Light grey fill with a thin dark grey border.
+*   **Line Styles:** All lines are solid.
+*   **Font:** A clean, legible sans-serif font (e.g., Arial, Helvetica) should be used consistently throughout the diagram for all labels and text.
+*   **Emphasis:** The significant size difference between the concentric circles is crucial to visually convey the "generative depth" and that observed events are a small subset of reality.
+
+Output ONLY the final polished Detailed Description. Do not include any conversational text, explanations, or preamble.

@@ -4,24 +4,44 @@
       "deny": [
         "agents/paper-scout/**",
         "agents/manuscript-writer/**",
+        "agents/manuscript-steward/**",
         "agents/stats-validator/**",
-        "agents/quality-reviewer/**"
+        "agents/quality-reviewer/**",
+        "agents/data-engineer/**",
+        "agents/inference-runner/**"
       ]
     },
     "paper-scout": {
       "deny": [
         "agents/data-curator/**",
         "agents/manuscript-writer/**",
+        "agents/manuscript-steward/**",
         "agents/stats-validator/**",
-        "agents/quality-reviewer/**"
+        "agents/quality-reviewer/**",
+        "agents/data-engineer/**",
+        "agents/inference-runner/**"
       ]
     },
     "manuscript-writer": {
       "deny": [
         "agents/data-curator/**",
         "agents/paper-scout/**",
+        "agents/manuscript-steward/**",
         "agents/stats-validator/**",
-        "agents/quality-reviewer/**"
+        "agents/quality-reviewer/**",
+        "agents/data-engineer/**",
+        "agents/inference-runner/**"
+      ]
+    },
+    "manuscript-steward": {
+      "deny": [
+        "agents/data-curator/**",
+        "agents/paper-scout/**",
+        "agents/manuscript-writer/**",
+        "agents/stats-validator/**",
+        "agents/quality-reviewer/**",
+        "agents/data-engineer/**",
+        "agents/inference-runner/**"
       ]
     },
     "stats-validator": {
@@ -29,7 +49,10 @@
         "agents/data-curator/**",
         "agents/paper-scout/**",
         "agents/manuscript-writer/**",
-        "agents/quality-reviewer/**"
+        "agents/manuscript-steward/**",
+        "agents/quality-reviewer/**",
+        "agents/data-engineer/**",
+        "agents/inference-runner/**"
       ]
     },
     "quality-reviewer": {
@@ -37,7 +60,32 @@
         "agents/data-curator/**",
         "agents/paper-scout/**",
         "agents/manuscript-writer/**",
-        "agents/stats-validator/**"
+        "agents/manuscript-steward/**",
+        "agents/stats-validator/**",
+        "agents/data-engineer/**",
+        "agents/inference-runner/**"
+      ]
+    },
+    "data-engineer": {
+      "deny": [
+        "agents/data-curator/**",
+        "agents/paper-scout/**",
+        "agents/manuscript-writer/**",
+        "agents/manuscript-steward/**",
+        "agents/stats-validator/**",
+        "agents/quality-reviewer/**",
+        "agents/inference-runner/**"
+      ]
+    },
+    "inference-runner": {
+      "deny": [
+        "agents/data-curator/**",
+        "agents/paper-scout/**",
+        "agents/manuscript-writer/**",
+        "agents/manuscript-steward/**",
+        "agents/stats-validator/**",
+        "agents/quality-reviewer/**",
+        "agents/data-engineer/**"
       ]
     }
   },
@@ -45,7 +93,8 @@
     "allow": [
       ".",
       "/Users/ujunbin/project/umc/**",
-      "/Users/ujunbin/research/UMC/**"
+      "/Users/ujunbin/research/UMC/**",
+      "/Users/ujunbin/article/**"
     ],
     "bash": {
       "allow": [],

@@ -1,0 +1,162 @@
+I am working on a task: given the 'Methodology' section of a paper, and the caption of the desired figure, automatically generate a corresponding illustrative diagram. I will input the text of the 'Methodology' section, the figure caption, and your output should be a detailed description of an illustrative figure that effectively represents the methods described in the text.
+
+To help you understand the task better, and grasp the principles for generating such figures, I will also provide you with several examples. You should learn from these examples to provide your figure description.
+
+** IMPORTANT: **
+Your description should be as detailed as possible. Semantically, clearly describe each element and their connections. Formally, include various details such as background style (typically pure white or very light pastel), colors, line thickness, icon styles, etc. Remember: vague or unclear specifications will only make the generated figure worse, not better.
+
+Your description should cover:
+1. **Overall layout**: General flow direction (left-to-right or top-to-bottom), major sections/phases
+2. **Components**: Each box, module, or element with its exact label
+3. **Connections**: Arrows, data flows, and their directions
+4. **Groupings**: How components are grouped or sectioned (colored regions, dashed borders)
+5. **Labels and annotations**: Text labels, mathematical notations
+6. **Input/Output**: What enters and exits the system
+7. **Styling**: Background fills, color palettes (in natural language, e.g., "soft sky blue", "warm peach" — never hex codes), line weights, icon styles
+
+## Methodology Section
+Conceptual diagram: stratified ontology of Critical Realism. THREE NESTED CONCENTRIC circles (subset containment), largest outside to smallest inside.
+1. Outermost largest = the Real (실재적 층위, the real); label inside band: 구조 · 생성기제.
+2. Middle, inside the Real = the Actual (현실적 층위, the actual); label: 발생한 사건.
+3. Innermost smallest = the Empirical (경험적 층위, the empirical); label: 관측된 사건.
+Relation: 실재적 ⊇ 현실적 ⊇ 경험적. Message: observed is only a subset of reality.
+One generative arrow from outside to inside: 생성기제 → 사건 → 관측.
+Style: flat, minimal, academic. Navy #1f3a5f outer, teal #2f7d95 inner. No 3D, no shadows. Korean labels with English in parentheses, readable. No abduction terms.
+
+## Figure Caption
+비판적 실재론의 층화된 존재론: 실재적 ⊇ 현실적 ⊇ 경험적 동심 포함관계와 생성기제 → 사건 → 관측의 발생 방향.
+
+## Reference Examples
+### Example 1
+**Caption**: Figure 1: An illustration of the two paradigms for FBN modeling. Top: Conceptual diagrams illustrating the core theoretical differences. The top-left provides a concrete example of a high-order (XOR) interaction to demonstrate how pairwise models fail to capture patterns that high-order models can identify. The top-right contrasts the scope of Local Constraints (acting on single nodes or edges) versus Global Constraints (acting on the entire network). Bottom: Comparison between the previous pairwise paradigm with our proposed GCM framework, which treats the adjacency matrix as a single, learnable object holistically shaped by global objectives. 
+**Source Context**: # 5 Methodology
+
+We introduce the proposed GCM in this section. It consists of three modules: (i) a prototype-based graph generator with Gumbel–Sigmoid relaxation, (ii) a batch-wise binarization algorithm (BBA) that enforces hard edge sparsity, and (iii) a multi-objective training loss aligned with task labels, subject identity, and sparsity priors. Appendix $\mathbf { E }$ summarizes pseudocode for GCM and BBA.
+
+Prototype Graph and Continuous Relaxation. We learn a binarized functional brain ne
+**Aspect Ratio**: 1.49
+**Diagram**: [See reference image 1 above]
+
+### Example 2
+**Caption**: Figure 2: Comparison between VanillaDPO (top) and DenseDPO (bottom). VanillaDPO compares two videos generated from independent random noises and only assigns a single binary preference, biasing the annotators toward slow-motion videos. In contrast, DenseDPO generates structurally similar videos from partially noised real videos, and labels segment-level dense preferences. 
+**Source Context**: # 3 Method
+
+We build upon diffusion models and the standard Direct Preference Optimization (DPO) framework, which we refer to as VanillaDPO (Sec. 3.1). We discuss the motion bias inherent in using this naïve approach for video generation and introduce StructuralDPO, a method that optimizes human preferences on structurally similar video pairs (Sec. 3.2). To address the reduction of diversity induced from using structurally similar videos, we propose DenseDPO, which enables fine-grained human pre
+**Aspect Ratio**: 1.85
+**Diagram**: [See reference image 2 above]
+
+### Example 3
+**Caption**: Figure 3: Overview of ComfyMind pipeline. Given a user instruction, the system first parses the task and delegates it to Planning Agent. The Agent incrementally explores a semantic search tree, where each node proposes a candidate workflow and receives local feedback based on execution results. 
+**Source Context**: # ComfyMind: Toward General-Purpose Generation via Tree-Based Planning and Reactive Feedback
+
+Litao Guo∗HKUST(GZ)
+
+Xinli Xu∗HKUST(GZ)
+
+Luozhou WangHKUST(GZ)
+
+Jiantao LinHKUST(GZ)
+
+Jinsong Zhou HKUST(GZ)
+
+Zixin ZhangHKUST(GZ)
+
+Bolan Su Bytedance
+
+Ying-Cong Chen† HKUST(GZ), HKUST
+
+![](images/d6469a5a950b5731d1e99f590a16bf55aacb9ff406b34cd02765e19b0286d4e0.jpg)  
+Figure 1: Overview of generative and editing capabilities supported by ComfyMind.
+
+# Abstract
+
+With the rapid advancement of generative m
+**Aspect Ratio**: 2.33
+**Diagram**: [See reference image 3 above]
+
+### Example 4
+**Caption**: Figure 3. Overview of the modules. During the training phase, holistic scorer is a detachable module that helps to build a comprehensive sight of the whole response and a rough perception of the possible future tokens. During the inference phase, we only use the well-trained feature extractor and token scorer to follow LLMs’ output streaming to perform timely judgment with acceptable latency, and a hyperparameter $k$ is used to determine the minimum number of detected harmful tokens that terminates generation. 
+**Source Context**: # From Judgment to Interference: Early Stopping LLM Harmful Outputs via Streaming Content Monitoring
+
+Yang Li1,2 Qiang Sheng1 Yehan Yang1,2 Xueyao Zhang3 Juan Cao1,2
+
+1Institute of Computing Technology, Chinese Academy of Sciences 2University of Chinese Academy of Sciences 3The Chinese University of Hong Kong, Shenzhen {liyang23s, shengqiang18z, caojuan}@ict.ac.cn
+
+ Code & Models: https://liesy.github.io/SCM
+
+Data: https://huggingface.co/datasets/liyang-ict/FineHarm
+
+# Abstract
+
+# Warning: this
+**Aspect Ratio**: 2.35
+**Diagram**: [See reference image 4 above]
+
+### Example 5
+**Caption**: Figure 4: Architecture for VisPer-LM. During Pre-Training (PT), we optimize an embedding loss at specific layers for each target encoder: layers $d \in \mathbb { D }$ , $s \in \mathbb { S }$ , and $g \in \mathbb { G }$ for the depth, segmentation, and generation tasks, respectively. We use a resampler-based embedding predictor [30], denoted as $\mathbf { P } _ { \{ \mathrm { t a s k } \} } ^ { l }$ at each layer $l$ , to output predictions. Each predictor takes in two inputs: a set of learnable queries $( \mathbf { Q } ^ { \mathrm { t a s k } } )$ and the token sequence from layer $l$ , with special tokens for other tasks omitted. The task tokens are derived from the corresponding embedding predictor’s learnable queries. During IFT, we train with only the next-token prediction objective while keeping the special tokens frozen to not affect their nature as we found it to perform empirically better in Sec. 5. 
+**Source Context**: # 4 Embedding Visual Information into LLM
+
+The current trend in developing MLLMs for visual reasoning is gluing vision encoder(s) to a decoder LLM with a projector and training the model to minimize the cross-entropy loss for classification over the LLM’s vocabulary for next token prediction (NTP). In our attempt to add a vision perspective to training MLLMs while only using a single visual encoder during inference, we aim to optimize a predictive visual embedding objective for the intermediate 
+**Aspect Ratio**: 1.62
+**Diagram**: [See reference image 5 above]
+
+### Example 6
+**Caption**: Figure 2: Overall Framework of COMPFLOW. To estimate the dynamics gap, we propose composite flow matching, which computes the Wasserstein distance between offline and online transition dynamics. Guided by the estimated dynamics gap, we augment policy training with offline transitions that exhibit low discrepancy from the online dynamics, and incorporate a behavior cloning objective to stabilize learning. To enhance data diversity and facilitate adaptation, we further encourage exploration in regions with high dynamics gap. 
+**Source Context**: # 3 Proposed Method
+
+In this section, we introduce our method, COMPFLOW. We begin by presenting a composite flow matching approach to estimate the dynamics gap via Wasserstein distance. Next, we propose a data collection strategy that actively explores high dynamics-gap regions and provide a theoretical analysis of its benefits. Finally, we describe the practical implementation details of our method.
+
+# 3.1 Estimating Dynamics Gap via Composite Flow
+
+To estimate the gap between dynamics, we firs
+**Aspect Ratio**: 2.08
+**Diagram**: [See reference image 6 above]
+
+### Example 7
+**Caption**: Figure 1: Overview of the DenoiseRotator framework. The top row illustrates a Transformer [41] layer architecture—used in mainstream models such as LLaMA [17], Mistral [24], and Qwen [42]—that consists of RMSNorm, attention, and feed-forward blocks. In the middle, learnable orthogonal matrices are inserted to rotate the weight matrices, concentrating parameter importance before pruning. The rotated weights are then merged and pruned in the bottom row. In this illustration, linear layers are represented in the $Y = X W$ format. 
+**Source Context**: # 3 Method
+
+In this section, we present the motivation and formulation of our proposed framework. We begin by formalizing the problem setting and introducing the concept of enhancing pruning robustness through concentrating parameter importance. Next, we describe how reducing the information entropy of normalized importance scores naturally leads to such concentration. Finally, we introduce a practical instantiation of this idea, termed DenoiseRotator, which implements entropy-based importance c
+**Aspect Ratio**: 1.56
+**Diagram**: [See reference image 7 above]
+
+### Example 8
+**Caption**: Figure 1: The framework consists of three modules: (a) view reconstruction, where autoencoders extract latent representations and reconstruct the inputs; (b) multi-view representation learning, which aligns views by maximizing mutual information, learns adaptive weighting to fuse complementary information, and minimizes distribution discrepancies; (c) data recovery and clustering, where missing views are completed and clustering is performed based on the completed representations. 
+**Source Context**: # 3 Method
+
+As shown in Figure 1, given two views $\mathbf { X } ^ { 1 }$ and $\mathbf { X } ^ { 2 }$ , we first map them to ${ \bf Z } ^ { 1 }$ and ${ \bf Z } ^ { 2 }$ via autoencoders, and then extract semantic information at two levels. In the low-level semantic space, the model maximizes the mutual information between views to ensure consistency alignment. In the high-level semantic space, ${ \bf Z } ^ { 1 }$ and ${ \bf Z } ^ { 2 }$ are concatenated to form the initial fused representation $
+**Aspect Ratio**: 1.82
+**Diagram**: [See reference image 8 above]
+
+### Example 9
+**Caption**: Figure 1: The JanusDNA Architecture for Bidirectional DNA Modeling. JanusDNA employs a hierarchical bidirectional strategy to comprehensively model DNA sequences. (A) DNA, with its inherent double-stranded nature. (B) The model processes both the forward and reverse complement strands independently in parallel to capture complete biological context, with their embeddings subsequently combined for downstream tasks. (C) The core JanusDNA model architecture processes a single input strand using parallel left-to-right and right-to-left pathways. Each pathway consists of Mamba-FFN and Mamba-MoE layers for effective and efficient sequential encoding. (D) The MoE architecture enhances model capacity and specialization by dynamically and sparsely routing inputs to a subset of expert networks, enabling efficient computation and improved representation learning. (E) The Bidirectional Global Fusion mechanism, utilizing a specific attention mask, integrates the forward and backward representations from (C) to ensure that each nucleotide’s embedding is informed by its complete sequence context. 
+**Source Context**: # JanusDNA: A Powerful Bi-directional Hybrid DNA Foundation Model
+
+Qihao Duan1,4,5, Bingding Huang2, Zhenqiao Song3,   
+Irina Lehmann1, Lei $\mathbf { G u ^ { 4 } } ^ { \dagger }$ , Roland $\mathbf { E i l s ^ { 1 , 5 , 6 , 7 ^ { \dagger } } }$ , Benjamin Wild1†   
+1Berlin Institute of Health, Charité – Universitätsmedizin Berlin   
+2College of Big Data and Internet, Shenzhen Technology University   
+3Language Technologies Institute, Carnegie Mellon University   
+4Epigenetics Laboratory, Max Pla
+**Aspect Ratio**: 1.76
+**Diagram**: [See reference image 9 above]
+
+
+Based on the methodology section, figure caption, and learning from the style and structure of the reference examples above, generate a comprehensive and detailed textual description of the methodology diagram.
+
+Note: Do not include figure titles (e.g., "Figure 1: ...") in the diagram description. The caption should remain separate from the diagram content.
+
+## Aspect Ratio Recommendation
+
+After your detailed description, on a **new line**, output exactly one line in this format:
+```
+RECOMMENDED_RATIO: <ratio>
+```
+where `<ratio>` is one of: 1:1, 2:3, 3:2, 3:4, 4:3, 9:16, 16:9, 21:9.
+
+Choose the best aspect ratio based on:
+- The **content structure**: pipelines and sequential flows → wide (16:9, 21:9); deep hierarchies or vertical stacks → tall (2:3, 9:16); balanced architectures → square-ish (1:1, 4:3, 3:4)
+- The **reference examples' aspect ratios** listed above (if available)
+- The **number of components** and their spatial arrangement
+
+For example, a left-to-right encoder-decoder pipeline would be 16:9, while a top-to-bottom tree structure would be 2:3.

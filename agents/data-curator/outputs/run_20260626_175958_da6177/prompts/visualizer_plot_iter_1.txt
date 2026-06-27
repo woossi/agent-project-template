@@ -1,0 +1,105 @@
+You are an expert statistical plot illustrator. Write code to generate high-quality statistical plots based on user requests.
+
+Generate complete, executable Python code using matplotlib and/or seaborn to create the following statistical plot. The code should save the figure to the path specified by the OUTPUT_PATH variable.
+
+## Plot Description
+**Detailed Description**: The requested plot is a **bar chart** titled "Minimal Bar Chart Example," designed to visually represent the provided categorical data and corresponding numerical values.
+
+**Plot Content:**
+
+1.  **Chart Type:** A vertical bar chart.
+2.  **X-Axis (Categories):**
+    *   The x-axis represents the categorical variable, labeled "Category".
+    *   There are three distinct categories: "a", "b", and "c".
+    *   Each category will correspond to the center of a bar on the x-axis.
+3.  **Y-Axis (Values):**
+    *   The y-axis represents the numerical variable, labeled "Value".
+    *   The range of the y-axis will span from 0 to a maximum value slightly above the highest data point (e.g., 3.5 or 4.0) to provide adequate visual spacing.
+4.  **Bars:**
+    *   **Bar 1:** Centered at "a" on the x-axis, with a height corresponding to a value of `1` on the y-axis.
+    *   **Bar 2:** Centered at "b" on the x-axis, with a height corresponding to a value of `2` on the y-axis.
+    *   **Bar 3:** Centered at "c" on the x-axis, with a height corresponding to a value of `3` on the y-axis.
+
+**Plot Presentation (Aesthetics):**
+
+1.  **Figure Dimensions & Background:**
+    *   The plot will be rendered with a clean white background (`#ffffff`) for maximum contrast.
+    *   The overall aspect ratio of the figure will be approximately 1.6 (width to height) for a balanced appearance.
+2.  **Chart Title:**
+    *   Text: "Minimal Bar Chart Example"
+    *   Font family: Sans-Serif (e.g., Arial, Helvetica, or a system default sans-serif).
+    *   Font size: 16pt
+    *   Font weight: Bold
+    *   Color: Black (`#000000`)
+    *   Placement: Centered above the plot area.
+3.  **X-Axis:**
+    *   **Label:** "Category"
+        *   Font family: Sans-Serif.
+        *   Font size: 12pt
+        *   Font weight: Normal
+        *   Color: Black (`#000000`)
+        *   Placement: Below the x-axis tick labels.
+    *   **Tick Labels:** "a", "b", "c"
+        *   Font family: Sans-Serif.
+        *   Font size: 10pt
+        *   Color: Black (`#000000`)
+    *   **Ticks:** Subtle, inward-facing, short length.
+    *   **Line (Spine):** Visible at the bottom.
+        *   Color: Black (`#000000`)
+        *   Line width: 1.0pt
+    *   **Top Spine:** Hidden for a cleaner, "open" look.
+4.  **Y-Axis:**
+    *   **Label:** "Value"
+        *   Font family: Sans-Serif.
+        *   Font size: 12pt
+        *   Font weight: Normal
+        *   Color: Black (`#000000`)
+        *   Placement: Rotated 90 degrees counter-clockwise, positioned to the left of the y-axis tick labels.
+    *   **Tick Labels:** 0, 1, 2, 3 (with intermediate ticks if needed for clarity).
+        *   Font family: Sans-Serif.
+        *   Font size: 10pt
+        *   Color: Black (`#000000`)
+    *   **Ticks:** Subtle, inward-facing, short length.
+    *   **Line (Spine):** Visible at the left.
+        *   Color: Black (`#000000`)
+        *   Line width: 1.0pt
+    *   **Right Spine:** Hidden for a cleaner, "open" look.
+5.  **Bars:**
+    *   **Color:** A solid, distinct blue (`#1f77b4`), chosen as a high-contrast primary color used sparingly for a single data series.
+    *   **Edge Color:** Black (`#000000`), providing a high-contrast outline as per guidelines.
+    *   **Edge Width:** 1.0pt.
+    *   **Width:** Each bar will have a width of 0.7 units, ensuring appropriate whitespace between categories.
+6.  **Grid:**
+    *   **Visibility:** Only horizontal grid lines (corresponding to y-axis major ticks) will be visible.
+    *   **Color:** Light grey (`#cccccc`).
+    *   **Line Style:** Dashed (`--`).
+    *   **Line Width:** 0.5pt.
+    *   **Placement:** Rendered behind the bars.
+
+## Raw Data
+```json
+{
+  "x": [
+    "a",
+    "b",
+    "c"
+  ],
+  "y": [
+    1,
+    2,
+    3
+  ]
+}
+```
+
+## Requirements
+- Set OUTPUT_PATH variable at the top of the code
+- Use plt.savefig(OUTPUT_PATH, dpi=300, bbox_inches='tight')
+- Do NOT include plt.show() calls
+- Publication-quality figure suitable for NeurIPS/ICML/ICLR
+- Clean, minimal design (maximize data-ink ratio)
+- Professional, colorblind-friendly color palette
+- Clear axis labels with appropriate font sizes
+- Legend that does not obstruct data
+- High resolution (300 DPI minimum)
+- Only output the Python code, nothing else

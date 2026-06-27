@@ -17,6 +17,7 @@ automatically managed.
 | --- | --- | --- |
 | agent-clone-setup | `agent-clone-setup/` | Open `agent-clone-setup/SKILL.md` only when the request clearly matches the `agent-clone-setup` workflow. |
 | create-team-agent | `create-team-agent/` | Open `create-team-agent/SKILL.md` only when the request clearly matches the `create-team-agent` workflow. |
+| fetch-paper-fulltext | `fetch-paper-fulltext/` | Open `fetch-paper-fulltext/SKILL.md` only when the request clearly matches the `fetch-paper-fulltext` workflow. |
 | give-feedback | `give-feedback/` | Open `give-feedback/SKILL.md` only when the request clearly matches the `give-feedback` workflow. |
 | journal-submission-checklist | `journal-submission-checklist/` | Open `journal-submission-checklist/SKILL.md` only when the request clearly matches the `journal-submission-checklist` workflow. |
 | process-feedback | `process-feedback/` | Open `process-feedback/SKILL.md` only when the request clearly matches the `process-feedback` workflow. |

@@ -1,0 +1,103 @@
+You are an expert scientific diagram illustrator. Generate high-quality scientific diagrams based on user requests. Note that do not include figure titles in the image.
+
+CRITICAL: All text labels in the diagram must be rendered in clear, readable English. Use the EXACT label names specified in the description. Do not generate garbled, misspelled, or non-English text.
+
+**1. Overall Layout:**
+The diagram is structured as a horizontal pipeline, flowing from left to right. It consists of three large, distinct phases or "Stages," each enclosed within its own subtly colored rectangular container with gently rounded corners. These stages are visually separated but connected by arrows indicating the flow of data or processes. The overall background of the figure is pristine white, providing a clean canvas.
+
+**2. Components:**
+
+*   **Stage 1 Container (Leftmost):**
+    *   **Background:** A very pale, warm cream yellow, like soft buttercup.
+    *   **Title:** "Stage 1" in large, bold, dark charcoal gray sans-serif text.
+    *   **Subtitle:** "Classification" in smaller, dark charcoal gray sans-serif text, positioned below the title.
+    *   **Unit Label:** "unit: post" in small, dark charcoal gray sans-serif text, positioned at the top right corner of the container.
+    *   **Internal Boxes (Top to Bottom):** All internal process nodes are rounded rectangles with borders that are a slightly darker shade of their fill color.
+        *   "Platform records": A soft light gray rounded rectangle with a thin dark gray border.
+        *   "Rule + keyword screen": A soft light gray rounded rectangle with a thin dark gray border.
+        *   "Candidate posts": A gentle sky blue rounded rectangle with a thin muted blue border.
+        *   "Relevance coding": A soft peach rounded rectangle with a thin muted orange border.
+        *   "Dimension tagging": A soft peach rounded rectangle with a thin muted orange border.
+        *   "Classified post base": An emphasized rounded rectangle with a soft, slightly deeper slate blue fill, bold white sans-serif text, and a slightly darker, muted blue border.
+
+*   **Stage 2 Container (Middle):**
+    *   **Background:** A very pale, serene sky blue.
+    *   **Title:** "Stage 2" in large, bold, dark charcoal gray sans-serif text.
+    *   **Subtitle:** "EB aggregation" in smaller, dark charcoal gray sans-serif text, positioned below the title.
+    *   **Unit Label:** "unit: district x dimension" in small, dark charcoal gray sans-serif text, positioned at the top right corner of the container.
+    *   **Internal Boxes (Top to Bottom):** All internal process nodes are rounded rectangles with borders that are a slightly darker shade of their fill color.
+        *   "Classified post base": A rounded rectangle with a soft, slightly deeper slate blue fill, bold white sans-serif text, and a slightly darker, muted blue border (visually matching the output from Stage 1).
+        *   "Dong linkage": A gentle sky blue rounded rectangle with a thin muted blue border.
+        *   "Exposure denominator": A gentle sky blue rounded rectangle with a thin muted blue border. Below its main label, in smaller, lighter gray sans-serif text: "person-time".
+        *   "Observed post rate": A gentle sky blue rounded rectangle with a thin muted blue border.
+        *   "EB shrinkage": A gentle sky blue rounded rectangle with a thin muted blue border. Below its main label, in smaller, lighter gray sans-serif text: "prior + observed rate".
+        *   "Posterior rate": A gentle sky blue rounded rectangle with a thin muted blue border. Below its main label, in smaller, lighter gray sans-serif text: "per 100k person-years".
+        *   "High-z_shift review cells": An emphasized rounded rectangle with a soft, warm coral peach fill and a slightly deeper coral border.
+
+*   **Stage 3 Container (Rightmost):**
+    *   **Background:** A very pale, calming mint green.
+    *   **Title:** "Stage 3" in large, bold, dark charcoal gray sans-serif text.
+    *   **Subtitle:** "Evidence-grounded judgment" in smaller, dark charcoal gray sans-serif text, positioned below the title.
+    *   **Unit Label:** "unit: post-level case" in small, dark charcoal gray sans-serif text, positioned at the top right corner of the container.
+    *   **Internal Groupings (Information Boundary):** Two side-by-side rectangular regions with rounded dashed borders, indicating an "information boundary."
+        *   **Left Grouping (I_R):** A rounded dashed border in a soft, muted blue. Label at the top left of this region: "I_R: Stage A/B isolated inputs" in small, muted blue sans-serif text.
+            *   **Internal Boxes:** All internal process nodes are rounded rectangles with borders that are a slightly darker shade of their fill color.
+                *   "Stage A post record": A soft light gray rounded rectangle with a thin dark gray border, positioned towards the top of I_R.
+                *   Three hypothesis boxes, stacked vertically to the right of "Stage A post record":
+                    *   "Abductive hyp.": A muted sage green rounded rectangle with a thin deeper green border.
+                    *   "Forward hyp.": A muted sage green rounded rectangle with a thin deeper green border.
+                    *   "Sequential hyp.": A muted sage green rounded rectangle with a thin deeper green border.
+            *   **Annotation:** "Stage B: no district profiles or evidence" in small, muted blue sans-serif text, positioned below the hypothesis boxes.
+        *   **Right Grouping (I_J):** A rounded dashed border in a soft, muted orange. Label at the top left of this region: "I_J: Stage C/D/E evidence set" in small, muted orange sans-serif text.
+            *   **Internal Boxes (Top to Bottom):** All internal process nodes are rounded rectangles with borders that are a slightly darker shade of their fill color.
+                *   "Stage C data specification": A soft peach rounded rectangle with a thin muted orange border.
+                *   "Stage D rule-based evidence": A gentle sky blue rounded rectangle with a thin muted blue border.
+                *   "Stage E judgment": A soft peach rounded rectangle with a thin muted orange border.
+                *   "Supported final coding": A rounded rectangle with a soft, muted teal green fill and a slightly darker teal border, indicating a final, refined output.
+
+**3. Connections:**
+
+*   **Within Stages:** All internal processes within Stage 1, Stage 2, and the I_J grouping of Stage 3 are connected by solid, single-headed, medium-thickness dark charcoal gray arrows, indicating a clear top-to-bottom flow. Within the I_R grouping of Stage 3, "Stage A post record" connects to each of the three hypothesis boxes with diverging solid, single-headed, medium-thickness muted dark green arrows.
+*   **Between Stages:**
+    *   A solid, single-headed, medium-thickness muted slate blue arrow originates from the "Classified post base" in Stage 1, extends horizontally to the right, bends downwards, and points to the "Classified post base" at the top of Stage 2. This arrow is labeled "classified base" in small muted slate blue sans-serif text.
+    *   A solid, single-headed, medium-thickness muted coral peach arrow originates from the "High-z_shift review cells" box in Stage 2, extends horizontally to the right, and points to the "Stage A post record" box within the I_R grouping of Stage 3. This arrow is labeled "review cells" in small muted coral peach sans-serif text.
+*   **Across Information Boundary (Stage 3):** Three solid, single-headed, medium-thickness muted dark gray arrows originate from each of the three hypothesis boxes ("Abductive hyp.", "Forward hyp.", "Sequential hyp.") in the I_R grouping, gracefully cross the dashed boundary, and converge to point at the "Stage C data specification" box in the I_J grouping.
+
+**4. Groupings:**
+*   The three main "Stages" (Stage 1, Stage 2, Stage 3) are the primary groupings, each enclosed in a large, distinct, very pale pastel-colored rectangle with gently rounded corners (warm cream yellow, serene sky blue, calming mint green, respectively).
+*   Within Stage 3, an "information boundary" is visually represented by two adjacent rounded dashed rectangular boxes:
+    *   The left box (I_R) has a soft, muted blue dashed border.
+    *   The right box (I_J) has a soft, muted orange dashed border.
+
+**5. Labels and Annotations:**
+*   All text uses a clean, professional sans-serif font.
+*   Main stage titles (e.g., "Stage 1") are large, bold, and dark charcoal gray.
+*   Stage subtitles (e.g., "Classification") are smaller, dark charcoal gray.
+*   Unit labels (e.g., "unit: post") are small, dark charcoal gray, and positioned at the top right of their respective stage containers.
+*   Internal box labels are concise (1-2 words), dark charcoal gray for most, and bold white for the emphasized "Classified post base" in Stage 1 and Stage 2.
+*   Sub-labels within boxes (e.g., "person-time") are smaller and lighter gray.
+*   Arrow labels ("classified base", "review cells") are small and match the arrow's color.
+*   Grouping labels ("I_R: Stage A/B isolated inputs", "I_J: Stage C/D/E evidence set") are small and match the dashed border color.
+*   The annotation "Stage B: no district profiles or evidence" is small and muted blue.
+
+**6. Input/Output:**
+*   The overall input to the system is "Platform records" in Stage 1.
+*   The final output of the system is "Supported final coding" in Stage 3.
+*   Intermediate outputs are clearly passed between stages (e.g., "Classified post base" from Stage 1 to Stage 2, "High-z_shift review cells" from Stage 2 to Stage 3).
+
+**7. Styling:**
+*   **Background Fills:** Stage 1: very pale, warm cream yellow. Stage 2: very pale, serene sky blue. Stage 3: very pale, calming mint green. The overall figure background is pristine white.
+*   **Color Palette (Boxes):**
+    *   Initial Inputs: Soft light gray.
+    *   Screening/Processing Steps: Gentle sky blue.
+    *   Coding/Tagging/Review/Judgment: Soft peach.
+    *   Hypotheses: Muted sage green.
+    *   Emphasized Output (Stage 1 & 2 Input): Soft, slightly deeper slate blue fill with bold white text.
+    *   Emphasized Output (Stage 2): Soft, warm coral peach fill.
+    *   Final Output (Stage 3): Soft, muted teal green fill.
+*   **Borders:** Most boxes have thin borders that are a slightly darker shade of their internal fill color. Emphasized boxes have slightly thicker, darker borders that complement their fill. Grouping boundaries (I_R, I_J) are rounded dashed lines in muted blue and muted orange.
+*   **Line Weights:** Arrows are of medium thickness. Emphasized box borders are subtly thicker than standard process node borders.
+*   **Font Style:** All text uses a clean, sans-serif font. Titles are bold and larger. Sub-text and annotations are smaller and lighter.
+
+
+Note: this plan was guided by a user-provided reference sketch; follow the description above faithfully.

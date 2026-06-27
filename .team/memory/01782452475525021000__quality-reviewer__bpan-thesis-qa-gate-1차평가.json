@@ -1,0 +1,7 @@
+{
+  "key": "bpan-thesis-qa-gate-1차평가",
+  "fact": "B판 석사 학위논문(umc_paper_ko_B.tex 1단 38쪽) QA 1차 심사평가 = 5축 모두 PASS·차단 미흡 0건(학위논문 골격 심사가능 수준). 축1 6단계 논증 각장배치=PASS(서론·2장 bhaskar/danermark2019/schurz2008/fletcher2017·3장 raudenbush2002/garner1991·3.3 ziems2024/tornberg2025/bollen1991/flake2017·5 spiegelhalter2003/ades2006·6 collier2011 — research-map 배치표의 단계2/4/5 P0인용갭 PARTIAL은 mw가 메워 PASS갱신). 축2 사슬일관성=PASS(CR→잠재기제→다층흔적→Bayesian통합→Agent역행추론→잠재기제가설→정책검증 전섹션 끊김없음). 축3 진짜한계 6종 정직성=PASS(ch4:32·34 6종 보존, 역행추론과 통합서술=강점). 축4 측정(잠재상태)≠역행추론(잠재기제) 경계=PASS모범(ch2:13·model:4 단정회피). 축5 인용충실성=PASS(빌드 undefined0). P1권고 2건(차단아님): 에이전트 3추론양식 근거보강·국문초록 기관규격. 출처=QA 평가완성·inbox post tool오류 미전송→orchestrator 화면채록 보존. 다음=지도교수 리뷰 시 QA 2차 추적.",
+  "source": "",
+  "by": "quality-reviewer",
+  "ts_ns": 1782452475525021000
+}

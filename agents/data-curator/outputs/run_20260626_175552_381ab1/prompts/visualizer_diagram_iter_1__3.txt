@@ -1,0 +1,44 @@
+You are an expert scientific diagram illustrator. Generate high-quality scientific diagrams based on user requests. Note that do not include figure titles in the image.
+
+CRITICAL: All text labels in the diagram must be rendered in clear, readable English. Use the EXACT label names specified in the description. Do not generate garbled, misspelled, or non-English text.
+
+The figure illustrates the stratified ontology of Critical Realism using a clean, flat, and minimal academic style. It consists of three perfectly concentric circles, visually representing a set/subset containment model on a pure white background. The outer rings are significantly larger than the inner ones, emphasizing that the inner layers are subsets of the outer layers.
+
+**Overall Layout:**
+The diagram is centered on the canvas, with three concentric circles. A single causal arrow traverses the circles from outside to inside. Text labels are placed within or beside their respective bands.
+
+**Components and Groupings:**
+
+1.  **Outermost Region: The Real (실재적 층위)**
+    *   **Shape:** The largest concentric circle.
+    *   **Fill Color:** A rich, deep navy blue.
+    *   **Border:** A thin, clean white outline.
+    *   **Label:** "실재적 층위 (The Real)" is positioned to the top-left, outside the largest circle. The text is in a clear sans-serif font, rendered in a medium, soft charcoal gray.
+    *   **Leader Line:** A thin, light gray dashed line connects the "실재적 층위 (The Real)" label to the outermost rich navy blue ring, indicating its association.
+    *   **Content Label:** "구조 · 생성기제" (structures and generative mechanisms) is centered within the rich navy blue ring. The text is white, in a clear sans-serif font.
+
+2.  **Middle Region: The Actual (현실적 층위)**
+    *   **Shape:** A medium-sized concentric circle, fully contained within the "Real" region. This circle is visibly much smaller than the outermost but still significantly larger than the innermost.
+    *   **Fill Color:** A calming, medium teal blue, a lighter but distinct shade from the rich navy blue.
+    *   **Border:** A thin, clean white outline.
+    *   **Label:** "현실적 층위 (The Actual)" is centered within this calming teal blue ring. The text is white, in a clear sans-serif font.
+    *   **Content Label:** "발생한 사건" (events that occur) is centered below the "현실적 층위 (The Actual)" label within the calming teal blue ring. The text is white, in a clear sans-serif font.
+
+3.  **Innermost Region: The Empirical (경험적 층위)**
+    *   **Shape:** The smallest concentric circle, appearing as a central disk, fully contained within the "Actual" region. This disk is notably small to visually convey that observations are a limited subset.
+    *   **Fill Color:** A soft sky blue, a noticeably lighter shade than the calming teal blue, harmonizing with the overall cool palette.
+    *   **Border:** A thin, clean white outline.
+    *   **Label:** "경험적 층위 (The Empirical)" is centered within this soft sky blue disk. The text is in a deep charcoal gray for strong contrast, in a clear sans-serif font.
+    *   **Content Label:** "관측된 사건" (observed events / observations) is centered below the "경험적 층위 (The Empirical)" label within the soft sky blue disk. The text is in a deep charcoal gray, in a clear sans-serif font.
+
+**Connections and Annotations:**
+
+*   **Generative-Direction Arrow:** A single, prominent, solid white arrow of medium thickness originates from the top-center, outside the "Real" layer, and points directly downwards towards the center of the innermost "Empirical" disk. This arrow visually represents the causal/generative flow.
+*   **Arrow Annotation:** To the right side of the generative arrow, aligned vertically, is a text label: "생성기제 → 사건 → 관측" (Generative Mechanisms → Events → Observations). This text is in a small, elegant white sans-serif font, clearly indicating the direction of causality from the outermost to the innermost layer.
+
+**Styling:**
+*   **Background:** Pure white.
+*   **Colors:** The palette features a rich, deep navy blue for the outermost layer, a calming, medium teal blue for the middle layer, and a harmonizing soft sky blue for the innermost layer. Text colors are chosen for maximum legibility (white on darker backgrounds, deep charcoal gray on lighter backgrounds).
+*   **Lines:** All outlines are thin and clean white. The leader line is thin, light gray, and dashed. The generative arrow is solid white and medium thickness.
+*   **Typography:** All text labels (Korean with English in parentheses, and content descriptions) use a clear, readable sans-serif font. Korean text is prioritized for readability.
+*   **Aesthetics:** The diagram is flat, minimal, and free of 3D effects, drop shadows, or any decorative clutter, maintaining an academic publication quality.

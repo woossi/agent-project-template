@@ -1,0 +1,48 @@
+You are an expert at writing precise, actionable figure captions for academic methodology diagrams. Your job is to take a vague or brief caption and transform it into a detailed visual specification that tells a diagram generator exactly what to depict.
+
+## Your Task
+
+Take the original caption and methodology context below, and produce a sharpened caption that:
+
+1. **Specifies the diagram type**: Is this a pipeline/flowchart, architecture diagram, framework overview, block diagram, data flow diagram, or comparison chart?
+2. **Names the key elements**: Which specific components from the methodology MUST appear in the diagram?
+3. **Describes the visual narrative**: What story should the diagram tell? What is the reader supposed to understand at a glance?
+4. **Indicates scope**: What level of detail — high-level overview, detailed internals, or a specific sub-component?
+5. **Clarifies emphasis**: Which parts are most important and should be visually prominent?
+6. **Suggests flow direction**: Left-to-right, top-to-bottom, or another layout that fits the methodology?
+
+## Rules
+- The output must be a single paragraph (2-5 sentences), not a list
+- Be specific — replace generic words like "our method" or "the framework" with actual component names from the methodology
+- Include spatial hints (e.g., "with the encoder on the left feeding into the decoder on the right")
+- Do not add components not present in the methodology text
+- Keep it under 150 words — concise but precise
+
+## Original Caption
+Integrated UMC methodology framework: four sequential stages (3.1 Measure to 3.2 Explain to 3.3 Integrate to 4 Interpret) flow left to right, with a lower band aligning critical-realism strata (Empirical, Actual, Real) to the stage positions.
+
+## Methodology Text (for context)
+Integrated UMC (Universal & Meaningful Connectivity) methodology framework. This study links three analyses into one inference cycle. The district-level UMC index (Measurement, RQ1) constructs prior expectations implied by the UMC conceptual frame at the Real (structural) stratum. A two-level hierarchical linear model (HLM, Explanation, RQ2) provides the boundary conditions of how that prior relates to individual-level outcomes. Platform text analysis (Integration, RQ3) combines empirical-stratum observations with the prior to update it, and retroductively infers causal mechanisms where the discrepancy (prediction error) is largest. The final interpretation stage allocates limited policy capacity by priority. The ordering Measure to Explain to Integrate to Interpret links district conditions, individual vulnerability, and everyday narratives without reducing them to a single level. Mapped onto critical realism's Empirical-Actual-Real strata: Empirical = observed platform signals, Actual = stratum where events/mechanisms operate, Real = structural stratum implied by the UMC conceptual frame.
+
+CRITICAL CONSTRAINTS:
+- Minimal text only. Each box has ONLY a short top label and one short bottom sub-label. NO descriptive sentences anywhere. NO subtitle, NO explanatory paragraph, NO topic line at the bottom. The reference image contained slide-residue sentences ('Measuring meaningful connectivity beyond infrastructure', 'District indicators, survey models...', 'Topic: universal and meaningful connectivity...') that MUST be entirely removed.
+- Clean academic flat design, teal/navy blue palette.
+
+LAYOUT (keep skeleton from the reference image): four boxes in a horizontal left-to-right flow connected by dark navy arrows; below them a separate horizontal band marking three critical-realism strata aligned to stage positions.
+
+The four stage boxes, each = [number + stage name on top accent rule / one short sub-label at bottom], with a simple flat line icon in the middle:
+- ' 3.1 Measure ' top / ' UMC index ' bottom  (grid + target/gauge icon)
+- ' 3.2 Explain ' top / ' multilevel model ' bottom  (small hierarchical node graph icon)
+- ' 3.3 Integrate ' top / ' platform signals ' bottom  (two speech bubbles icon)
+- ' 4 Interpret ' top / ' policy targeting ' bottom  (table + clock icon)
+
+Below the boxes: a thin horizontal axis line with three filled dots and short bold labels, aligned under the boxes:
+- ' Empirical ' dot under the 3.1 Measure box
+- ' Actual ' dot under the 3.2 Explain box
+- ' Real ' dot under the 3.3 Integrate box
+
+Top-left: a small title chip label ' Integrated UMC Methodology ' only. No other title or text.
+All labels in English.
+
+## Sharpened Caption
+Produce the improved caption below:

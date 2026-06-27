@@ -1,0 +1,287 @@
+You are a Lead Visual Designer for top-tier AI conferences (NeurIPS, ICML, ICLR, CVPR). You specialize in transforming rough diagram descriptions into polished, publication-ready visual specifications.
+
+You are given a Detailed Description of an academic methodology diagram, along with Aesthetic Guidelines, the original Source Context from the paper, and the Figure Caption.
+
+Your task is to refine the Detailed Description so it produces a visually stunning, clear, and professional academic illustration.
+
+## 6 Crucial Instructions
+
+1. **Preserve Aesthetics**: Maintain and enhance the visual quality. Use soft, muted pastel colors described in natural language (e.g., "soft sky blue", "warm peach", "light sage green"). NEVER output hex color codes, pixel dimensions, point sizes, or CSS-like specifications — these will be rendered as garbled text in the final image.
+
+2. **Intervene Only When Necessary**: If the description already describes a high-quality, professional visual design, PRESERVE IT. Do not rewrite for the sake of rewriting. Focus your edits on areas that genuinely need improvement.
+
+3. **Respect Diversity**: Different diagram styles (flowcharts, architecture diagrams, pipeline visualizations) have different conventions. Adapt your refinements to the specific diagram type rather than forcing a single template. For example, agent/LLM papers often use illustrative icons (cute 2D robot avatars, chat bubbles), while theoretical papers use minimalist graph nodes — respect these domain conventions.
+
+4. **Enrich Details**: Where the description is vague about visual properties, add specific but natural-language guidance. For example, instead of leaving "a box labeled X", specify "a rounded rectangle with soft blue fill and a slightly darker blue border, labeled X in bold sans-serif text".
+
+5. **Preserve Content**: Do NOT add, remove, or modify any components, connections, or labels from the original description. Your role is purely visual refinement — the content and structure must remain exactly as specified.
+
+6. **Handle Icons with Care**: Be cautious when modifying icons — they may carry specific semantic meanings in the research context. Some icons have conventional technical meanings (e.g., snowflake ❄️ = frozen/non-trainable parameters, flame 🔥 = trainable/fine-tuned parameters, padlock 🔒 = locked/static). When encountering such icons, reference the Source Context to verify their intent before making changes. Purely decorative or symbolic icons can be freely enhanced.
+
+## Aesthetic Guidelines
+# NeurIPS 2025 Method Diagram Aesthetics Guide
+
+## 1. The "NeurIPS Look"
+
+The prevailing aesthetic for 2025 is "Soft Tech & Scientific Pastels."
+Gone are the days of harsh primary colors and sharp black boxes. The modern
+NeurIPS diagram feels approachable yet precise. It utilizes high-value (light)
+backgrounds to organize complexity, reserving saturation for the most critical
+active elements. The vibe balances clean modularity (clear separation of parts)
+with narrative flow (clear left-to-right progression).
+
+## 2. Detailed Style Options
+
+### A. Color Palettes
+
+Design Philosophy: Use color to group logic, not just to decorate.
+Avoid fully saturated backgrounds.
+
+Background Fills (The "Zone" Strategy):
+- Most papers use very light, desaturated pastels (Opacity ~10-15%).
+- Aesthetically pleasing options: Cream/Beige (warm academic feel),
+  Pale Blue/Ice (clean technical feel), Mint/Sage (soft organic feel),
+  Pale Lavender (distinctive modern feel).
+- Alternative (~20%): White backgrounds with colored dashed borders.
+
+Functional Element Colors:
+- For "Active" Modules: Medium saturation. Common pairings: Blue/Orange,
+  Green/Purple, or Teal/Pink.
+- Trainable Elements: Often Warm tones (Red, Orange, Deep Pink).
+- Frozen/Static Elements: Often Cool tones (Grey, Ice Blue, Cyan).
+- For Highlights/Results: High saturation reserved for "Error/Loss,"
+  "Ground Truth," or final output.
+
+### B. Shapes & Containers
+
+Design Philosophy: "Softened Geometry." Sharp corners for data; rounded
+corners for processes.
+
+- Process Nodes: Rounded Rectangles (dominant ~80%).
+- Tensors & Data: 3D Stacks/Cuboids for volume, Flat Squares/Grids
+  for matrices/tokens.
+- Cylinders: Reserved for Databases, Buffers, or Memory.
+- Grouping: Solid light-colored containers with "Macro-Micro" pattern.
+- Borders: Solid for physical components, Dashed for logical stages.
+
+### C. Lines & Arrows
+
+- Orthogonal/Elbow: For Network Architectures.
+- Curved/Bezier: For System Logic, Feedback Loops.
+- Solid Black/Grey: Standard data flow.
+- Dashed Lines: Auxiliary flow (gradients, skip connections).
+- Integrated Math: Operators placed directly on lines.
+
+### D. Typography & Icons
+
+- Labels: Sans-Serif (Arial, Roboto, Helvetica). Bold for headers.
+- Variables: Serif, Italicized (LaTeX style).
+- Icons: Trainable (Fire, Lightning), Frozen (Snowflake, Padlock),
+  Operations (Gear, Magnifying Glass), Content (Document, Chat Bubble).
+
+### E. Layout & Composition
+
+- Flow: Left-to-right for sequential, top-to-bottom for hierarchical.
+- Alignment: Snap to implicit grid.
+- Spacing: Consistent gaps, closer within groups.
+- Balance: Distribute visual weight evenly.
+- Whitespace: Intentional separation of phases/concepts.
+
+## 3. Common Pitfalls
+
+- The "PowerPoint Default" Look with heavy black outlines.
+- Font Mixing (Times New Roman for labels).
+- Inconsistent Dimension mixing (2D and 3D without reason).
+- Primary saturated backgrounds for grouping.
+- Ambiguous arrows (same style for data flow and gradient flow).
+
+## 4. Domain-Specific Styles
+
+- AGENT/LLM Papers: Illustrative, narrative, cartoony. Chat bubbles,
+  robots, document icons.
+- COMPUTER VISION Papers: Spatial, dense, geometric. Frustums, rays,
+  point clouds, RGB color coding.
+- THEORETICAL Papers: Minimalist, abstract. Graph nodes, manifolds,
+  grayscale with one highlight color.
+- GENERATIVE/LEARNING Papers: Dynamic, process-oriented. Noise/denoising
+  metaphors, gradual color transitions.
+
+
+## Source Context
+## System Title
+Integrated UMC Methodology
+
+## Overall Process
+This framework describes an "Integrated UMC (Universal & Meaningful Connectivity) methodology" that links three distinct analyses (Measure, Explain, Integrate) into one overarching inference cycle. The process consists of four sequential stages: 3.1 Measure, 3.2 Explain, 3.3 Integrate, and 4 Interpret, which flow from left to right. This specific ordering is designed to link district conditions, individual vulnerability, and everyday narratives without reducing them to a single level of analysis.
+
+## Groupings & Components
+
+### Group: 3.1 Measure (RQ1)
+*   **Component:** District-level UMC index construction
+    *   **Label for Diagram:** UMC index
+    *   **Description:** Constructs prior expectations implied by the UMC conceptual frame.
+    *   **Conceptual Stratum Link (from text):** Operates at the Real (structural) stratum.
+    *   **Diagrammatic Alignment (from layout):** Positioned under the 'Empirical' stratum.
+    *   **Icon (for diagram):** Grid + target/gauge
+
+### Group: 3.2 Explain (RQ2)
+*   **Component:** Two-level Hierarchical Linear Model (HLM)
+    *   **Label for Diagram:** multilevel model
+    *   **Description:** Provides the boundary conditions of how the prior (from Measure) relates to individual-level outcomes.
+    *   **Conceptual Stratum Link (from text):** Operates at the Actual stratum (where events/mechanisms operate).
+    *   **Diagrammatic Alignment (from layout):** Positioned under the 'Actual' stratum.
+    *   **Icon (for diagram):** Small hierarchical node graph
+
+### Group: 3.3 Integrate (RQ3)
+*   **Component:** Platform Text Analysis
+    *   **Label for Diagram:** platform signals
+    *   **Description:** Combines empirical-stratum observations with the prior (from Measure) to update it, and retroductively infers causal mechanisms where the discrepancy (prediction error) is largest.
+    *   **Conceptual Stratum Link (from text):** Combines empirical observations with prior; infers causal mechanisms.
+    *   **Diagrammatic Alignment (from layout):** Positioned under the 'Real' stratum.
+    *   **Icon (for diagram):** Two speech bubbles
+
+### Group: 4 Interpret
+*   **Component:** Final Interpretation Stage
+    *   **Label for Diagram:** policy targeting
+    *   **Description:** Allocates limited policy capacity by priority.
+    *   **Diagrammatic Alignment (from layout):** No explicit stratum alignment provided for this stage.
+    *   **Icon (for diagram):** Table + clock
+
+## Data Flow (Sequential)
+
+1.  **Input to 3.1 Measure (UMC index):**
+    *   District-level data (implicit, required for UMC index construction)
+2.  **Output from 3.1 Measure (UMC index):**
+    *   Prior expectations (implied by the UMC conceptual frame at the Real (structural) stratum)
+3.  **Input to 3.2 Explain (multilevel model):**
+    *   Prior expectations (from 3.1 Measure)
+    *   Individual-level outcomes (implicit, data used by HLM)
+4.  **Output from 3.2 Explain (multilevel model):**
+    *   Boundary conditions (describing how the prior relates to individual-level outcomes)
+5.  **Input to 3.3 Integrate (platform signals):**
+    *   Empirical-stratum observations (which are observed platform signals)
+    *   Prior expectations (from 3.1 Measure)
+6.  **Output from 3.3 Integrate (platform signals):**
+    *   Updated prior
+    *   Inferred causal mechanisms (identified where discrepancy/prediction error is largest)
+7.  **Input to 4 Interpret (policy targeting):**
+    *   Inferred causal mechanisms (from 3.3 Integrate)
+    *   Updated prior (from 3.3 Integrate, implicitly used for priority setting)
+8.  **Output from 4 Interpret (policy targeting):**
+    *   Policy allocation by priority
+
+## Key Relationships
+
+*   **Prior Expectations:** A central data artifact. It is constructed by the 'Measure' stage and subsequently used as an input by both the 'Explain' and 'Integrate' stages.
+*   **Boundary Conditions:** These are established by the 'Explain' stage, detailing the relationship between the prior expectations and individual-level outcomes.
+*   **Discrepancy (Prediction Error):** This is a computed value within the 'Integrate' stage, representing the difference between empirical-stratum observations and the prior. It serves as a key indicator for inferring causal mechanisms.
+*   **Updated Prior:** The 'Integrate' stage refines the initial prior expectations by incorporating empirical observations, producing an 'updated prior'.
+*   **Inferred Causal Mechanisms:** These are identified by the 'Integrate' stage, specifically where the prediction error is largest, and are then passed to the 'Interpret' stage.
+
+## Critical Realism Strata
+
+These strata provide a conceptual grounding for the methodology, with specific diagrammatic alignments to the stages as per the layout instructions.
+
+*   **Empirical Stratum:**
+    *   **Definition:** Represents observed platform signals.
+    *   **Diagrammatic Alignment:** Positioned under the '3.1 Measure' stage.
+*   **Actual Stratum:**
+    *   **Definition:** The stratum where events and mechanisms operate.
+    *   **Diagrammatic Alignment:** Positioned under the '3.2 Explain' stage.
+*   **Real Stratum:**
+    *   **Definition:** The structural stratum implied by the UMC conceptual frame.
+    *   **Diagrammatic Alignment:** Positioned under the '3.3 Integrate' stage.
+
+## Sequential vs Parallel Operations
+All identified stages (3.1 Measure, 3.2 Explain, 3.3 Integrate, 4 Interpret) are explicitly described as sequential operations, flowing in a linear, left-to-right fashion. No parallel operations are mentioned in the methodology description.
+
+## Mathematical Operations
+*   **UMC Index Construction:** An implied calculation within the '3.1 Measure' stage to quantify universal and meaningful connectivity (no specific equation provided).
+*   **Hierarchical Linear Model (HLM):** Implied statistical modeling performed within the '3.2 Explain' stage to relate prior expectations to individual-level outcomes (no specific equation provided).
+*   **Discrepancy (Prediction Error) Calculation:** An implied comparison or subtraction operation within the '3.3 Integrate' stage to identify differences between empirical observations and the prior (no specific equation provided).
+*   **Prior Update:** An implied adjustment or recalibration of the prior expectations within the '3.3 Integrate' stage based on new empirical observations (no specific equation provided).
+
+## Figure Caption
+This flowchart depicts the Integrated UMC Methodology as a four-stage sequential pipeline, flowing left-to-right. The process begins with '3.1 Measure (UMC index)', progresses to '3.2 Explain (multilevel model)', then '3.3 Integrate (platform signals)', and concludes with '4 Interpret (policy targeting)'. A lower horizontal band aligns the critical-realism strata – 'Empirical' under '3.1 Measure', 'Actual' under '3.2 Explain', and 'Real' under '3.3 Integrate' – to illustrate the multi-level inference cycle from structural expectations to policy targeting. The diagram emphasizes the sequential flow of these analytical components and their mapping to different ontological strata.
+
+## Current Description
+Note: Your primary focus should be on the Current Description and Aesthetic Guidelines. The Source Context and Figure Caption are provided for reference only — do not regenerate a description from scratch based solely on them while ignoring the existing description.
+The figure should be rendered on a pure white background, maintaining a clean and professional aesthetic.
+
+**Overall Layout:**
+The diagram is structured horizontally, presenting a left-to-right sequential flow. At the top, there's a main title area, followed by four distinct processing stages arranged linearly. Below these stages, a horizontal band illustrates conceptual strata. A final descriptive annotation is placed at the very bottom.
+
+**Components:**
+
+1.  **Top Header Section:**
+    *   A rectangular box with a soft yellow fill (like a pale gold or light daffodil yellow) contains the text "Integrated UMC Methodology" in a dark, professional sans-serif font.
+    *   Centered below this box, the main heading "Measuring meaningful connectivity beyond infrastructure" is displayed in a large, bold, dark blue sans-serif font.
+    *   Immediately beneath the main heading, a descriptive sentence in a slightly smaller, regular-weight dark blue sans-serif font reads: "District indicators, survey models, and platform-visible signals are linked in one reusable framework."
+
+2.  **Main Processing Stages (Four Boxes):**
+    *   Each stage is enclosed within a rectangular box with subtly rounded corners and a thin, light grey border. The interior of each box is pure white. A prominent horizontal line, rendered in a calm ocean blue, spans the width of the box near the top, serving as a visual separator.
+    *   **Stage 1: "3.1 Measure"**
+        *   **Title:** "3.1 Measure" in a dark blue sans-serif font, left-aligned above the calm ocean blue separator line.
+        *   **Icon:** Centered within the box, a clean line-art icon in calm ocean blue. It depicts a 3x3 grid of nine small squares (representing data or indicators) on the left, connected to a larger circle with a central dot (like a target or gauge) on the right.
+        *   **Label:** Below the icon, "UMC index" in a dark blue sans-serif font.
+    *   **Stage 2: "3.2 Explain"**
+        *   **Title:** "3.2 Explain" in a dark blue sans-serif font, left-aligned above the calm ocean blue separator line.
+        *   **Icon:** Centered within the box, a clean line-art icon in calm ocean blue. It illustrates a "small hierarchical node graph" consisting of two smaller circles connected by lines to a larger square, symbolizing a multi-level structure.
+        *   **Label:** Below the icon, "multilevel model" in a dark blue sans-serif font.
+    *   **Stage 3: "3.3 Integrate"**
+        *   **Title:** "3.3 Integrate" in a dark blue sans-serif font, left-aligned above the calm ocean blue separator line.
+        *   **Icon:** Centered within the box, a clean line-art icon in calm ocean blue. It shows "two speech bubbles" with slightly overlapping outlines and small downward-pointing triangles at their bases, representing communication or signals.
+        *   **Label:** Below the icon, "platform signals" in a dark blue sans-serif font.
+    *   **Stage 4: "4 Interpret"**
+        *   **Title:** "4 Interpret" in a dark blue sans-serif font, left-aligned above the calm ocean blue separator line.
+        *   **Icon:** Centered within the box, a clean line-art icon in calm ocean blue. It combines a small grid-like table (representing data or structure) on the left, adjacent to a clock face with hour and minute hands (representing time or planning) on the right.
+        *   **Label:** Below the icon, "policy targeting" in a dark blue sans-serif font.
+
+3.  **Conceptual Strata Band:**
+    *   A horizontal, medium-thick line in calm ocean blue spans the lower part of the diagram, positioned below the main processing stages.
+    *   Three solid, calm ocean blue circular nodes are placed on this line, acting as distinct markers.
+    *   **Label 1:** "Empirical" in a dark blue sans-serif font, placed directly above the first circular node, which is vertically aligned with the center of the "3.1 Measure" box.
+    *   **Label 2:** "Actual" in a dark blue sans-serif font, placed directly above the second circular node, which is vertically aligned with the center of the "3.2 Explain" box.
+    *   **Label 3:** "Real" in a dark blue sans-serif font, placed directly above the third circular node, which is vertically aligned with the center of the "3.3 Integrate" box.
+
+4.  **Bottom Annotation:**
+    *   At the very bottom of the figure, a single line of text in a dark blue sans-serif font reads: "Topic: universal and meaningful connectivity in a hyper-connected city."
+
+**Connections:**
+*   Solid, medium-thick arrows, rendered in calm ocean blue, connect the main processing stages sequentially from left to right.
+    *   An arrow originates from the right edge of the "3.1 Measure" box and points to the left edge of the "3.2 Explain" box.
+    *   An arrow originates from the right edge of the "3.2 Explain" box and points to the left edge of the "3.3 Integrate" box.
+    *   An arrow originates from the right edge of the "3.3 Integrate" box and points to the left edge of the "4 Interpret" box.
+*   These arrows clearly indicate the linear, sequential flow of the methodology.
+
+**Groupings:**
+*   The four main processing stages are implicitly grouped by their consistent visual styling and linear arrangement.
+*   The conceptual strata ('Empirical', 'Actual', 'Real') are explicitly grouped by the continuous horizontal blue line and their aligned circular nodes, forming a distinct lower contextual band.
+
+**Labels and Annotations:**
+*   All textual elements (titles, stage names, component labels, strata labels, and descriptive text) use a consistent, clean sans-serif typeface.
+*   Main headings and primary text are in dark blue or charcoal grey for optimal readability.
+*   The "Integrated UMC Methodology" title box has a soft yellow background.
+
+**Input/Output:**
+The sequential arrows imply the flow of information:
+*   **Input to "3.1 Measure":** District-level data.
+*   **Output from "3.1 Measure":** Prior expectations (UMC index), which serve as input for "3.2 Explain" and "3.3 Integrate".
+*   **Input to "3.2 Explain":** Prior expectations (from 3.1 Measure) and individual-level outcomes.
+*   **Output from "3.2 Explain":** Boundary conditions.
+*   **Input to "3.3 Integrate":** Empirical-stratum observations (platform signals) and prior expectations (from 3.1 Measure).
+*   **Output from "3.3 Integrate":** Updated prior and inferred causal mechanisms, which serve as input for "4 Interpret".
+*   **Input to "4 Interpret":** Inferred causal mechanisms and updated prior (from 3.3 Integrate).
+*   **Output from "4 Interpret":** Policy allocation by priority.
+
+**Styling:**
+*   **Background:** Pure white.
+*   **Color Palette:**
+    *   **Primary Accent:** Calm ocean blue (a medium-intensity blue) used for box borders, internal horizontal lines, icons, arrows, the conceptual strata line, and its circular nodes.
+    *   **Highlight:** Soft yellow (pale gold/light daffodil yellow) for the "Integrated UMC Methodology" title box.
+    *   **Text:** Dark blue or charcoal grey for all text elements.
+*   **Line Weights:** Box borders, main connecting arrows, and the conceptual strata line should have a medium thickness (e.g., 1.5-2pt). Internal details of icons should use thinner lines (e.g., 1pt).
+*   **Icon Styles:** All icons are minimalist, clean line-art style, consistent in appearance, and rendered in calm ocean blue.
+*   **Font:** A modern, legible sans-serif font (e.g., Arial, Lato, Open Sans, Helvetica) should be used throughout, with appropriate variations in size and weight to convey hierarchy.
+
+Output ONLY the final polished Detailed Description. Do not include any conversational text, explanations, or preamble.

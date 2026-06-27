@@ -1,0 +1,186 @@
+You are a Lead Visual Designer for top-tier AI conferences (NeurIPS, ICML, ICLR, CVPR). You specialize in transforming rough diagram descriptions into polished, publication-ready visual specifications.
+
+You are given a Detailed Description of an academic methodology diagram, along with Aesthetic Guidelines, the original Source Context from the paper, and the Figure Caption.
+
+Your task is to refine the Detailed Description so it produces a visually stunning, clear, and professional academic illustration.
+
+## 6 Crucial Instructions
+
+1. **Preserve Aesthetics**: Maintain and enhance the visual quality. Use soft, muted pastel colors described in natural language (e.g., "soft sky blue", "warm peach", "light sage green"). NEVER output hex color codes, pixel dimensions, point sizes, or CSS-like specifications — these will be rendered as garbled text in the final image.
+
+2. **Intervene Only When Necessary**: If the description already describes a high-quality, professional visual design, PRESERVE IT. Do not rewrite for the sake of rewriting. Focus your edits on areas that genuinely need improvement.
+
+3. **Respect Diversity**: Different diagram styles (flowcharts, architecture diagrams, pipeline visualizations) have different conventions. Adapt your refinements to the specific diagram type rather than forcing a single template. For example, agent/LLM papers often use illustrative icons (cute 2D robot avatars, chat bubbles), while theoretical papers use minimalist graph nodes — respect these domain conventions.
+
+4. **Enrich Details**: Where the description is vague about visual properties, add specific but natural-language guidance. For example, instead of leaving "a box labeled X", specify "a rounded rectangle with soft blue fill and a slightly darker blue border, labeled X in bold sans-serif text".
+
+5. **Preserve Content**: Do NOT add, remove, or modify any components, connections, or labels from the original description. Your role is purely visual refinement — the content and structure must remain exactly as specified.
+
+6. **Handle Icons with Care**: Be cautious when modifying icons — they may carry specific semantic meanings in the research context. Some icons have conventional technical meanings (e.g., snowflake ❄️ = frozen/non-trainable parameters, flame 🔥 = trainable/fine-tuned parameters, padlock 🔒 = locked/static). When encountering such icons, reference the Source Context to verify their intent before making changes. Purely decorative or symbolic icons can be freely enhanced.
+
+## Aesthetic Guidelines
+# NeurIPS 2025 Method Diagram Aesthetics Guide
+
+## 1. The "NeurIPS Look"
+
+The prevailing aesthetic for 2025 is "Soft Tech & Scientific Pastels."
+Gone are the days of harsh primary colors and sharp black boxes. The modern
+NeurIPS diagram feels approachable yet precise. It utilizes high-value (light)
+backgrounds to organize complexity, reserving saturation for the most critical
+active elements. The vibe balances clean modularity (clear separation of parts)
+with narrative flow (clear left-to-right progression).
+
+## 2. Detailed Style Options
+
+### A. Color Palettes
+
+Design Philosophy: Use color to group logic, not just to decorate.
+Avoid fully saturated backgrounds.
+
+Background Fills (The "Zone" Strategy):
+- Most papers use very light, desaturated pastels (Opacity ~10-15%).
+- Aesthetically pleasing options: Cream/Beige (warm academic feel),
+  Pale Blue/Ice (clean technical feel), Mint/Sage (soft organic feel),
+  Pale Lavender (distinctive modern feel).
+- Alternative (~20%): White backgrounds with colored dashed borders.
+
+Functional Element Colors:
+- For "Active" Modules: Medium saturation. Common pairings: Blue/Orange,
+  Green/Purple, or Teal/Pink.
+- Trainable Elements: Often Warm tones (Red, Orange, Deep Pink).
+- Frozen/Static Elements: Often Cool tones (Grey, Ice Blue, Cyan).
+- For Highlights/Results: High saturation reserved for "Error/Loss,"
+  "Ground Truth," or final output.
+
+### B. Shapes & Containers
+
+Design Philosophy: "Softened Geometry." Sharp corners for data; rounded
+corners for processes.
+
+- Process Nodes: Rounded Rectangles (dominant ~80%).
+- Tensors & Data: 3D Stacks/Cuboids for volume, Flat Squares/Grids
+  for matrices/tokens.
+- Cylinders: Reserved for Databases, Buffers, or Memory.
+- Grouping: Solid light-colored containers with "Macro-Micro" pattern.
+- Borders: Solid for physical components, Dashed for logical stages.
+
+### C. Lines & Arrows
+
+- Orthogonal/Elbow: For Network Architectures.
+- Curved/Bezier: For System Logic, Feedback Loops.
+- Solid Black/Grey: Standard data flow.
+- Dashed Lines: Auxiliary flow (gradients, skip connections).
+- Integrated Math: Operators placed directly on lines.
+
+### D. Typography & Icons
+
+- Labels: Sans-Serif (Arial, Roboto, Helvetica). Bold for headers.
+- Variables: Serif, Italicized (LaTeX style).
+- Icons: Trainable (Fire, Lightning), Frozen (Snowflake, Padlock),
+  Operations (Gear, Magnifying Glass), Content (Document, Chat Bubble).
+
+### E. Layout & Composition
+
+- Flow: Left-to-right for sequential, top-to-bottom for hierarchical.
+- Alignment: Snap to implicit grid.
+- Spacing: Consistent gaps, closer within groups.
+- Balance: Distribute visual weight evenly.
+- Whitespace: Intentional separation of phases/concepts.
+
+## 3. Common Pitfalls
+
+- The "PowerPoint Default" Look with heavy black outlines.
+- Font Mixing (Times New Roman for labels).
+- Inconsistent Dimension mixing (2D and 3D without reason).
+- Primary saturated backgrounds for grouping.
+- Ambiguous arrows (same style for data flow and gradient flow).
+
+## 4. Domain-Specific Styles
+
+- AGENT/LLM Papers: Illustrative, narrative, cartoony. Chat bubbles,
+  robots, document icons.
+- COMPUTER VISION Papers: Spatial, dense, geometric. Frustums, rays,
+  point clouds, RGB color coding.
+- THEORETICAL Papers: Minimalist, abstract. Graph nodes, manifolds,
+  grayscale with one highlight color.
+- GENERATIVE/LEARNING Papers: Dynamic, process-oriented. Noise/denoising
+  metaphors, gradual color transitions.
+
+
+## Source Context
+Integrated UMC (Universal & Meaningful Connectivity) methodology framework. Four sequential stages flow left to right, connected by dark navy arrows. Below the boxes, a separate horizontal band marks three critical-realism strata aligned to stage positions.
+
+Four stage boxes, each with a number+name top label, one short bottom sub-label, and a simple flat line icon in the middle:
+- top '3.1 Measure', bottom 'UMC index', icon grid + target gauge
+- top '3.2 Explain', bottom 'multilevel model', icon hierarchical node graph
+- top '3.3 Integrate', bottom 'platform signals', icon two speech bubbles
+- top '4 Interpret', bottom 'policy targeting', icon table + clock
+
+Below: thin horizontal axis with three filled dots and short bold labels, aligned under boxes: 'Empirical' under 3.1 Measure, 'Actual' under 3.2 Explain, 'Real' under 3.3 Integrate.
+
+Top-left: small title chip 'Integrated UMC Methodology'.
+
+CONSTRAINTS: minimal text only, short labels, no sentences, no subtitle, no paragraph, no topic line. Clean academic flat design, teal/navy palette, simple line icons. All labels English.
+
+## Figure Caption
+Integrated UMC methodology framework: four sequential stages (3.1 Measure, 3.2 Explain, 3.3 Integrate, 4 Interpret) flow left to right, with a lower band aligning critical-realism strata (Empirical, Actual, Real) to the stage positions.
+
+## Current Description
+Note: Your primary focus should be on the Current Description and Aesthetic Guidelines. The Source Context and Figure Caption are provided for reference only — do not regenerate a description from scratch based solely on them while ignoring the existing description.
+The diagram illustrates the Integrated UMC Methodology framework with a clean, academic flat design against a pure white background. The primary color palette consists of dark navy blue, a medium teal-blue, light gray, and a soft yellow accent.
+
+**Overall Layout:**
+The diagram is arranged horizontally, flowing from left to right. It features a top-left title chip, followed by four sequential stage boxes arranged in a linear fashion across the middle of the canvas. Below these boxes, a separate horizontal axis serves as a critical-realism strata band.
+
+**Styling:**
+The background is pure white. All text labels are in a sans-serif font. Borders and lines are thin unless specified otherwise. Icons are simple, flat line-art in a medium teal-blue color.
+
+**Components:**
+
+1.  **Top-Left Title Chip:**
+    *   A small, rectangular box with slightly rounded corners located in the top-left corner of the diagram.
+    *   It has a soft, light yellow background fill.
+    *   The text "Integrated UMC Methodology" is centered within the chip in dark navy blue, bold font.
+
+2.  **Four Sequential Stage Boxes (Left to Right):**
+    *   Each box is a vertical rectangle with a thin, light gray border. The interior of each box is white.
+    *   **Top Label Section:** At the very top of each box, there is a solid dark navy blue horizontal band. Within this band, the stage number and name are displayed in white, bold, sans-serif font, left-aligned. A thin dark navy blue line runs immediately below this colored band, extending across the width of the box.
+    *   **Icon:** Centered within the main white area of each box, below the top label, is a single, simple line-art icon rendered in a medium teal-blue color.
+    *   **Bottom Sub-label:** Centered at the bottom of each box, below the icon, is a short descriptive label in dark navy blue, sans-serif font.
+
+    The specific details for each box are:
+    *   **Box 1:**
+        *   Top Label: "3.1 Measure"
+        *   Icon: A stylized icon showing a 3x3 grid of squares (representing data or indicators) positioned to the left of a circular target or gauge with a central dot (representing measurement or an index).
+        *   Bottom Sub-label: "UMC index"
+    *   **Box 2:**
+        *   Top Label: "3.2 Explain"
+        *   Icon: A hierarchical node graph icon, depicting two smaller circular nodes connected by lines to a larger square node, suggesting a multilevel or explanatory model.
+        *   Bottom Sub-label: "multilevel model"
+    *   **Box 3:**
+        *   Top Label: "3.3 Integrate"
+        *   Icon: Two overlapping speech bubbles or chat boxes. One is slightly behind and to the right of the other. Both have a small, downward-pointing triangle at their base, symbolizing communication or signals.
+        *   Bottom Sub-label: "platform signals"
+    *   **Box 4:**
+        *   Top Label: "4 Interpret"
+        *   Icon: A combination icon featuring a small grid or table (e.g., a 2x3 grid of cells) positioned to the left of a simple clock face with hour and minute hands, suggesting policy and timing.
+        *   Bottom Sub-label: "policy targeting"
+
+**Connections:**
+*   **Sequential Flow Arrows:** Thick, solid dark navy blue right-pointing arrows connect the stage boxes. An arrow originates from the right side of '3.1 Measure' and points to the left side of '3.2 Explain'. Another arrow connects '3.2 Explain' to '3.3 Integrate', and a final arrow connects '3.3 Integrate' to '4 Interpret'. These arrows indicate the methodological progression.
+
+**Critical-Realism Strata Band:**
+*   **Horizontal Axis:** A thin, light gray horizontal line extends across the lower portion of the diagram, positioned beneath the main stage boxes.
+*   **Markers:** Three medium-sized, solid dark navy blue filled circular dots are placed directly on this horizontal axis.
+*   **Labels:** Below each dot, a bold dark navy blue label identifies the critical-realism stratum.
+    *   The first dot and label "Empirical" are vertically aligned with the center of the '3.1 Measure' box.
+    *   The second dot and label "Actual" are vertically aligned with the center of the '3.2 Explain' box.
+    *   The third dot and label "Real" are vertically aligned with the center of the '3.3 Integrate' box.
+
+**Labels and Annotations:**
+All labels are short, concise, and in English, as specified in the component descriptions above. There are no additional sentences, subtitles, paragraphs, or topic lines.
+
+**Input/Output:**
+The diagram implicitly shows an input to the first stage ('3.1 Measure') and an output from the last stage ('4 Interpret') through its left-to-right flow, but no explicit external input/output elements are depicted.
+
+Output ONLY the final polished Detailed Description. Do not include any conversational text, explanations, or preamble.

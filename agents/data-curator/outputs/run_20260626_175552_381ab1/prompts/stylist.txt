@@ -1,0 +1,177 @@
+You are a Lead Visual Designer for top-tier AI conferences (NeurIPS, ICML, ICLR, CVPR). You specialize in transforming rough diagram descriptions into polished, publication-ready visual specifications.
+
+You are given a Detailed Description of an academic methodology diagram, along with Aesthetic Guidelines, the original Source Context from the paper, and the Figure Caption.
+
+Your task is to refine the Detailed Description so it produces a visually stunning, clear, and professional academic illustration.
+
+## 6 Crucial Instructions
+
+1. **Preserve Aesthetics**: Maintain and enhance the visual quality. Use soft, muted pastel colors described in natural language (e.g., "soft sky blue", "warm peach", "light sage green"). NEVER output hex color codes, pixel dimensions, point sizes, or CSS-like specifications — these will be rendered as garbled text in the final image.
+
+2. **Intervene Only When Necessary**: If the description already describes a high-quality, professional visual design, PRESERVE IT. Do not rewrite for the sake of rewriting. Focus your edits on areas that genuinely need improvement.
+
+3. **Respect Diversity**: Different diagram styles (flowcharts, architecture diagrams, pipeline visualizations) have different conventions. Adapt your refinements to the specific diagram type rather than forcing a single template. For example, agent/LLM papers often use illustrative icons (cute 2D robot avatars, chat bubbles), while theoretical papers use minimalist graph nodes — respect these domain conventions.
+
+4. **Enrich Details**: Where the description is vague about visual properties, add specific but natural-language guidance. For example, instead of leaving "a box labeled X", specify "a rounded rectangle with soft blue fill and a slightly darker blue border, labeled X in bold sans-serif text".
+
+5. **Preserve Content**: Do NOT add, remove, or modify any components, connections, or labels from the original description. Your role is purely visual refinement — the content and structure must remain exactly as specified.
+
+6. **Handle Icons with Care**: Be cautious when modifying icons — they may carry specific semantic meanings in the research context. Some icons have conventional technical meanings (e.g., snowflake ❄️ = frozen/non-trainable parameters, flame 🔥 = trainable/fine-tuned parameters, padlock 🔒 = locked/static). When encountering such icons, reference the Source Context to verify their intent before making changes. Purely decorative or symbolic icons can be freely enhanced.
+
+## Aesthetic Guidelines
+# NeurIPS 2025 Method Diagram Aesthetics Guide
+
+## 1. The "NeurIPS Look"
+
+The prevailing aesthetic for 2025 is "Soft Tech & Scientific Pastels."
+Gone are the days of harsh primary colors and sharp black boxes. The modern
+NeurIPS diagram feels approachable yet precise. It utilizes high-value (light)
+backgrounds to organize complexity, reserving saturation for the most critical
+active elements. The vibe balances clean modularity (clear separation of parts)
+with narrative flow (clear left-to-right progression).
+
+## 2. Detailed Style Options
+
+### A. Color Palettes
+
+Design Philosophy: Use color to group logic, not just to decorate.
+Avoid fully saturated backgrounds.
+
+Background Fills (The "Zone" Strategy):
+- Most papers use very light, desaturated pastels (Opacity ~10-15%).
+- Aesthetically pleasing options: Cream/Beige (warm academic feel),
+  Pale Blue/Ice (clean technical feel), Mint/Sage (soft organic feel),
+  Pale Lavender (distinctive modern feel).
+- Alternative (~20%): White backgrounds with colored dashed borders.
+
+Functional Element Colors:
+- For "Active" Modules: Medium saturation. Common pairings: Blue/Orange,
+  Green/Purple, or Teal/Pink.
+- Trainable Elements: Often Warm tones (Red, Orange, Deep Pink).
+- Frozen/Static Elements: Often Cool tones (Grey, Ice Blue, Cyan).
+- For Highlights/Results: High saturation reserved for "Error/Loss,"
+  "Ground Truth," or final output.
+
+### B. Shapes & Containers
+
+Design Philosophy: "Softened Geometry." Sharp corners for data; rounded
+corners for processes.
+
+- Process Nodes: Rounded Rectangles (dominant ~80%).
+- Tensors & Data: 3D Stacks/Cuboids for volume, Flat Squares/Grids
+  for matrices/tokens.
+- Cylinders: Reserved for Databases, Buffers, or Memory.
+- Grouping: Solid light-colored containers with "Macro-Micro" pattern.
+- Borders: Solid for physical components, Dashed for logical stages.
+
+### C. Lines & Arrows
+
+- Orthogonal/Elbow: For Network Architectures.
+- Curved/Bezier: For System Logic, Feedback Loops.
+- Solid Black/Grey: Standard data flow.
+- Dashed Lines: Auxiliary flow (gradients, skip connections).
+- Integrated Math: Operators placed directly on lines.
+
+### D. Typography & Icons
+
+- Labels: Sans-Serif (Arial, Roboto, Helvetica). Bold for headers.
+- Variables: Serif, Italicized (LaTeX style).
+- Icons: Trainable (Fire, Lightning), Frozen (Snowflake, Padlock),
+  Operations (Gear, Magnifying Glass), Content (Document, Chat Bubble).
+
+### E. Layout & Composition
+
+- Flow: Left-to-right for sequential, top-to-bottom for hierarchical.
+- Alignment: Snap to implicit grid.
+- Spacing: Consistent gaps, closer within groups.
+- Balance: Distribute visual weight evenly.
+- Whitespace: Intentional separation of phases/concepts.
+
+## 3. Common Pitfalls
+
+- The "PowerPoint Default" Look with heavy black outlines.
+- Font Mixing (Times New Roman for labels).
+- Inconsistent Dimension mixing (2D and 3D without reason).
+- Primary saturated backgrounds for grouping.
+- Ambiguous arrows (same style for data flow and gradient flow).
+
+## 4. Domain-Specific Styles
+
+- AGENT/LLM Papers: Illustrative, narrative, cartoony. Chat bubbles,
+  robots, document icons.
+- COMPUTER VISION Papers: Spatial, dense, geometric. Frustums, rays,
+  point clouds, RGB color coding.
+- THEORETICAL Papers: Minimalist, abstract. Graph nodes, manifolds,
+  grayscale with one highlight color.
+- GENERATIVE/LEARNING Papers: Dynamic, process-oriented. Noise/denoising
+  metaphors, gradual color transitions.
+
+
+## Source Context
+Figure for Section 2.1 "Critical Realism" in a Korean Master's thesis. This is a conceptual diagram of the STRATIFIED ONTOLOGY of Critical Realism (Bhaskar). The diagram must show THREE NESTED CONCENTRIC regions (a set/subset containment model), NOT three separate side-by-side boxes.
+
+CRITICAL VISUAL STRUCTURE — three concentric nested regions, largest outside, smallest inside:
+
+1. OUTERMOST and LARGEST region = the Real (실재적 층위, the real). Content label: "구조 · 생성기제" (structures and generative mechanisms). These exist independently of whether they are observed.
+
+2. MIDDLE region, fully contained inside the Real = the Actual (현실적 층위, the actual). Content label: "발생한 사건" (events that occur). Events produced when mechanisms operate under specific conditions.
+
+3. INNERMOST and SMALLEST region, fully contained inside the Actual = the Empirical (경험적 층위, the empirical). Content label: "관측된 사건" (observed events / observations). The subset of events that we actually observe.
+
+Containment relation to convey: 실재적 ⊇ 현실적 ⊇ 경험적 (the Real contains the Actual contains the Empirical). The core message: what is empirically observed is only a SUBSET of reality (generative depth). The outer rings should be visibly much larger than the inner ones so the "only a small subset is observed" message reads instantly.
+
+GENERATIVE-DIRECTION ARROW (required): a single causal/generative directional arrow crossing the three strata from OUTSIDE to INSIDE: generative mechanisms (Real) → events (Actual) → observations (Empirical). Meaning: mechanisms generate events, and a part of those events is observed. The flow "mechanism → event → observation" must be readable at a glance, pointing inward.
+
+Layout: concentric circles, the Real as the big outer ring, the Actual as a medium ring inside it, the Empirical as the small innermost disk. Place each stratum's Korean label (with English in parentheses) and its short content phrase clearly within or beside its band. Use leader lines so outer-ring labels do not overlap inner content.
+
+STYLE: academic publication quality, flat and minimal. Calm navy/teal palette: navy #1f3a5f, teal #2f7d95. Bands shaded from darker navy outside to lighter teal/blue inside. No 3D, no drop shadows, no decorative clutter. Thin clean outlines. Readable Korean text priority.
+
+Do NOT include abduction terminology.
+
+## Figure Caption
+비판적 실재론의 층화된 존재론. 세 층위는 동심 포함관계를 이룬다(실재적 ⊇ 현실적 ⊇ 경험적). 가장 바깥의 실재적 층위(the real)는 구조와 생성기제를, 중간의 현실적 층위(the actual)는 발생한 사건을, 가장 안쪽의 경험적 층위(the empirical)는 관측된 사건을 가리킨다. 바깥에서 안으로 향하는 화살표는 생성기제 → 사건 → 관측의 발생 방향을 나타낸다.
+
+## Current Description
+Note: Your primary focus should be on the Current Description and Aesthetic Guidelines. The Source Context and Figure Caption are provided for reference only — do not regenerate a description from scratch based solely on them while ignoring the existing description.
+The figure illustrates the stratified ontology of Critical Realism using a clean, flat, and minimal academic style. It consists of three perfectly concentric circles, visually representing a set/subset containment model on a pure white background. The outer rings are significantly larger than the inner ones, emphasizing that the inner layers are subsets of the outer layers.
+
+**Overall Layout:**
+The diagram is centered on the canvas, with three concentric circles. A single causal arrow traverses the circles from outside to inside. Text labels are placed within or beside their respective bands.
+
+**Components and Groupings:**
+
+1.  **Outermost Region: The Real (실재적 층위)**
+    *   **Shape:** The largest concentric circle.
+    *   **Fill Color:** Deep navy blue (`#1f3a5f`).
+    *   **Border:** A thin, clean white outline.
+    *   **Label:** "실재적 층위 (The Real)" is positioned to the top-left, outside the largest circle. The text is in a readable sans-serif font, medium gray color.
+    *   **Leader Line:** A thin, light gray dashed line connects the "실재적 층위 (The Real)" label to the outermost dark navy blue ring, indicating its association.
+    *   **Content Label:** "구조 · 생성기제" (structures and generative mechanisms) is centered within the deep navy blue ring. The text is white, in a clear sans-serif font.
+
+2.  **Middle Region: The Actual (현실적 층위)**
+    *   **Shape:** A medium-sized concentric circle, fully contained within the "Real" region. This circle is visibly much smaller than the outermost but still significantly larger than the innermost.
+    *   **Fill Color:** Calm teal blue (`#2f7d95`), a lighter but distinct shade from the deep navy blue.
+    *   **Border:** A thin, clean white outline.
+    *   **Label:** "현실적 층위 (The Actual)" is centered within this calm teal blue ring. The text is white, in a clear sans-serif font.
+    *   **Content Label:** "발생한 사건" (events that occur) is centered below the "현실적 층위 (The Actual)" label within the calm teal blue ring. The text is white, in a clear sans-serif font.
+
+3.  **Innermost Region: The Empirical (경험적 층위)**
+    *   **Shape:** The smallest concentric circle, appearing as a central disk, fully contained within the "Actual" region. This disk is notably small to visually convey that observations are a limited subset.
+    *   **Fill Color:** A soft sky blue, a noticeably lighter shade than the calm teal blue, harmonizing with the overall cool palette.
+    *   **Border:** A thin, clean white outline.
+    *   **Label:** "경험적 층위 (The Empirical)" is centered within this soft sky blue disk. The text is in a dark gray or black color for strong contrast, in a clear sans-serif font.
+    *   **Content Label:** "관측된 사건" (observed events / observations) is centered below the "경험적 층위 (The Empirical)" label within the soft sky blue disk. The text is in a dark gray or black color, in a clear sans-serif font.
+
+**Connections and Annotations:**
+
+*   **Generative-Direction Arrow:** A single, prominent, solid white arrow of medium thickness originates from the top-center, outside the "Real" layer, and points directly downwards towards the center of the innermost "Empirical" disk. This arrow visually represents the causal/generative flow.
+*   **Arrow Annotation:** To the right side of the generative arrow, aligned vertically, is a text label: "생성기제 → 사건 → 관측" (Generative Mechanisms → Events → Observations). This text is in a small, elegant white sans-serif font, clearly indicating the direction of causality from the outermost to the innermost layer.
+
+**Styling:**
+*   **Background:** Pure white.
+*   **Colors:** The palette strictly adheres to deep navy blue (`#1f3a5f`), calm teal blue (`#2f7d95`), and a harmonizing soft sky blue for the innermost layer. Text colors are chosen for maximum legibility (white on dark backgrounds, dark gray/black on light backgrounds).
+*   **Lines:** All outlines are thin and clean white. The leader line is thin, light gray, and dashed. The generative arrow is solid white and medium thickness.
+*   **Typography:** All text labels (Korean with English in parentheses, and content descriptions) use a clear, readable sans-serif font. Korean text is prioritized for readability.
+*   **Aesthetics:** The diagram is flat, minimal, and free of 3D effects, drop shadows, or any decorative clutter, maintaining an academic publication quality.
+
+Output ONLY the final polished Detailed Description. Do not include any conversational text, explanations, or preamble.

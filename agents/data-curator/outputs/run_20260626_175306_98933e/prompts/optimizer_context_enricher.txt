@@ -1,0 +1,47 @@
+You are an expert at analyzing academic methodology sections and restructuring them for diagram generation. Your job is to take raw methodology text and produce a structured, diagram-ready version that makes it easy for a downstream agent to create an accurate illustration.
+
+## Your Task
+
+Analyze the methodology text below and produce a restructured version that explicitly identifies:
+
+1. **Components**: Every distinct module, model, block, layer, or processing step mentioned. Give each a clear, concise label.
+2. **Data Flow**: What flows between components — data, signals, features, gradients, etc. Identify the direction (input → output).
+3. **Groupings**: Which components belong together (e.g., "Encoder block", "Training pipeline", "Preprocessing stage"). Name each group.
+4. **Input/Output**: What enters the system and what comes out. Be explicit about data types and shapes if mentioned.
+5. **Key Relationships**: Residual connections, skip connections, attention mechanisms, loss functions, feedback loops.
+6. **Sequential vs Parallel**: Which operations happen in sequence and which in parallel.
+7. **Mathematical Operations**: Any equations, losses, or transformations — express them as labeled operations in the flow.
+
+## Rules
+- Preserve ALL technical details from the original — do not summarize or lose information
+- Add structure and clarity, but never invent components not in the source
+- Use the caption to understand what aspects of the methodology to emphasize
+- Output as structured text (not JSON), using clear headers and bullet points
+- If the text describes multiple variants or ablations, focus on the main architecture
+
+## Methodology Text
+Figure for Section 2.1 "Critical Realism" in a Korean Master's thesis. This is a conceptual diagram of the STRATIFIED ONTOLOGY of Critical Realism (Bhaskar). The diagram must show THREE NESTED CONCENTRIC regions (a set/subset containment model), NOT three separate side-by-side boxes.
+
+CRITICAL VISUAL STRUCTURE — three concentric nested regions, largest outside, smallest inside:
+
+1. OUTERMOST and LARGEST region = the Real (실재적 층위, the real). Content label: "구조 · 생성기제" (structures and generative mechanisms). These exist independently of whether they are observed.
+
+2. MIDDLE region, fully contained inside the Real = the Actual (현실적 층위, the actual). Content label: "발생한 사건" (events that occur). Events produced when mechanisms operate under specific conditions.
+
+3. INNERMOST and SMALLEST region, fully contained inside the Actual = the Empirical (경험적 층위, the empirical). Content label: "관측된 사건" (observed events / observations). The subset of events that we actually observe.
+
+Containment relation to convey: 실재적 ⊇ 현실적 ⊇ 경험적 (the Real contains the Actual contains the Empirical). The core message: what is empirically observed is only a SUBSET of reality (generative depth, 발생적 깊이). The outer rings should be visibly much larger than the inner ones so the "only a small subset is observed" message reads instantly.
+
+GENERATIVE-DIRECTION ARROW (required): a single causal/generative directional arrow crossing the three strata from OUTSIDE to INSIDE: generative mechanisms (Real) → events (Actual) → observations (Empirical). Meaning: mechanisms generate events, and a part of those events is observed. The flow "mechanism → event → observation" must be readable at a glance, pointing inward.
+
+Layout: concentric circles (or concentric rounded rectangles), the Real as the big outer ring, the Actual as a medium ring inside it, the Empirical as the small innermost disk. Place each stratum's Korean label (with English in parentheses) and its short content phrase clearly within or beside its band. Use a leader/annotation so labels for the outer rings don't overlap the inner content.
+
+STYLE: academic publication quality, flat and minimal tone to match sibling figures in the same thesis. Calm navy/teal palette: navy #1f3a5f, teal #2f7d95. Concentric bands shaded from darker navy outside to lighter teal/blue inside, or light tints. No gradients overload, no decorative clutter, no 3D, no drop shadows. Thin clean outlines. Readable Korean text is the priority. Square-ish to landscape proportion fitting a single-column thesis body width.
+
+Do NOT include abduction / 가추 terminology — this is purely a strata containment model and does not need it.
+
+## Figure Caption (for context on what to emphasize)
+비판적 실재론의 층화된 존재론. 세 층위는 동심 포함관계를 이룬다. 가장 바깥의 실재적 층위(the real)는 관찰 여부와 무관하게 존재하는 구조와 생성기제를, 중간의 현실적 층위(the actual)는 그 기제가 조건적으로 작동하여 발생시키는 사건을, 가장 안쪽의 경험적 층위(the empirical)는 발생한 사건 가운데 우리가 실제로 관측하는 부분 집합을 가리킨다(실재적 ⊇ 현실적 ⊇ 경험적). 바깥에서 안으로 향하는 화살표는 '생성기제 → 사건 → 관측'의 발생 방향을 나타내며, 경험적으로 관측되는 것이 실재의 부분집합에 그친다는 발생적 깊이를 보여준다.
+
+## Structured Output
+Produce the restructured methodology below:

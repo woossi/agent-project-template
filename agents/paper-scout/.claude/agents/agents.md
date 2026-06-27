@@ -7,6 +7,7 @@
 | Path | Role |
 | --- | --- |
 | `.claude/agents/agents.md` | Human-readable index and maintenance note |
+| `.claude/agents/fulltext-grounder.md` | Use when paper-scout needs PDF full-text obtained and exact citation-grounding quotes extracted for a batch of newly adopted citation keys, in an isolated context — fetching the body (local PDF → OA → scrapling paywall bypass → OCR for scans), then extracting verbatim quote + page + claim-fit per key into a handoff table for manuscript-writer. |
 
 ## Maintenance
 

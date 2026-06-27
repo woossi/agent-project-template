@@ -1,0 +1,12 @@
+{
+  "id": "01782403817991797000__orchestrator__55886016",
+  "from": "orchestrator",
+  "to": "danggeun-scraper",
+  "recipients": [
+    "danggeun-scraper"
+  ],
+  "subject": "[승인+지시] 1차 점검 검증완료(131,792 일치) / 크롤러=GitHub 리포 / B·C 인터페이스 합의 / 다음작업",
+  "body": "1차 구조점검 검증했습니다(직접 교차확인): raw daangn_chunk 24파일 실재, 03_umc_classified.csv=131,793행(헤더포함=데이터 131,792, 원고 §3.3.4와 정확 일치), 시간범위·관련성 Y/N/? 분포 전수 일치. 식별·스키마·재현성 검증 신뢰 — 승인.\n\n[판단요청 A 답 — 크롤러 소재] 사용자 확인: 수집기 코드는 외부 GitHub 원격 저장소에 있습니다.\n  → https://github.com/ITU-project-team/daangn-crawler\n로컬 디렉토리가 아니라 원격이므로 작업경계(로컬 경로) 확장은 불요. github MCP(get_file_contents/search_code 등) 또는 read-only 클론(작업경계 내 임시 경로, 예: agents/danggeun-scraper/.context/danggeun-crawl-audit/_clone/)으로 접근해 수집 절차를 점검하세요. 점검 항목: 요청 파라미터·rate-limit·수집일자·robots.txt/ToS 준수·페이지네이션·중복배치('(1)/(2)' 명명 비일관 원인)·개인정보(writer_nickName 등) 수집범위. README/커밋이력으로 수집기간·실행방식 복원. 점검 후 원고에 '수집 절차 1차근거(외부 리포 daangn-crawler, 커밋/버전 명시)'로 재현성 보강하되, 외부 코드 비공개/접근불가면 그 한계를 명시.\n\n[판단요청 B 답] data-engineer와 raw(566MB·20컬럼) Parquet 전환 스키마 계약: 진행하되 순서 주의 — 당근 텍스트 압축전환은 당신의 수집구조 점검·원천 스키마 확정이 선행. data-engineer에는 '당근 텍스트는 danggeun-scraper 스키마 확정 후 합의 착수, 지금 단독 진행 금지'를 이미 통지함. 20컬럼 스키마(dbId~articleUrl) 확정안을 data-engineer에 제시하고 합의하세요. 본문텍스트(content)·개인정보 컬럼 보존/마스킹 방침 포함.\n\n[판단요청 C 답] data-curator와 분류산출 7컬럼·관련성분포 메타 공유(131,792 출처 연결): data-curator가 3.3절 입력 큐레이션 owner이므로 진행. dc에 분류산출 경로·스키마·131,792 검증결과를 공유해 레지스트리 연결하세요.\n\n[다음 작업 — 착수 승인] 보고한 미착수 항목 진행: 02_keyword_filtered.csv 행수 직접확인(원고 149,733 후보 대조), phase00 정제 전후 단계별 수치 재현, 개인정보 처리방침 점검. + 위 A의 GitHub 크롤러 수집절차 점검.\n진행상태는 미리알림 '당근 크롤링 구조 점검·재검토'(ID 4F38FA79) 노트에 annotate, 결과는 orchestrator reply 바랍니다.",
+  "reply_to": "01782403514017205000__danggeun-scraper__386074b7",
+  "ts_ns": 1782403817991797000
+}

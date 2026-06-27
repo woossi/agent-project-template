@@ -1,0 +1,48 @@
+You are an expert scientific diagram illustrator. Generate high-quality scientific diagrams based on user requests. Note that do not include figure titles in the image.
+
+CRITICAL: All text labels in the diagram must be rendered in clear, readable English. Use the EXACT label names specified in the description. Do not generate garbled, misspelled, or non-English text.
+
+The figure illustrates a sequential, left-to-right pipeline consisting of three distinct processing stages. The overall background is a very subtle, clean off-white, providing a crisp yet soft canvas for the diagram elements.
+
+**Overall Layout**:
+The diagram is arranged horizontally, depicting a clear linear flow from left to right. It is composed of three main rounded rectangular modules, each representing a stage in the pipeline, connected by directional arrows.
+
+**Components**:
+1.  **Stage 1 Classification**: Positioned on the far left, this component is a rounded rectangle with a soft daffodil yellow fill. Its dimensions are balanced to accommodate the centered text label.
+2.  **Stage 2 EB aggregation**: Located in the center, this component is a rounded rectangle with a serene sky blue fill. It is visually similar in size and style to the other stages.
+3.  **Stage 3 Evidence-grounded judgment**: Placed on the far right, this component is a rounded rectangle with a fresh mint green fill. It completes the sequence of the pipeline.
+
+All three stage boxes have a subtle, solid border in a slightly darker shade than their respective fills, providing clear definition without harshness against the background.
+
+**Connections**:
+Two prominent, solid arrows in a muted charcoal grey illustrate the primary data flow and progression between the stages:
+1.  An arrow originates from the horizontal center of the right edge of the "Stage 1 Classification" box and points directly to the horizontal center of the left edge of the "Stage 2 EB aggregation" box.
+2.  A second arrow originates from the horizontal center of the right edge of the "Stage 2 EB aggregation" box and points directly to the horizontal center of the left edge of the "Stage 3 Evidence-grounded judgment" box.
+All arrowheads are standard, solid triangular shapes, clearly indicating the direction of flow.
+
+**Groupings**:
+Each of the three stages ("Stage 1 Classification", "Stage 2 EB aggregation", "Stage 3 Evidence-grounded judgment") acts as its own distinct grouping, identified by its unique color fill and border. There are no larger overarching grouping boxes or dashed regions; the stages themselves are the primary structural units.
+
+**Labels and Annotations**:
+*   **Stage Labels**: Each rounded rectangular component has its specific label centered horizontally and vertically within its box:
+    *   "Stage 1 Classification" (in the yellow box)
+    *   "Stage 2 EB aggregation" (in the blue box)
+    *   "Stage 3 Evidence-grounded judgment" (in the green box)
+    The text for these labels is in a clear, bold sans-serif typeface in a deep, soft charcoal grey, ensuring high readability.
+*   **Input/Output Labels**:
+    *   To the left of the "Stage 1 Classification" box, a text label "Input" is placed. A medium-weight, solid arrow in a muted charcoal grey originates from the "Input" label and points towards the left edge of the "Stage 1 Classification" box, indicating data entry.
+    *   To the right of the "Stage 3 Evidence-grounded judgment" box, a text label "Output" is placed. A medium-weight, solid arrow in a muted charcoal grey originates from the right edge of the "Stage 3 Evidence-grounded judgment" box and points towards the "Output" label, signifying the final result.
+    These input/output labels also use the same clear sans-serif typeface in a deep, soft charcoal grey.
+
+**Styling**:
+*   **Background**: A very subtle, clean off-white.
+*   **Component Fills**:
+    *   "Stage 1 Classification": Soft daffodil yellow.
+    *   "Stage 2 EB aggregation": Serene sky blue.
+    *   "Stage 3 Evidence-grounded judgment": Fresh mint green.
+    These colors are light and pastel, ensuring text readability and a pleasant visual appearance.
+*   **Borders**: All component boxes have a subtle, solid border in a slightly darker shade than their fill.
+*   **Lines and Arrows**:
+    *   Main flow arrows between stages: Prominent, solid arrows in a muted charcoal grey.
+    *   Input/Output arrows: Medium-weight, solid arrows in a muted charcoal grey.
+*   **Text**: All labels (stage names, Input, Output) are rendered in a clear sans-serif typeface in a deep, soft charcoal grey. Stage labels are bold. Text size is appropriate for easy reading within the diagram's overall scale.

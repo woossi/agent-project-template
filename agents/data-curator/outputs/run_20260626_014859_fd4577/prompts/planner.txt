@@ -1,0 +1,138 @@
+I am working on a task: given the 'Methodology' section of a paper, and the caption of the desired figure, automatically generate a corresponding illustrative diagram. I will input the text of the 'Methodology' section, the figure caption, and your output should be a detailed description of an illustrative figure that effectively represents the methods described in the text.
+
+To help you understand the task better, and grasp the principles for generating such figures, I will also provide you with several examples. You should learn from these examples to provide your figure description.
+
+** IMPORTANT: **
+Your description should be as detailed as possible. Semantically, clearly describe each element and their connections. Formally, include various details such as background style (typically pure white or very light pastel), colors, line thickness, icon styles, etc. Remember: vague or unclear specifications will only make the generated figure worse, not better.
+
+Your description should cover:
+1. **Overall layout**: General flow direction (left-to-right or top-to-bottom), major sections/phases
+2. **Components**: Each box, module, or element with its exact label
+3. **Connections**: Arrows, data flows, and their directions
+4. **Groupings**: How components are grouped or sectioned (colored regions, dashed borders)
+5. **Labels and annotations**: Text labels, mathematical notations
+6. **Input/Output**: What enters and exits the system
+7. **Styling**: Background fills, color palettes (in natural language, e.g., "soft sky blue", "warm peach" — never hex codes), line weights, icon styles
+
+## Methodology Section
+## System Title
+Integrated UMC Methodology
+
+## Overall Process
+This framework describes an "Integrated UMC (Universal & Meaningful Connectivity) methodology" that links three distinct analyses (Measure, Explain, Integrate) into one overarching inference cycle. The process consists of four sequential stages: 3.1 Measure, 3.2 Explain, 3.3 Integrate, and 4 Interpret, which flow from left to right. This specific ordering is designed to link district conditions, individual vulnerability, and everyday narratives without reducing them to a single level of analysis.
+
+## Groupings & Components
+
+### Group: 3.1 Measure (RQ1)
+*   **Component:** District-level UMC index construction
+    *   **Label for Diagram:** UMC index
+    *   **Description:** Constructs prior expectations implied by the UMC conceptual frame.
+    *   **Conceptual Stratum Link (from text):** Operates at the Real (structural) stratum.
+    *   **Diagrammatic Alignment (from layout):** Positioned under the 'Empirical' stratum.
+    *   **Icon (for diagram):** Grid + target/gauge
+
+### Group: 3.2 Explain (RQ2)
+*   **Component:** Two-level Hierarchical Linear Model (HLM)
+    *   **Label for Diagram:** multilevel model
+    *   **Description:** Provides the boundary conditions of how the prior (from Measure) relates to individual-level outcomes.
+    *   **Conceptual Stratum Link (from text):** Operates at the Actual stratum (where events/mechanisms operate).
+    *   **Diagrammatic Alignment (from layout):** Positioned under the 'Actual' stratum.
+    *   **Icon (for diagram):** Small hierarchical node graph
+
+### Group: 3.3 Integrate (RQ3)
+*   **Component:** Platform Text Analysis
+    *   **Label for Diagram:** platform signals
+    *   **Description:** Combines empirical-stratum observations with the prior (from Measure) to update it, and retroductively infers causal mechanisms where the discrepancy (prediction error) is largest.
+    *   **Conceptual Stratum Link (from text):** Combines empirical observations with prior; infers causal mechanisms.
+    *   **Diagrammatic Alignment (from layout):** Positioned under the 'Real' stratum.
+    *   **Icon (for diagram):** Two speech bubbles
+
+### Group: 4 Interpret
+*   **Component:** Final Interpretation Stage
+    *   **Label for Diagram:** policy targeting
+    *   **Description:** Allocates limited policy capacity by priority.
+    *   **Diagrammatic Alignment (from layout):** No explicit stratum alignment provided for this stage.
+    *   **Icon (for diagram):** Table + clock
+
+## Data Flow (Sequential)
+
+1.  **Input to 3.1 Measure (UMC index):**
+    *   District-level data (implicit, required for UMC index construction)
+2.  **Output from 3.1 Measure (UMC index):**
+    *   Prior expectations (implied by the UMC conceptual frame at the Real (structural) stratum)
+3.  **Input to 3.2 Explain (multilevel model):**
+    *   Prior expectations (from 3.1 Measure)
+    *   Individual-level outcomes (implicit, data used by HLM)
+4.  **Output from 3.2 Explain (multilevel model):**
+    *   Boundary conditions (describing how the prior relates to individual-level outcomes)
+5.  **Input to 3.3 Integrate (platform signals):**
+    *   Empirical-stratum observations (which are observed platform signals)
+    *   Prior expectations (from 3.1 Measure)
+6.  **Output from 3.3 Integrate (platform signals):**
+    *   Updated prior
+    *   Inferred causal mechanisms (identified where discrepancy/prediction error is largest)
+7.  **Input to 4 Interpret (policy targeting):**
+    *   Inferred causal mechanisms (from 3.3 Integrate)
+    *   Updated prior (from 3.3 Integrate, implicitly used for priority setting)
+8.  **Output from 4 Interpret (policy targeting):**
+    *   Policy allocation by priority
+
+## Key Relationships
+
+*   **Prior Expectations:** A central data artifact. It is constructed by the 'Measure' stage and subsequently used as an input by both the 'Explain' and 'Integrate' stages.
+*   **Boundary Conditions:** These are established by the 'Explain' stage, detailing the relationship between the prior expectations and individual-level outcomes.
+*   **Discrepancy (Prediction Error):** This is a computed value within the 'Integrate' stage, representing the difference between empirical-stratum observations and the prior. It serves as a key indicator for inferring causal mechanisms.
+*   **Updated Prior:** The 'Integrate' stage refines the initial prior expectations by incorporating empirical observations, producing an 'updated prior'.
+*   **Inferred Causal Mechanisms:** These are identified by the 'Integrate' stage, specifically where the prediction error is largest, and are then passed to the 'Interpret' stage.
+
+## Critical Realism Strata
+
+These strata provide a conceptual grounding for the methodology, with specific diagrammatic alignments to the stages as per the layout instructions.
+
+*   **Empirical Stratum:**
+    *   **Definition:** Represents observed platform signals.
+    *   **Diagrammatic Alignment:** Positioned under the '3.1 Measure' stage.
+*   **Actual Stratum:**
+    *   **Definition:** The stratum where events and mechanisms operate.
+    *   **Diagrammatic Alignment:** Positioned under the '3.2 Explain' stage.
+*   **Real Stratum:**
+    *   **Definition:** The structural stratum implied by the UMC conceptual frame.
+    *   **Diagrammatic Alignment:** Positioned under the '3.3 Integrate' stage.
+
+## Sequential vs Parallel Operations
+All identified stages (3.1 Measure, 3.2 Explain, 3.3 Integrate, 4 Interpret) are explicitly described as sequential operations, flowing in a linear, left-to-right fashion. No parallel operations are mentioned in the methodology description.
+
+## Mathematical Operations
+*   **UMC Index Construction:** An implied calculation within the '3.1 Measure' stage to quantify universal and meaningful connectivity (no specific equation provided).
+*   **Hierarchical Linear Model (HLM):** Implied statistical modeling performed within the '3.2 Explain' stage to relate prior expectations to individual-level outcomes (no specific equation provided).
+*   **Discrepancy (Prediction Error) Calculation:** An implied comparison or subtraction operation within the '3.3 Integrate' stage to identify differences between empirical observations and the prior (no specific equation provided).
+*   **Prior Update:** An implied adjustment or recalibration of the prior expectations within the '3.3 Integrate' stage based on new empirical observations (no specific equation provided).
+
+## Figure Caption
+This flowchart depicts the Integrated UMC Methodology as a four-stage sequential pipeline, flowing left-to-right. The process begins with '3.1 Measure (UMC index)', progresses to '3.2 Explain (multilevel model)', then '3.3 Integrate (platform signals)', and concludes with '4 Interpret (policy targeting)'. A lower horizontal band aligns the critical-realism strata – 'Empirical' under '3.1 Measure', 'Actual' under '3.2 Explain', and 'Real' under '3.3 Integrate' – to illustrate the multi-level inference cycle from structural expectations to policy targeting. The diagram emphasizes the sequential flow of these analytical components and their mapping to different ontological strata.
+
+## Reference Examples
+(No reference examples available. Generate based on source context alone.)
+
+Based on the methodology section, figure caption, and learning from the style and structure of the reference examples above, generate a comprehensive and detailed textual description of the methodology diagram.
+
+Note: Do not include figure titles (e.g., "Figure 1: ...") in the diagram description. The caption should remain separate from the diagram content.
+
+## Aspect Ratio Recommendation
+
+After your detailed description, on a **new line**, output exactly one line in this format:
+```
+RECOMMENDED_RATIO: <ratio>
+```
+where `<ratio>` is one of: 1:1, 2:3, 3:2, 3:4, 4:3, 9:16, 16:9, 21:9.
+
+Choose the best aspect ratio based on:
+- The **content structure**: pipelines and sequential flows → wide (16:9, 21:9); deep hierarchies or vertical stacks → tall (2:3, 9:16); balanced architectures → square-ish (1:1, 4:3, 3:4)
+- The **reference examples' aspect ratios** listed above (if available)
+- The **number of components** and their spatial arrangement
+
+For example, a left-to-right encoder-decoder pipeline would be 16:9, while a top-to-bottom tree structure would be 2:3.
+
+
+## User-Provided Reference/Sketch
+The final 1 attached image(s), after the reference example images, are user-provided reference/sketch images (e.g. a hand-drawn sketch, whiteboard photo, or a prior version of the figure). Use them as guidance for the layout and content of the target diagram while staying faithful to the source text.

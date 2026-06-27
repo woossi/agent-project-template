@@ -1,0 +1,62 @@
+You are an expert scientific diagram illustrator. Generate high-quality scientific diagrams based on user requests. Note that do not include figure titles in the image.
+
+CRITICAL: All text labels in the diagram must be rendered in clear, readable English. Use the EXACT label names specified in the description. Do not generate garbled, misspelled, or non-English text.
+
+The diagram illustrates the Integrated UMC Methodology framework with a clean, academic flat design.
+
+**Overall Layout:**
+The diagram is arranged horizontally, flowing from left to right, embodying a clear narrative progression. It features a top-left title chip, followed by four sequential stage boxes arranged linearly across the middle of the canvas. Below these boxes, a separate horizontal axis forms a critical-realism strata band.
+
+**Styling:**
+The overall canvas background is pure white, allowing the elements to stand out with clarity. All text labels are rendered in a clean, professional sans-serif font. Borders and lines are generally thin and precise, unless a thicker weight is specified for emphasis. Icons are designed as simple, elegant line-art, colored in a serene, medium teal blue.
+
+**Components:**
+
+1.  **Top-Left Title Chip:**
+    *   A small, rectangular box with gently rounded corners, positioned in the top-left corner of the diagram.
+    *   It features a soft, pale goldenrod background fill, providing a subtle accent.
+    *   The text "Integrated UMC Methodology" is centered within the chip, presented in a rich, deep navy blue, bold sans-serif font.
+
+2.  **Four Sequential Stage Boxes (Left to Right):**
+    *   Each box is a vertical rectangle with crisp, yet soft, light gray borders. The interior of each box remains pristine white.
+    *   **Top Label Section:** At the very top of each box, there is a horizontal band filled with a muted, deep teal blue. Within this band, the stage number and name are displayed in clean white, bold sans-serif font, left-aligned. A thin, rich deep navy blue line runs immediately below this colored band, extending across the full width of the box, subtly separating the header from the main content.
+    *   **Icon:** Centered within the main white area of each box, directly below the top label, is a single, simple line-art icon rendered in a serene, medium teal blue.
+    *   **Bottom Sub-label:** Centered at the bottom of each box, below the icon, is a concise descriptive label in a rich, deep navy blue sans-serif font.
+
+    The specific details for each box are:
+    *   **Box 1:**
+        *   Top Label: "3.1 Measure"
+        *   Icon: A stylized line-art icon depicting a 3x3 grid of squares (representing data or indicators) positioned to the left of a circular target or gauge with a central dot (symbolizing measurement or an index).
+        *   Bottom Sub-label: "UMC index"
+    *   **Box 2:**
+        *   Top Label: "3.2 Explain"
+        *   Icon: A hierarchical node graph icon, rendered in line-art, showing two smaller circular nodes connected by lines to a larger square node, visually suggesting a multilevel or explanatory model.
+        *   Bottom Sub-label: "multilevel model"
+    *   **Box 3:**
+        *   Top Label: "3.3 Integrate"
+        *   Icon: Two overlapping speech bubbles or chat boxes, presented as line-art. One is slightly behind and to the right of the other. Both feature a small, downward-pointing triangle at their base, symbolizing communication or signals.
+        *   Bottom Sub-label: "platform signals"
+    *   **Box 4:**
+        *   Top Label: "4 Interpret"
+        *   Icon: A combination line-art icon featuring a small grid or table (e.g., a 2x3 grid of cells) positioned to the left of a simple clock face with hour and minute hands, conveying concepts of policy and timing.
+        *   Bottom Sub-label: "policy targeting"
+
+**Connections:**
+*   **Sequential Flow Arrows:** Substantial, solid arrows, colored in a rich, deep navy blue, indicate the methodological progression. These right-pointing arrows connect the stage boxes. An arrow originates from the right side of the '3.1 Measure' box and points cleanly to the left side of the '3.2 Explain' box. Subsequent arrows connect '3.2 Explain' to '3.3 Integrate', and '3.3 Integrate' to '4 Interpret', maintaining consistent visual weight and direction.
+
+**Critical-Realism Strata Band:**
+*   **Horizontal Axis:** A thin, subtle light gray horizontal line extends across the lower portion of the diagram, positioned gracefully beneath the main stage boxes.
+*   **Markers:** Three medium-sized, solid filled circular dots, colored in a rich, deep navy blue, are precisely placed directly on this horizontal axis.
+*   **Labels:** Below each dot, a bold label in a rich, deep navy blue identifies the critical-realism stratum.
+    *   The first dot and label "Empirical" are vertically aligned with the center of the '3.1 Measure' box.
+    *   The second dot and label "Actual" are vertically aligned with the center of the '3.2 Explain' box.
+    *   The third dot and label "Real" are vertically aligned with the center of the '3.3 Integrate' box.
+
+**Labels and Annotations:**
+All labels are intentionally short, concise, and presented in English, adhering to a minimalist academic style. No additional sentences, subtitles, paragraphs, or topic lines are included.
+
+**Input/Output:**
+The diagram implicitly conveys an input to the first stage ('3.1 Measure') and an output from the last stage ('4 Interpret') through its clear left-to-right flow, without depicting any explicit external input/output elements.
+
+
+Note: this plan was guided by a user-provided reference sketch; follow the description above faithfully.

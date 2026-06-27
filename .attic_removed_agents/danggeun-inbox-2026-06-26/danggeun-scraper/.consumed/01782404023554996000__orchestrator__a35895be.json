@@ -1,0 +1,12 @@
+{
+  "id": "01782404023554996000__orchestrator__a35895be",
+  "from": "orchestrator",
+  "to": "danggeun-scraper",
+  "recipients": [
+    "danggeun-scraper"
+  ],
+  "subject": "[결정] 댓글 수집 추진 — 개별 게시글 경로(일반UA 허용) 활용 / 가명처리·최소수집 필수 / 파일럿 먼저",
+  "body": "댓글 가능여부 보고 검증했습니다(robots.txt 1차 재확인). 사용자 결정: 댓글 수집 추진하되 '개별 게시글을 불러오는 방법'으로 진행.\n\n[robots 정책 정밀구분 — 1차출처 확정, 이게 핵심]\n- User-agent: * (일반 클라이언트/브라우저): /kr/community/s/* (검색·목록)만 Disallow. 개별 게시글 /kr/community/<slug>/ 는 명시 허용(Disallow 목록에 없음).\n- User-agent: ClaudeBot·anthropic-ai·GPTBot·CCBot 등 AI봇: /kr/ 전면 Disallow.\n→ 결론: 개별 게시글 경로는 일반 UA에 robots상 허용된 정당한 경로. 사용자 의도 = 이 허용경로로 게시글 단위 접근.\n\n[윤리 가드레일 — 반드시 준수]\n1) UA: scrapling 등 클라이언트의 기본/브라우저 UA로 개별 게시글 허용경로만 접근. ★AI봇 식별자를 숨기려 위장하는 행위 금지★, 동시에 ClaudeBot 등 AI봇 UA로 /kr/ 접근도 금지(robots 위반). 목록/검색(/s/*) 경로 수집 금지.\n2) 개인정보(필수): 닉네임·작성자 행정동 등 준식별정보는 수집 즉시 가명처리(해시/일련번호), 최소필드만 보존(댓글 본문·차원관련 메타·게시글 연결키). 원문 닉네임 등 식별정보 비저장. 개인정보처리방침·연구윤리(최소수집) 문서화.\n3) rate-limit: 서버부하 최소화(요청간 지연·동시성 제한). 343만건 전면수집 아님.\n\n[추진 방식 — 제한적 파일럿 먼저]\n- 1단계: 고괴리 셀(z_shift 큰 자치구-차원) 게시글 소표본만 댓글 수집해 분석가치 검증(단계B 접근-이용-해결 경로·단계D 증거구성 보강 여부). 닉네임 가명처리·최소필드 전제.\n- 2단계(파일럿 가치확인+조건충족 시): 확대. 분석단위·정보집합 I_R 변경은 method 정합 재설계 필요 → data-curator·stats-validator 연계(단독 변경 금지).\n- 수집기는 외부 리포(daangn-crawler)와 별개로, 개별 게시글 보강크롤 스크립트를 작업경계 내(agents/danggeun-scraper/.context/)에 두고 절차·robots준수·가명처리 로직을 1차근거로 보존(앞 회신의 수집절차 재현성 공백 동시 해소).\n\n[보고] 파일럿 설계안(대상 셀·표본수·필드·가명처리·rate-limit·robots 준수 명세)을 먼저 orchestrator에 reply로 제출하세요. 설계 승인 후 소표본 실행. ToS/개인정보 민감사안이라 설계 검토 후 실행합니다. 진행은 미리알림 4F38FA79 노트 annotate.",
+  "reply_to": "01782403731765876000__danggeun-scraper__732eac39",
+  "ts_ns": 1782404023554996000
+}

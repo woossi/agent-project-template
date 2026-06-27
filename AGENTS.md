@@ -28,6 +28,7 @@
 - .
 - /Users/ujunbin/project/umc (UMC 분석 프로젝트)
 - /Users/ujunbin/research/UMC (UMC 논문화 작업)
+- /Users/ujunbin/article (원문 PDF 라이브러리 · 읽기 전용 참고)
 
 명시 차단 경로:
 - (none)

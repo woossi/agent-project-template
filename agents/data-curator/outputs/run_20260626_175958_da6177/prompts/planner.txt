@@ -1,0 +1,115 @@
+I am working on a task: given the raw data (typically in tabular or json format) and a visual intent of the desired plot, automatically generate a corresponding statistical plot that is both accurate and aesthetically pleasing. I will input the raw data and the plot visual intent, and your output should be a detailed description of an illustrative plot that effectively represents the data. Note that your description should include all the raw data points to be plotted.
+
+To help you understand the task better, and grasp the principles for generating such plots, I will also provide you with several examples. You should learn from these examples to provide your plot description.
+
+** IMPORTANT: **
+Your description should be as detailed as possible. For content, explain the precise mapping of variables to visual channels (x, y, hue) and explicitly enumerate every raw data point's coordinate to be drawn to ensure accuracy. For presentation, specify the exact aesthetic parameters, including specific HEX color codes, font sizes for all labels, line widths, marker dimensions, legend placement, and grid styles. You should learn from the examples' content presentation and aesthetic design (e.g., color schemes).
+
+## Raw Data
+Data for plotting:
+{"x": ["a", "b", "c"], "y": [1, 2, 3]}
+
+## Visual Intent (Figure Caption)
+probe: minimal bar chart to verify image generation backend connectivity
+
+## Reference Examples
+### Example 1
+**Caption**: Figure 3: Overall pipeline of the Safety DPO Policy Learning framework. (a) Given multi-view camera images and LiDAR point clouds, a Transfuser backbone encodes the scene into a set of scene tokens. Meanwhile, a predefined Anchor Vocabulary is processed by an Anchor Tokenizer to produce anchor tokens. The anchor tokens attend to the scene tokens through a Transformer decoder to capture context-aware representations, which are then passed to the Policy Head to produce a probability distribution $\pi _ { \theta }$ . (b) To provide a unified supervisory signal, we compute a distribution $p _ { \mathrm { u n i f i e d } }$ by combining human trajectory similarity and rule-based safety score. This distribution supervises the policy output via a KL divergence loss. (c) To further improve policy optimization, we introduce the iterative DPO framework. We sample $K$ candidate trajectories from the predicted policy distribution $\pi _ { \theta }$ , and construct a preference pair to fine-tune the policy via a DPO loss. 
+**Source Context**: # 4 Method
+
+In this section, we propose a Safety DPO Policy Learning framework. First, we introduce the overall policy model architecture (Sec. 4.1), which includes perception encoding, anchor tokenization, and cross-attention fusion for decision-making. To enable direct policy optimization that integrates human demonstrations and rule-based safety signals, we propose Unified Policy Distillation (Sec. 4.2), which integrates imitation similarity and rule-based score into a single supervision dist
+**Aspect Ratio**: 1.51
+**Diagram**: [See reference image 1 above]
+
+### Example 2
+**Caption**: Figure 1: Simulating primate early visual processing as CNN front-end blocks. A The SubcorticalBlock integrates two parallel processing pathways for $\mathrm { \bf P }$ and M cells with a light-adaptation layer, a DoG convolutional layer, a contrast-normalization layer and a neural noise generator. B Both VOneNets and EVNets comprise an initial block designed to simulate a specific stage of the visual system, followed by a standard CNN architecture. VOneNets include a VOneBlock and EVNets include both a SubcorticalBlock and a VOneBlock. C SF, size, and contrast tuning curves (left to right) for two example subcortical neurons with example frames from the drifting gratings stimulus set shown below. Markers indicate the F1 component of the cell response and the solid line depicts the fitted response functions used for parameterizing response properties (cf. Supplementary Material E.2). Notably, the SubcorticalBlock exhibits hallmark LGN phenomena, including contrast saturation and surround suppression, with stronger modulation observed in M cells. 
+**Source Context**: # 2 Methods
+
+Inspired by the hierarchical organization of early visual processing culminating in V1, we introduce EVNets, a new family of neuro-inspired CNNs that build upon the VOneNet framework. EVNets incorporate modular fixed-weight front-ends that reflects the functional stages of the early primate visual pathway (Fig. 1). This architecture comprises three key components: the SubcorticalBlock, modeling response characteristics of foveal neurons in the retina and the LGN; a variant of the VO
+**Aspect Ratio**: 1.58
+**Diagram**: [See reference image 2 above]
+
+### Example 3
+**Caption**: Figure 2: Architecture overview. FTR comprises a focus stage and a reuse stage, depicted in the orange and purple boxes, respectively. The focus stage utilizes a novel object selection mechanism to filter task-relevant segments, and the reuse stage applies a fixed, simulator-trained policy to generate actions based on the selected objects. The object selection mechanism consists of a trainable segment selector, a fixed segmentation model, and a fixed tracking model. The training of the segment selector synthesizes prior knowledge from a VLM and feedback from the environment. 
+**Source Context**: # 4 Method
+
+We present Focus-Then-Reuse (FTR), a hierarchical framework designed to quickly deploy policies in target domains with visual perturbations. FTR facilitates efficient policy adaptation by maintaining the core functionality of the original policy while dynamically compensating for visual perturbations through a learned "focus" module. In this section, we first provide a brief overview of the FTR framework. Following this, we introduce the forward process of our method, which is divide
+**Aspect Ratio**: 2.04
+**Diagram**: [See reference image 3 above]
+
+### Example 4
+**Caption**: Figure 1: Overview of the proving pipeline. The solver starts proving by processing the given problem into a standard format. Then theorem search identifies applicable theorems from the database and attempts to decompose the inequality. If the proof fails, an inductive agent explores transformations to generate potential directions. If the proof succeeds, the logic system expands the theorem database by integrating newly proven results. 
+**Source Context**: # 3 The IneqSearch System
+
+The development of IneqSearch is motivated by the observation that effective inequality proving requires both systematic deductive reasoning and constructive insight. The system architecture reflects this dual requirement, implementing a methodology that progresses from direct proof attempts to theorem-based search, and finally to exploration of problem transformations when simpler approaches are insufficient. As depicted in Figure 1, IneqSearch is built upon a proving
+**Aspect Ratio**: 1.49
+**Diagram**: [See reference image 4 above]
+
+### Example 5
+**Caption**: Figure 2: Overview of our proposed CSM: (a) CSM model architecture, (b) supervised training paradigm and (c) end-to-end training paradigm. 
+**Source Context**: # 4 Methodology
+
+# 4.1 CI Parameterization via Surrogate Model (CSM)
+
+As established, directly computing CI values during inference is infeasible due to label dependency and computational cost, requiring a CI surrogate model (CSM) for approximation. Due to the query-awareness and list-awareness of CI value, our CSM should effectively capture both local query-context relevance and global list-level interactions. Inspired by recent advances in list-wise neural rerankers [26, 32], we design CSM wit
+**Aspect Ratio**: 2.39
+**Diagram**: [See reference image 5 above]
+
+### Example 6
+**Caption**: Figure 1: The overall architecture of the proposed LLM-DAMVC framework. Multi-view data $( \mathbf { X } ^ { 1 } , \ldots , \mathbf { X } ^ { V } )$ are processed by a Residual Gated Encoder to generate shared latent features $( \mathbf { H } ^ { v } )$ . These features are then fed into two parallel branches, a Standard Agent and an Adversarial Agent, to produce initial predictions $( \mathbf { P } _ { \mathrm { s t d } } ^ { v } , \mathbf { P } _ { \mathrm { a d v } } ^ { v } )$ and contrastive embeddings $( \mathbf { Z } _ { \mathrm { s t d } } ^ { v } , \mathbf { Z } _ { \mathrm { a d v } } ^ { v } )$ . The encoder is subsequently refined by a Dual-Domain Contrastive Learning Module, which enforces consistency on these embeddings in both the feature domain and frequency domain (via FFT). Concurrently, a state assessment based on multi-faceted quality indicators $( \mathbf { q } _ { a } ^ { v } )$ informs an LLM and a parallel heuristic policy to generate dynamic aggregation weights $( \mathbf { w } _ { a } ^ { v } )$ . Finally, these weights guide the fusion of all agent predictions into a unified probability distribution $( \mathbf { P } )$ , from which the final cluster assignments are derived. 
+**Source Context**: # 3 METHODOLOGY
+
+# 3.1 Notations and Problem Definition
+
+Multi-view clustering aims to leverage complementary information from different feature spaces to achieve better clustering performance. Given a multi-view dataset $\mathcal { X } = \{ \mathbf { X } ^ { 1 } , \mathbf { X } ^ { 2 } , \ldots , \mathbf { \bar { X } } ^ { V } \}$ , where $\mathbf { X } ^ { v } \in \mathbb { R } ^ { N \times d _ { v } }$ represents the feature matrix of the $v$ -th view containing $N$ samples with $d _ { v }$ -
+**Aspect Ratio**: 1.84
+**Diagram**: [See reference image 6 above]
+
+### Example 7
+**Caption**: Figure 2: Comparison of a standard Transformer layer (left) and the LittleBit architecture (right). LittleBit performs linear transformation using parallel Primary and Residual pathways. The Primary path employs binarized factors $( \mathbf { U } _ { \mathrm { s i g n } } , \mathbf { V } _ { \mathrm { s i g n } } )$ and FP16 scales $( \mathbf { h } , \mathbf { g } , \ell )$ on input $\mathbf { X }$ , initialized from W via Dual-SVID. Simultaneously, the Residual path computes a correction with its own parameters $( \mathbf { U } _ { \mathrm { r e s , s i g n } } , \mathbf { V } _ { \mathrm { r e s , s i g n } } , \mathbf { h } _ { \mathrm { r e s } } , \mathbf { g } _ { \mathrm { r e s } } , \boldsymbol { \ell } _ { \mathrm { r e s } } )$ from the approximation residual. Their outputs sum to form $\mathbf { Y }$ , eliminating storage of the effective weight matrices $\widehat { \mathbf { W } } _ { \mathrm { p r i } }$ and $\widehat { \mathbf { W } } _ { \mathrm { r e s } }$ . 
+**Source Context**: # 3 Methodology
+
+This section details LittleBit. We describe its factorized architecture with multi-scale compensation (Section 3.1), the Dual-SVID initialization for stable QAT (Section 3.2), and Residual Compensation for enhanced fidelity (Section 3.3). These components are optimized via QAT (details in Section 4).
+
+# 3.1 LittleBit Architecture
+
+The LittleBit architecture, depicted in Fig. 2, redesigns linear layers for extreme compression (e.g., 0.1 BPW) by synergistically combining low-rank 
+**Aspect Ratio**: 1.97
+**Diagram**: [See reference image 7 above]
+
+### Example 8
+**Caption**: Figure 2: Overview of MEGADance. Stage 1 (HFDQ) quantizes dance into upper/lower-body latent codes using FSQs with kinematic and dynamic reconstruction constraints. Stage 2 (GADG) maps music to codes via an L-layer Mixture-of-Experts architecture (blue: Specialized Experts, pink: Universal Experts), where each expert is equipped with a Mamba-Transformer hybrid backbone 
+**Source Context**: # 3 Methodology
+
+# 3.1 Problem Definition
+
+Given a music sequence $M = \{ m _ { 0 } , m _ { 1 } , . . . , m _ { T } \}$ and a dance genre label $g$ , our objective is to synthesize the corresponding dance sequence $S \stackrel { \cdot } { = } \{ s _ { 0 } , s _ { 1 } , . . . , s _ { T } \}$ , where $m _ { t }$ and $s _ { t }$ denotes the music and dance feature at time step $t$ . We define each music feature $m _ { t }$ as a 35-dim vector[8] extracted by Librosa[36], including 20-dim MFCC, 12-di
+**Aspect Ratio**: 1.98
+**Diagram**: [See reference image 8 above]
+
+### Example 9
+**Caption**: Figure 2: Illustration of OpenVLThinker-7B’s training process. We iteratively apply SFT and GRPO to refine the LVLM using reasoning data generated from previous iterations. The data sources are also progressively evolved to introduce more challenging questions over time. 
+**Source Context**: # 4 OpenVLThinker: Iterative Self-improvement on Curriculum Data
+
+In this section, we first analyze how SFT and RL affect the occurrence of reasoning-related keywords, which serves to motivate our approach. We then introduce the proposed iterative approach to enhancing complex reasoning capabilities in OpenVLThinker-7B with SFT-RL cycles. At last, we propose a source-based curriculum RL.
+
+# 4.1 The Role of SFT and RL
+
+The initial SFT data. The standard distillation approach used for text-only re
+**Aspect Ratio**: 1.88
+**Diagram**: [See reference image 9 above]
+
+### Example 10
+**Caption**: Figure 1: ResponseRank learns strength-aware preferences from rankings over comparisons derived from implicit strength signals (e.g., response times). (1) Comparisons are stratified (e.g., by annotator ID), ensuring local validity of signal-strength relationship. (2) Within each stratum, instances $( a _ { i } , b _ { i } , p _ { i } , \tau _ { i } )$ are normalized to $( w _ { i } , l _ { i } , \tau _ { i } )$ format based on the preference label $p _ { i }$ , where $w _ { i }$ is the preferred item and $l _ { i }$ is the dispreferred item. (3) Rank construction then sorts these normalized tuples (e.g., by ascending response time $\tau _ { i }$ ) and appends a virtual anchor element with a fixed score of 0 to create target rankings. (4) A preference predictor models these target rankings by predicting signed utility differences $s _ { \theta } ( w _ { i } , l _ { i } ) = \bar { u } _ { \theta } ( w _ { i } ) - \bar { u } _ { \theta } ( l _ { i } )$ . (5) The $s _ { \theta }$ values (and the anchor’s 0) act as latent strengths for a Plackett–Luce model; NLL loss minimization yields parameters $\theta$ . 
+**Source Context**: # 2 Learning preference strength from local rankings
+
+We introduce ResponseRank, a novel method for learning strength-aware preference models from rankings of comparisons. Our method builds on the principle that auxiliary signals can indicate preference strength but are often noisy and confounded. We learn utility differences by leveraging the relative order of these signals within homogeneous partitions (strata).
+
+# 2.1 Problem setting and utility framework
+
+We aim to learstrength modelEach dat
+**Aspect Ratio**: 2.32
+**Diagram**: [See reference image 10 above]
+
+
+Based on the raw data, visual intent, and learning from the style and structure of the reference examples above, generate a comprehensive and detailed textual description of the statistical plot.

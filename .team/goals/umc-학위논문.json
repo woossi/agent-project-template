@@ -1,0 +1,25 @@
+{
+  "id": "umc-학위논문",
+  "title": "umc 학위논문",
+  "objective": "B판(CR 에이전트 역행추론·정책검증판)을 토대로 비판적 실재론 기반 생성기제 탐색 석사 학위논문을 완성한다",
+  "scope": "B판(parts_ko_B/, umc_paper_ko_B.tex) 기반. 한국어. SSCI 투고 목표(umc-논문화)와 별개 목표.",
+  "deliverable": "심사 통과 가능한 석사 학위논문 1편(전 섹션) — paper-scout 6가지 논증으로 구축한 CR 이론장 포함",
+  "success_criteria": [
+    "paper-scout의 6가지 논증 구조로 이론장(2장 등)을 체계적으로 구축",
+    "학위논문 체재 전 섹션 완성(초록·서론·이론·방법·결과·논의·결론·참고문헌)",
+    "지도교수 리뷰 통과"
+  ],
+  "verification": [
+    "지도교수 리뷰 통과",
+    "6가지 논증 구조가 이론장에 일대일로 배치되었는지 점검",
+    "학위논문 체재 전 섹션 누락 없이 컴파일 통과"
+  ],
+  "constraints": [
+    "이번 학기말(2026 가을, ~12월) 심사 일정. 근거 없이 내용 만들지 않음. 검증 안 된 주장은 불확실로 표시."
+  ],
+  "status": "active",
+  "created_by": "orchestrator",
+  "updated_by": "orchestrator",
+  "created_ts_ns": 1782439806848990000,
+  "updated_ts_ns": 1782439806848991000
+}

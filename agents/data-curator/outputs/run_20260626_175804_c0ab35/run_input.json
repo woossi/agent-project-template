@@ -1,0 +1,9 @@
+{
+  "source_context": "Conceptual diagram: stratified ontology of Critical Realism. THREE NESTED CONCENTRIC circles (subset containment), largest outside to smallest inside.\n1. Outermost largest = the Real (\uc2e4\uc7ac\uc801 \uce35\uc704, the real); label inside band: \uad6c\uc870 \u00b7 \uc0dd\uc131\uae30\uc81c.\n2. Middle, inside the Real = the Actual (\ud604\uc2e4\uc801 \uce35\uc704, the actual); label: \ubc1c\uc0dd\ud55c \uc0ac\uac74.\n3. Innermost smallest = the Empirical (\uacbd\ud5d8\uc801 \uce35\uc704, the empirical); label: \uad00\uce21\ub41c \uc0ac\uac74.\nRelation: \uc2e4\uc7ac\uc801 \u2287 \ud604\uc2e4\uc801 \u2287 \uacbd\ud5d8\uc801. Message: observed is only a subset of reality.\nOne generative arrow from outside to inside: \uc0dd\uc131\uae30\uc81c \u2192 \uc0ac\uac74 \u2192 \uad00\uce21.\nStyle: flat, minimal, academic. Navy #1f3a5f outer, teal #2f7d95 inner. No 3D, no shadows. Korean labels with English in parentheses, readable. No abduction terms.",
+  "communicative_intent": "\ube44\ud310\uc801 \uc2e4\uc7ac\ub860\uc758 \uce35\ud654\ub41c \uc874\uc7ac\ub860: \uc2e4\uc7ac\uc801 \u2287 \ud604\uc2e4\uc801 \u2287 \uacbd\ud5d8\uc801 \ub3d9\uc2ec \ud3ec\ud568\uad00\uacc4\uc640 \uc0dd\uc131\uae30\uc81c \u2192 \uc0ac\uac74 \u2192 \uad00\uce21\uc758 \ubc1c\uc0dd \ubc29\ud5a5.",
+  "diagram_type": "methodology",
+  "raw_data": null,
+  "aspect_ratio": "4:3",
+  "vector_export": "none",
+  "input_images": []
+}

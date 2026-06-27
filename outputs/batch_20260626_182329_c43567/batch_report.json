@@ -1,0 +1,20 @@
+{
+  "batch_id": "batch_20260626_182329_c43567",
+  "manifest": "/private/tmp/claude-501/-Users-ujunbin-team-umc-agents-data-curator/6886b437-c892-46c1-9beb-570e3f3ea2bb/scratchpad/cr_strata_manifest.yaml",
+  "batch_kind": "methodology",
+  "status": "completed",
+  "items": [
+    {
+      "id": "item_1",
+      "caption": "\ube44\ud310\uc801 \uc2e4\uc7ac\ub860\uc758 \uce35\ud654\ub41c \uc874\uc7ac\ub860. \uc138 \uce35\uc704\ub294 \ub3d9\uc2ec \ud3ec\ud568\uad00\uacc4\ub97c \uc774\ub8ec\ub2e4(\uc2e4\uc7ac\uc801 \u2287 \ud604\uc2e4\uc801 \u2287 \uacbd\ud5d8\uc801). \uac00\uc7a5 \ubc14\uae65\uc758 \uc2e4\uc7ac\uc801 \uce35\uc704(the real)\ub294 \uad6c\uc870\uc640 \uc0dd\uc131\uae30\uc81c\ub97c, \uc911\uac04\uc758 \ud604\uc2e4\uc801 \uce35\uc704(the actual)\ub294 \ubc1c\uc0dd\ud55c \uc0ac\uac74\uc744, \uac00\uc7a5 \uc548\ucabd\uc758 \uacbd\ud5d8\uc801 \uce35\uc704(the empirical)\ub294 \uad00\uce21\ub41c \uc0ac\uac74\uc744 \uac00\ub9ac\ud0a8\ub2e4. \ubc14\uae65\uc5d0\uc11c \uc548\uc73c\ub85c \ud5a5\ud558\ub294 \ud654\uc0b4\ud45c\ub294 \uc0dd\uc131\uae30\uc81c \u2192 \uc0ac\uac74 \u2192 \uad00\uce21\uc758 \ubc1c\uc0dd \ubc29\ud5a5\uc744 \ub098\ud0c0\ub0b8\ub2e4.",
+      "run_id": null,
+      "output_path": null,
+      "iterations": null,
+      "status": "failed",
+      "attempts": 1,
+      "input": "/private/tmp/claude-501/-Users-ujunbin-team-umc-agents-data-curator/6886b437-c892-46c1-9beb-570e3f3ea2bb/scratchpad/cr_strata_context.txt",
+      "error": "RetryError[<Future at 0x10ba2bc50 state=finished raised ClientError>]"
+    }
+  ],
+  "total_seconds": 397.4
+}

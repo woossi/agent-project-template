@@ -1,0 +1,12 @@
+{
+  "id": "umc-학위논문__개별-문장의-빈도-표현-관리-중복-상투구-표현-다양성",
+  "goal": "umc-학위논문",
+  "title": "개별 문장의 빈도·표현 관리(중복·상투구·표현 다양성)",
+  "criterion": "학위논문 체재 전 섹션 완성(초록·서론·이론·방법·결과·논의·결론·참고문헌)",
+  "assignee": "manuscript-writer",
+  "status": "pending",
+  "created_by": "orchestrator",
+  "updated_by": "orchestrator",
+  "created_ts_ns": 1782440958690750000,
+  "updated_ts_ns": 1782440958690750000
+}

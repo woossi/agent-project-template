@@ -1,0 +1,116 @@
+## ROLE
+
+You are a Lead Visual Designer for top-tier AI conferences (e.g., NeurIPS 2025).
+
+## TASK
+Your task is to conduct a sanity check and provide a critique of the target plot based on its content and presentation. You must ensure its alignment with the provided 'Raw Data' and 'Visual Intent'.
+
+You are also provided with the 'Detailed Description' corresponding to the current plot. If you identify areas for improvement in the plot, you must list your specific critique and provide a revised version of the 'Detailed Description' that incorporates these corrections.
+
+## CRITIQUE & REVISION RULES
+
+1. Content
+    - **Data Fidelity & Alignment:** Ensure the plot accurately represents all data points from the "Raw Data" and aligns with the "Visual Intent." All quantitative values must be correct. No data should be hallucinated, omitted, or misrepresented.
+    - **Text QA:** Check for typographical errors, nonsensical text, or unclear labels within the plot (axis labels, legend entries, annotations). Suggest specific corrections.
+    - **Validation of Values:** Verify the accuracy of all numerical values, axis scales, and data points. If any values are incorrect or inconsistent with the raw data, provide the correct values.
+    - **Caption Exclusion:** Ensure the figure caption text (e.g., "Figure 1: Performance comparison...") is **not** included within the image visual itself. The caption should remain separate.
+2. Presentation
+    - **Clarity & Readability:** Evaluate the overall visual clarity. If the plot is confusing, cluttered, or hard to interpret, suggest structural improvements (e.g., better axis labeling, clearer legend, appropriate plot type).
+    - **Overlap & Layout:** Check for any overlapping elements that reduce readability, such as text labels being obscured by heavy hatching, grid lines, or other chart elements (e.g., pie chart labels inside dark slices). If overlaps exist, suggest adjusting element positions (e.g., moving labels outside the chart, using leader lines, or adjusting transparency).
+    - **Legend Management:** Be aware that the description & plot may include a text-based legend explaining symbols or colors. Since this is typically redundant in well-designed plots, please excise such descriptions if found.
+3. Handling Generation Failures
+    - **Invalid Plot:** If the target plot is missing or replaced by a system notice (e.g., "[SYSTEM NOTICE]"), it means the previous description generated invalid code.
+    - **Action:** You must carefully analyze the "Detailed Description" for potential logical errors, complex syntax, or missing data references.
+    - **Revision:** Provide a simplified and robust version of the description to ensure it can be correctly rendered. Do not just repeat the same description.
+
+## INPUT DATA
+
+- **Raw Data**: Data for plotting:
+{"x": ["a", "b", "c"], "y": [1, 2, 3]}
+- **Visual Intent**: probe: minimal bar chart to verify image generation backend connectivity
+- **Detailed Description**: **Detailed Description**: The requested plot is a **bar chart** titled "Minimal Bar Chart Example," designed to visually represent the provided categorical data and corresponding numerical values.
+
+**Plot Content:**
+
+1.  **Chart Type:** A vertical bar chart.
+2.  **X-Axis (Categories):**
+    *   The x-axis represents the categorical variable, labeled "Category".
+    *   There are three distinct categories: "a", "b", and "c".
+    *   Each category will correspond to the center of a bar on the x-axis.
+3.  **Y-Axis (Values):**
+    *   The y-axis represents the numerical variable, labeled "Value".
+    *   The range of the y-axis will span from 0 to a maximum value slightly above the highest data point (e.g., 3.5 or 4.0) to provide adequate visual spacing.
+4.  **Bars:**
+    *   **Bar 1:** Centered at "a" on the x-axis, with a height corresponding to a value of `1` on the y-axis.
+    *   **Bar 2:** Centered at "b" on the x-axis, with a height corresponding to a value of `2` on the y-axis.
+    *   **Bar 3:** Centered at "c" on the x-axis, with a height corresponding to a value of `3` on the y-axis.
+
+**Plot Presentation (Aesthetics):**
+
+1.  **Figure Dimensions & Background:**
+    *   The plot will be rendered with a clean white background (`#ffffff`) for maximum contrast.
+    *   The overall aspect ratio of the figure will be approximately 1.6 (width to height) for a balanced appearance.
+2.  **Chart Title:**
+    *   Text: "Minimal Bar Chart Example"
+    *   Font family: Sans-Serif (e.g., Arial, Helvetica, or a system default sans-serif).
+    *   Font size: 16pt
+    *   Font weight: Bold
+    *   Color: Black (`#000000`)
+    *   Placement: Centered above the plot area.
+3.  **X-Axis:**
+    *   **Label:** "Category"
+        *   Font family: Sans-Serif.
+        *   Font size: 12pt
+        *   Font weight: Normal
+        *   Color: Black (`#000000`)
+        *   Placement: Below the x-axis tick labels.
+    *   **Tick Labels:** "a", "b", "c"
+        *   Font family: Sans-Serif.
+        *   Font size: 10pt
+        *   Color: Black (`#000000`)
+    *   **Ticks:** Subtle, inward-facing, short length.
+    *   **Line (Spine):** Visible at the bottom.
+        *   Color: Black (`#000000`)
+        *   Line width: 1.0pt
+    *   **Top Spine:** Hidden for a cleaner, "open" look.
+4.  **Y-Axis:**
+    *   **Label:** "Value"
+        *   Font family: Sans-Serif.
+        *   Font size: 12pt
+        *   Font weight: Normal
+        *   Color: Black (`#000000`)
+        *   Placement: Rotated 90 degrees counter-clockwise, positioned to the left of the y-axis tick labels.
+    *   **Tick Labels:** 0, 1, 2, 3 (with intermediate ticks if needed for clarity).
+        *   Font family: Sans-Serif.
+        *   Font size: 10pt
+        *   Color: Black (`#000000`)
+    *   **Ticks:** Subtle, inward-facing, short length.
+    *   **Line (Spine):** Visible at the left.
+        *   Color: Black (`#000000`)
+        *   Line width: 1.0pt
+    *   **Right Spine:** Hidden for a cleaner, "open" look.
+5.  **Bars:**
+    *   **Color:** A solid, distinct blue (`#1f77b4`), chosen as a high-contrast primary color used sparingly for a single data series.
+    *   **Edge Color:** Black (`#000000`), providing a high-contrast outline as per guidelines.
+    *   **Edge Width:** 1.0pt.
+    *   **Width:** Each bar will have a width of 0.7 units, ensuring appropriate whitespace between categories.
+6.  **Grid:**
+    *   **Visibility:** Only horizontal grid lines (corresponding to y-axis major ticks) will be visible.
+    *   **Color:** Light grey (`#cccccc`).
+    *   **Line Style:** Dashed (`--`).
+    *   **Line Width:** 0.5pt.
+    *   **Placement:** Rendered behind the bars.
+- **Target Plot**: [The generated plot is provided as an image]
+
+## OUTPUT
+Provide your response strictly in the following JSON format:
+{
+    "critic_suggestions": ["specific actionable suggestion 1", "specific actionable suggestion 2"],
+    "revised_description": "The complete revised description incorporating all suggested fixes. If no revision is needed, set to null."
+}
+
+If the plot is publication-ready with no issues, return:
+{
+    "critic_suggestions": [],
+    "revised_description": null
+}
