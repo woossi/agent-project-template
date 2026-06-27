@@ -20,7 +20,7 @@ from worker_session import WorkerSession, WorkerEvent, TurnResult
 class SessionPool:
     """worker 이름 → WorkerSession. 멀티턴 컨텍스트를 워커별로 유지한다."""
 
-    def __init__(self, root: Path, *, permission_mode: str = "acceptEdits",
+    def __init__(self, root: Path, *, permission_mode: str = "bypassPermissions",
                  session_factory: Callable[..., WorkerSession] | None = None):
         self.root = root
         self.permission_mode = permission_mode

@@ -67,3 +67,41 @@ def test_reset_starts_new_conversation():
     pool.reset("paper-scout")
     assert pool.has_session("paper-scout") is False
     assert "paper-scout" not in pool.active_workers()
+
+
+def test_distinct_workers_get_independent_sessions():
+    # 동시 가동(2026-06-27): 워커마다 별도 세션 객체 → 동시 send가 서로 안 섞인다.
+    pool = _pool(Path("/tmp"))
+    a = pool.session("data-lead", "data")
+    b = pool.session("write-lead", "write")
+    assert a is not b
+    pool.send("data-lead", "data", "A 작업")
+    pool.send("write-lead", "write", "B 작업")
+    assert a.sent == ["A 작업"] and b.sent == ["B 작업"]  # 컨텍스트 격리
+    assert pool.active_workers() == {"data-lead", "write-lead"}
+
+
+def test_pool_defaults_to_bypass_permissions():
+    # headless는 승인 프롬프트를 못 띄우므로 기본 bypassPermissions(가드훅이 격리 책임).
+    assert SessionPool(Path("/tmp")).permission_mode == "bypassPermissions"
+
+
+def test_concurrent_sends_do_not_interleave_sessions():
+    # 두 워커를 실제 스레드로 동시에 보내도 각 세션이 자기 프롬프트만 받는다.
+    import threading
+    pool = _pool(Path("/tmp"))
+    workers = [("data-lead", "data"), ("write-lead", "write"),
+               ("scout-lead", "scout"), ("review-lead", "review")]
+    barrier = threading.Barrier(len(workers))
+
+    def run(w, t):
+        barrier.wait()  # 동시 출발
+        pool.send(w, t, f"{w} 지시")
+
+    threads = [threading.Thread(target=run, args=(w, t)) for w, t in workers]
+    for th in threads:
+        th.start()
+    for th in threads:
+        th.join()
+    for w, t in workers:
+        assert pool.session(w, t).sent == [f"{w} 지시"]  # 각자 자기 것만

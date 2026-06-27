@@ -7,6 +7,14 @@ team-umc 팀의 현재 작업 패킷입니다. 가장 작은 작업 단위이며
 
 상태: 진행 중 (orchestrator — 학위논문(B판) 전환 추적)
 
+★★ 동시 지시 + 콘솔 워커별 분리 + render_strips 크래시 수정 (2026-06-27)
+- ★사용자 증상 3개: (1)"한 팀 가동 중 다른 팀 명령 못 내림" (2)"lead가 팀 메일박스 못 읽음" (3)"AttributeError: 'NoneType' object has no attribute 'render_strips'".
+- ★(1) 원인: _instructing이 단일 문자열 락이라 한 워커 가동 중 전 워커 지시 차단. 해결: set으로(워커별 중복만 막고 다른 팀 동시 허용) + @work(exclusive=False)로 워커마다 독립 스레드 동시 실행. SessionPool은 워커별 독립 세션이라 동시 send 안전(실측: 4워커 동시 send 각자 프롬프트만).
+- ★(2)+(3) 동일 근본원인: WorkerConsole 재작성 시 만든 _render 메서드가 **Textual Widget의 예약 메서드 _render(self)를 오버라이드**해 None 반환 → 렌더 시 visual=None.render_strips()로 위젯 크래시. 그래서 워커 선택·콘솔 표시가 죽어 "lead 메일박스 못 읽음"으로 보임(실제 CLI·guard 레벨은 정상 — data-lead가 read --team data로 4건 정상 조회 확인). 해결: _render→_repaint 개명 + mount 전 query 가드 + on_mount 재그리기.
+- ★콘솔 워커별 분리(사용자 결정): WorkerConsole이 워커별 버퍼(dict) 보관, 선택 워커 것만 표시, set_active로 동시가동 워커 타이틀 표시. 동시에 여러 워커 돌아도 로그 안 섞임.
+- ★부수: SessionPool 기본 permission_mode도 bypassPermissions로 정합(worker_session과 일치).
+- ★검증: 대시보드 43 통과(기존 34 + 동시성/콘솔 9)·R2 PASS·app import OK·headless mount+render 재현으로 render_strips 크래시 소멸 확인("MOUNT+RENDER OK").
+
 ★★ 워커 구동 headless 통일 + 승인 멈춤 해소 (2026-06-27)
 - ★사용자 증상: 대시보드에서 "패널과 별개로 각각 tmux 화면에서 구동해야 하는 게 이상" + "워커가 기동 안 함". 진단 결과 (1)두 구동모델 공존(tmux 별창 l/f/m/i vs 대시보드 내 headless c) (2)headless 워커가 tasks.md Write에서 "민감파일 승인대기"로 영구 멈춤(acceptEdits가 일부 경로를 ask로 떨굼, headless는 프롬프트 못 띄움).
 - ★사용자 결정: headless로 통일 + 지금 뜬 tmux 워커도 정리.

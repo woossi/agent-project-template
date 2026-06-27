@@ -88,7 +88,7 @@ class Dashboard(App):
         self._tasks_error: str = ""
         self._tasks_pulled: bool = False  # 아직 한 번도 안 당김
         self._pulling: bool = False       # 백그라운드 당기기 진행 중(중복 방지)
-        self._instructing: str = ""       # headless 지시 처리 중인 워커(중복 방지)
+        self._instructing: set[str] = set()  # 가동 중인 워커 집합(워커별 동시 지시 허용)
 
     def _reminders_list_name(self) -> str:
         data = store._load_json(self.root / ".project" / "team.json") or {}
@@ -224,8 +224,9 @@ class Dashboard(App):
             self._toast(False, "워커를 먼저 선택하세요(사이드바)")
             return
         worker, team = sel
-        if self._instructing:
-            self._toast(False, f"{self._instructing} 지시 처리 중 — 끝나면 다시")
+        # 워커별 락: 같은 워커가 이미 가동 중이면만 막고, 다른 팀/워커는 동시 지시 허용.
+        if worker in self._instructing:
+            self._toast(False, f"{worker} 지시 처리 중 — 끝나면 다시")
             return
         resuming = self.pool.has_session(worker)
         console = self.query_one(WorkerConsole)
@@ -234,7 +235,8 @@ class Dashboard(App):
         def submit(payload: dict) -> None:
             prompt = payload["prompt"]
             console.add_prompt(worker, prompt)
-            self._instructing = worker
+            self._instructing.add(worker)
+            console.set_active(worker, True)
             self._instruct_worker(worker, team, prompt)
 
         self.push_screen(InstructModal(worker, submit, resuming=resuming, team=team))
@@ -249,25 +251,29 @@ class Dashboard(App):
         self.query_one(WorkerConsole).add_status(f"{worker} 세션 리셋 — 다음 지시는 새 대화")
         self._toast(True, f"{worker} 세션 리셋")
 
-    def _on_worker_event(self, ev: WorkerEvent) -> None:
-        """워커 스레드에서 도착한 이벤트를 콘솔에 그린다(메인 스레드)."""
-        self.query_one(WorkerConsole).append_event(ev)
+    def _on_worker_event(self, worker: str, ev: WorkerEvent) -> None:
+        """워커 스레드에서 도착한 이벤트를 그 워커 버퍼에 그린다(메인 스레드)."""
+        self.query_one(WorkerConsole).append_event(worker, ev)
 
     def _on_turn_done(self, worker: str, ok: bool, error: str) -> None:
-        self._instructing = ""
+        self._instructing.discard(worker)
         console = self.query_one(WorkerConsole)
+        console.set_active(worker, False)
         if ok:
-            console.add_status(f"{worker} 턴 완료")
+            console.add_status(worker, f"{worker} 턴 완료")
         else:
-            console.add_status(f"{worker} 실패: {error}", ok=False)
+            console.add_status(worker, f"{worker} 실패: {error}", ok=False)
         self._toast(ok, f"{worker} 응답 완료" if ok else f"{worker} 실패: {error}")
         self.refresh_data()  # active 세션 배지 갱신
 
-    @work(thread=True, group="instruct")
+    @work(thread=True, exclusive=False)
     def _instruct_worker(self, worker: str, team: str, prompt: str) -> None:
-        """별도 스레드에서 headless claude를 구동(블로킹). UI는 안 막힌다."""
+        """별도 스레드에서 headless claude를 구동(블로킹). UI는 안 막힌다.
+        exclusive=False라 호출마다 독립 스레드로 동시 실행된다 — 여러 워커/팀을 동시에
+        가동할 수 있다(이전엔 단일 _instructing 락이 직렬화했다). 워커별 중복은
+        action_instruct의 set 락이 막고, 출력은 워커별 콘솔 버퍼로 분리된다."""
         def emit(ev: WorkerEvent) -> None:
-            self.call_from_thread(self._on_worker_event, ev)
+            self.call_from_thread(self._on_worker_event, worker, ev)
         r = self.pool.send(worker, team, prompt, on_event=emit)
         self.call_from_thread(self._on_turn_done, worker, r.ok, r.error)
 
