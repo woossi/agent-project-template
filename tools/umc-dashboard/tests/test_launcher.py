@@ -42,7 +42,7 @@ def test_launch_creates_window_with_identity(tmp_path):
     fake = FakeTmux()
     L = TmuxLauncher(tmp_path, runner=fake, in_tmux=True)
     r = L.launch("paper-scout", "scout")
-    assert r.ok and r.window == "umc:paper-scout"
+    assert r.ok and r.window == "UMC_paper-scout"
     # 정체성이 명령에 박혔는지
     nw = next(c for c in fake.calls if "new-window" in c)
     assert any("CLAUDE_AGENT_NAME=paper-scout" in part for part in nw)

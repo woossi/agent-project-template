@@ -33,8 +33,13 @@ class LaunchResult:
     error: str = ""
 
 
+# 사용자가 이미 운영 중인 tmux 윈도우 명명 규칙: ``UMC_<워커>``.
+# 대시보드가 수동으로 띄운 워커도 같은 규칙으로 인식하도록 맞춘다.
+WINDOW_PREFIX = "UMC_"
+
+
 def _window_name(worker: str) -> str:
-    return f"umc:{worker}"
+    return f"{WINDOW_PREFIX}{worker}"
 
 
 class TmuxLauncher:
@@ -59,14 +64,8 @@ class TmuxLauncher:
         return self.root / "teams" / team / worker
 
     def is_running(self, worker: str) -> bool:
-        """그 워커의 윈도우가 떠 있는지."""
-        ok, _ = self.available()
-        if not ok:
-            return False
-        rc, out, _ = self._run(["tmux", "list-windows", "-F", "#{window_name}"])
-        if rc != 0:
-            return False
-        return _window_name(worker) in out.splitlines()
+        """그 워커의 윈도우가 떠 있는지(모든 세션 기준)."""
+        return worker in self.running_workers()
 
     def launch(self, worker: str, team: str) -> LaunchResult:
         """새 윈도우에서 export CLAUDE_AGENT_NAME + cd + claude 실행."""
@@ -136,8 +135,8 @@ class TmuxLauncher:
         ok, _ = self.available()
         if not ok:
             return set()
-        rc, out, _ = self._run(["tmux", "list-windows", "-F", "#{window_name}"])
+        # 모든 세션의 윈도우를 본다(-a) — 대시보드와 워커가 다른 세션/윈도우에 있을 수 있다.
+        rc, out, _ = self._run(["tmux", "list-windows", "-a", "-F", "#{window_name}"])
         if rc != 0:
             return set()
-        prefix = "umc:"
-        return {ln[len(prefix):] for ln in out.splitlines() if ln.startswith(prefix)}
+        return {ln[len(WINDOW_PREFIX):] for ln in out.splitlines() if ln.startswith(WINDOW_PREFIX)}
