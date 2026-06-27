@@ -127,11 +127,38 @@ def slugify(text: str) -> str:
     return re.sub(r"[^0-9a-zA-Z가-힣]+", "-", text.strip()).strip("-").lower()
 
 
-def list_agents(team_root: Path) -> list[str]:
+def _is_worker_dir(p: Path) -> bool:
+    """A derivation worker is a folder carrying any surface this roll-up reads: a private
+    memory-log ledger (.context/memory-log) OR a private memory store (.claude/memory),
+    since share markers live in memory.md. Excludes non-worker scratch folders (only
+    handoff notes under .context) and TEAM folders — which also hold .claude/memory but
+    are explicitly marked with a ``.team-folder`` sentinel so they are never roll-up workers."""
+    if not p.is_dir() or p.name.startswith(".") or (p / ".team-folder").exists():
+        return False
+    return (p / ".context" / "memory-log").is_dir() or (p / ".claude" / "memory").is_dir()
+
+
+def worker_dirs(team_root: Path) -> dict[str, Path]:
+    """Map worker NAME -> folder across both topologies. Names are globally unique."""
+    found: dict[str, Path] = {}
+    teams_dir = team_root / "teams"
+    if teams_dir.is_dir():
+        for team in sorted(teams_dir.iterdir(), key=lambda p: p.name):
+            if not team.is_dir() or team.name.startswith("."):
+                continue
+            for child in sorted(team.iterdir(), key=lambda p: p.name):
+                if _is_worker_dir(child):
+                    found.setdefault(child.name, child)
     agents_dir = team_root / "agents"
-    if not agents_dir.is_dir():
-        return []
-    return sorted(p.name for p in agents_dir.glob("*") if p.is_dir())
+    if agents_dir.is_dir():
+        for child in sorted(agents_dir.iterdir(), key=lambda p: p.name):
+            if _is_worker_dir(child):
+                found.setdefault(child.name, child)
+    return found
+
+
+def list_agents(team_root: Path) -> list[str]:
+    return sorted(worker_dirs(team_root))
 
 
 def memory_share_signals(memory_path: Path, agent: str) -> list[dict[str, Any]]:
@@ -160,8 +187,7 @@ def memory_share_signals(memory_path: Path, agent: str) -> list[dict[str, Any]]:
 def collect_signals(team_root: Path, policy: dict[str, Any]) -> list[dict[str, Any]]:
     rel = policy["agent_ledger"]
     out: list[dict[str, Any]] = []
-    for agent in list_agents(team_root):
-        adir = team_root / "agents" / agent
+    for agent, adir in sorted(worker_dirs(team_root).items()):
         for rec in load_jsonl(adir / rel["signals"]):
             rec = dict(rec)
             rec.pop("explicit", None)  # per-agent observations are never team-explicit

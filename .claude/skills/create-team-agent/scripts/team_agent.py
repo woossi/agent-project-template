@@ -39,19 +39,77 @@ import json
 import os
 import sys
 import uuid
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
-# Shared subtrees symlinked into each agent's .claude (target relative to agents/<name>/.claude/).
+# Shared subtrees symlinked into each agent's .claude, keyed by the link name to the
+# REAL subpath under the team root. The relative symlink target is COMPUTED from the
+# link's actual depth (see _rel) — never hardcoded — so a worker at agents/<name>/ (depth 2)
+# and one at teams/<team>/<name>/ (depth 3) both get a correct ../-count from the same code.
 # NOTE: ``skills`` is NOT here — it is wired per-skill by _wire_skills so an agent can
 # hold PRIVATE skills (real dirs) alongside SHARED ones (symlinks). A whole-dir symlink
 # would force all-or-nothing and leak any private skill into the shared single source.
 SHARED_IN_CLAUDE = {
-    "hooks": "../../../.claude/hooks",
-    "policies": "../../../.claude/policies",
-    "settings.json": "../../../.claude/settings.json",
-    "CLAUDE.md": "../../../.claude/CLAUDE.md",
+    "hooks": ".claude/hooks",
+    "policies": ".claude/policies",
+    "settings.json": ".claude/settings.json",
+    "CLAUDE.md": ".claude/CLAUDE.md",
 }
+
+
+def _rel(target_abs: Path, link: Path) -> str:
+    """Relative POSIX symlink target from ``link`` to ``target_abs``, depth-independent.
+
+    Uses os.path.relpath against the link's PARENT (where the link physically lives) so
+    the ``../`` count is always correct regardless of how deep the agent folder is nested.
+    Normalized to POSIX ``/`` because symlink targets must not carry OS separators.
+    """
+    rel = os.path.relpath(os.fspath(target_abs), start=os.fspath(link.parent))
+    return PurePosixPath(rel).as_posix() if os.sep == "/" else rel.replace(os.sep, "/")
+
+
+# --- Skill compartmentalization (3-tier company) ---
+# GOVERNANCE skills re-/define the team itself (roster, goals, derivation authoring).
+# They are linked ONLY to the governance authoring_owner — a non-owner worker has no
+# business re-defining the team, so these stay off every other worker's skills folder.
+GOVERNANCE_SHARED = frozenset({
+    "team-init", "create-team-agent", "agent-clone-setup", "set-team-goal", "team-derive-author",
+})
+
+
+def _governance_owner(team_root: Path) -> str | None:
+    """The single worker allowed to hold governance skills (team-promotion.json owner)."""
+    pol = team_root / ".team" / "policies" / "team-promotion.json"
+    data = _load_json_or_none(pol)
+    if isinstance(data, dict):
+        gov = data.get("governance")
+        if isinstance(gov, dict):
+            owner = gov.get("authoring_owner")
+            if isinstance(owner, str) and owner.strip():
+                return owner.strip()
+    return None
+
+
+def _allowed_shared_skills(team_root: Path, name: str) -> set[str] | None:
+    """The set of SHARED root skills this worker may link, or None for "all" (back-compat).
+
+    Every shared skill is allowed EXCEPT governance skills, which are allowed only for the
+    governance owner. When no governance owner is resolvable (e.g. a fresh/flat team with no
+    team-promotion.json), return None so behavior is unchanged (link everything).
+    """
+    root_skills = team_root / ".claude" / "skills"
+    if not root_skills.is_dir():
+        return None
+    owner = _governance_owner(team_root)
+    if owner is None:
+        return None  # no governance policy => preserve legacy "link all"
+    all_shared = {
+        c.name for c in root_skills.iterdir()
+        if c.is_dir() and not c.name.startswith((".", "_"))
+    }
+    if name == owner:
+        return all_shared  # owner gets everything, including governance
+    return all_shared - GOVERNANCE_SHARED  # non-owner: governance withheld
 
 
 class AgentError(RuntimeError):
@@ -67,6 +125,16 @@ def _atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
     tmp = path.parent / f".tmp-{uuid.uuid4().hex}"
     tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     os.replace(tmp, path)
+
+
+def _load_json_or_none(path: Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    return data if isinstance(data, dict) else None
 
 
 def _ensure_symlink(link: Path, target: str, *, force: bool) -> str:
@@ -87,7 +155,7 @@ def _ensure_symlink(link: Path, target: str, *, force: bool) -> str:
     return "created"
 
 
-def _wire_skills(team_root: Path, agent_claude: Path, *, force: bool) -> dict[str, str]:
+def _wire_skills(team_root: Path, agent_claude: Path, *, force: bool, allowed: set[str] | None = None) -> dict[str, str]:
     """Wire ``.claude/skills`` as a REAL directory of per-skill symlinks to the
     shared root skills, preserving any PRIVATE (real) skill dirs this agent holds.
 
@@ -95,6 +163,14 @@ def _wire_skills(team_root: Path, agent_claude: Path, *, force: bool) -> dict[st
     mutually exclusive — anything added lands in the shared single source and
     leaks to every peer. Per-skill symlinks keep shared skills drift-free (one
     source) while leaving room for private real dirs isolated to this agent.
+
+    ``allowed``: when None (default), every shared skill is linked (back-compat).
+    When a set, ONLY those shared skills are linked — this is how governance skills
+    are kept off non-owner workers (compartmentalization). Pruning of now-disallowed
+    links is done by _prune_stale_skill_symlinks, which takes the same allowlist.
+
+    Per-skill targets are COMPUTED via _rel, so the same code wires a worker at
+    agents/<name>/ (depth 2) or teams/<team>/<name>/ (depth 3) correctly.
 
     Idempotent: re-running links in any newly added shared skills and leaves a
     same-named private real dir untouched (it shadows the shared name on purpose).
@@ -123,11 +199,14 @@ def _wire_skills(team_root: Path, agent_claude: Path, *, force: bool) -> dict[st
         # and private/hidden entries (leading "." or "_").
         if not child.is_dir() or child.name.startswith((".", "_")):
             continue
+        if allowed is not None and child.name not in allowed:
+            out[f"skills/{child.name}"] = "not-allowed (skipped)"  # compartmentalized off this worker
+            continue
         link = agent_skills / child.name
         if link.exists() and not link.is_symlink():
             out[f"skills/{child.name}"] = "private (kept)"  # private dir shadows shared name
             continue
-        target = f"../../../../.claude/skills/{child.name}"
+        target = _rel(root_skills / child.name, link)
         out[f"skills/{child.name}"] = _ensure_symlink(link, target, force=True)
     out["skills"] = "wired"
     return out
@@ -178,6 +257,52 @@ def _seed_private_assets(agent_claude: Path, name: str) -> None:
         )
 
 
+def _subteam_of(team_root: Path, name: str) -> str | None:
+    """The subteam a worker belongs to, from team.json's ``subteams`` (single source)."""
+    data = _load_json_or_none(team_root / ".team" / "team.json")
+    if not isinstance(data, dict):
+        return None
+    for st in data.get("subteams") or []:
+        if isinstance(st, dict) and name in (st.get("members") or []):
+            tname = st.get("name")
+            if isinstance(tname, str) and tname.strip():
+                return tname.strip()
+    return None
+
+
+def agent_dir_for(team_root: Path, name: str) -> Path:
+    """Resolve a worker's folder, 2-tier (teams/<team>/<name>) or flat (agents/<name>).
+
+    Prefers the subteam location from team.json. Falls back to flat ``agents/<name>``
+    when the worker is not in any subteam (a flat team, or a fresh/CI root with no
+    subteams) — this fallback is what keeps every existing test green after this
+    generalization, since their fake roots have no subteams.
+    """
+    sub = _subteam_of(team_root, name)
+    if sub:
+        return team_root / "teams" / sub / name
+    return team_root / "agents" / name
+
+
+def _wire_shared(team_root: Path, agent_dir: Path, name: str, *, force: bool) -> dict[str, str]:
+    """(Re)wire the SHARED symlinks + AGENTS.md + per-skill skills for one worker.
+
+    Shared by create and sync so both produce byte-identical wiring. All targets are
+    COMPUTED with _rel, so this is depth-independent (flat or 2-tier). Skills honor the
+    governance allowlist so non-owner workers never get governance skills linked.
+    """
+    agent_claude = agent_dir / ".claude"
+    out: dict[str, str] = {}
+    for rel, real_subpath in SHARED_IN_CLAUDE.items():
+        link = agent_claude / rel
+        out[rel] = _ensure_symlink(link, _rel(team_root / real_subpath, link), force=force)
+    allowed = _allowed_shared_skills(team_root, name)
+    out.update(_wire_skills(team_root, agent_claude, force=force, allowed=allowed))
+    agents_link = agent_dir / "AGENTS.md"
+    out["AGENTS.md"] = _ensure_symlink(agents_link, _rel(team_root / "AGENTS.md", agents_link), force=force)
+    return out
+
+
 def _register_in_roster(team_root: Path, name: str) -> bool:
     team_file = team_root / ".team" / "team.json"
     if team_file.exists():
@@ -199,7 +324,7 @@ def _register_in_roster(team_root: Path, name: str) -> bool:
 def create_agent(team_root: Path, name: str, *, role: str | None = None, force: bool = False) -> dict[str, Any]:
     if not (team_root / ".claude").is_dir():
         raise AgentError(f"team root has no .claude/: {team_root}")
-    agent_dir = team_root / "agents" / name
+    agent_dir = agent_dir_for(team_root, name)
     existed = agent_dir.exists()
     if existed and not force:
         return {"name": name, "dir": str(agent_dir), "created": False, "exists": True}
@@ -210,11 +335,7 @@ def create_agent(team_root: Path, name: str, *, role: str | None = None, force: 
 
     _seed_private_assets(agent_claude, name)
 
-    symlinks = {}
-    for rel, target in SHARED_IN_CLAUDE.items():
-        symlinks[rel] = _ensure_symlink(agent_claude / rel, target, force=force)
-    symlinks.update(_wire_skills(team_root, agent_claude, force=force))
-    symlinks["AGENTS.md"] = _ensure_symlink(agent_dir / "AGENTS.md", "../../AGENTS.md", force=force)
+    symlinks = _wire_shared(team_root, agent_dir, name, force=force)
 
     descriptor = agent_dir / "AGENT.md"
     if not descriptor.exists():
@@ -240,9 +361,41 @@ def create_agent(team_root: Path, name: str, *, role: str | None = None, force: 
     }
 
 
-def list_agents(team_root: Path) -> dict[str, Any]:
+def discover_worker_dirs(team_root: Path) -> dict[str, Path]:
+    """Map every worker NAME to its folder, scanning both topologies.
+
+    A WORKER is identified by holding ``.claude/memory/`` (create always seeds it). This
+    distinguishes workers from team folders (their ``.claude`` lives at the team root, and
+    dot-prefixed entries are skipped) and from non-worker folders (``.context`` only, no
+    ``.claude``). Scans teams/<team>/<worker>/ AND flat agents/<worker>/ so a half-migrated
+    or flat tree both resolve. Worker names are globally unique, so name is a safe key.
+    """
+    def _is_worker(c: Path) -> bool:
+        # A worker holds a seeded .claude/memory; a TEAM folder also does, but carries a
+        # .team-folder sentinel that excludes it. dot-prefixed entries are skipped.
+        return (c.is_dir() and not c.name.startswith(".")
+                and not (c / ".team-folder").exists()
+                and (c / ".claude" / "memory").is_dir())
+
+    found: dict[str, Path] = {}
+    teams_dir = team_root / "teams"
+    if teams_dir.is_dir():
+        for team in sorted(teams_dir.iterdir(), key=lambda p: p.name):
+            if not team.is_dir() or team.name.startswith("."):
+                continue
+            for child in sorted(team.iterdir(), key=lambda p: p.name):
+                if _is_worker(child):
+                    found.setdefault(child.name, child)
     agents_dir = team_root / "agents"
-    folders = sorted(p.name for p in agents_dir.glob("*") if p.is_dir()) if agents_dir.exists() else []
+    if agents_dir.is_dir():
+        for child in sorted(agents_dir.iterdir(), key=lambda p: p.name):
+            if _is_worker(child):
+                found.setdefault(child.name, child)
+    return found
+
+
+def list_agents(team_root: Path) -> dict[str, Any]:
+    folders = sorted(discover_worker_dirs(team_root))
     team_file = team_root / ".team" / "team.json"
     roster = []
     if team_file.exists():
@@ -250,64 +403,76 @@ def list_agents(team_root: Path) -> dict[str, Any]:
     return {"agent_folders": folders, "roster": roster, "out_of_sync": sorted(set(folders) ^ set(roster))}
 
 
-def _prune_stale_skill_symlinks(team_root: Path, agent_claude: Path) -> list[str]:
-    """Remove per-skill symlinks whose shared source no longer exists.
+def _prune_stale_skill_symlinks(team_root: Path, agent_claude: Path, *, allowed: set[str] | None = None) -> list[str]:
+    """Remove per-skill symlinks that should no longer exist for this worker.
 
-    _wire_skills only ADDS shared skills (shared -> agent); when a shared skill is
-    deleted or renamed, every peer keeps a dangling symlink. This is the reverse
-    direction (agent -> shared) that keeps the single source authoritative.
+    Two reasons to prune (both keep the single source authoritative):
+      1. the shared source skill was deleted/renamed (dangling link), or
+      2. ``allowed`` is a set and this skill is no longer permitted for this worker
+         (governance withheld) — this is the execution point that RECLAIMS a skill.
+
+    Resolves each symlink's target to an absolute path and checks it points under
+    root ``.claude/skills`` — depth-independent, unlike the old ``../``-prefix match.
+    Private real dirs are never pruned.
     """
     agent_skills = agent_claude / "skills"
-    root_skills = team_root / ".claude" / "skills"
+    root_skills = (team_root / ".claude" / "skills").resolve()
     pruned: list[str] = []
     if not agent_skills.is_dir() or agent_skills.is_symlink():
         return pruned
-    prefix = "../../../../.claude/skills/"
     for child in sorted(agent_skills.iterdir(), key=lambda p: p.name):
         if not child.is_symlink():
             continue  # private real dirs are never pruned
         target = os.readlink(child)
-        if target.startswith(prefix):
-            shared_name = target[len(prefix):].strip("/")
-            if not (root_skills / shared_name).is_dir():
-                child.unlink()
-                pruned.append(child.name)
+        # A shared per-skill link always points at ``.../.claude/skills/<child.name>``. We
+        # match on the TARGET STRING (not a resolve) so a link broken by a folder move —
+        # whose ``../`` count is now wrong and won't resolve — is still recognized and can
+        # be reclaimed. Links pointing elsewhere (user-made) don't match and are left alone.
+        posix = PurePosixPath(target.replace(os.sep, "/"))
+        if posix.name != child.name or ".claude/skills/" not in target.replace(os.sep, "/"):
+            continue  # not a managed shared-skill link
+        shared_name = child.name
+        disallowed = allowed is not None and shared_name not in allowed
+        missing = not (root_skills / shared_name).is_dir()
+        if disallowed or missing:
+            child.unlink()
+            pruned.append(child.name)
     return pruned
 
 
-def sync_agent(team_root: Path, agent_dir: Path, *, force: bool = False, prune: bool = True) -> dict[str, Any]:
-    """Reconcile ONE existing agent's skills against the shared single source.
+def sync_agent(team_root: Path, agent_dir: Path, name: str, *, force: bool = False, prune: bool = True) -> dict[str, Any]:
+    """Reconcile ONE existing worker against the shared single source.
 
-    Reuses ``_wire_skills`` (adds any new shared skill, keeps private dirs, migrates a
-    legacy whole-dir symlink under ``force``) and additionally prunes stale per-skill
-    symlinks whose shared source was removed. This is the reproduce/sync entry point
-    that ``_wire_skills`` (create-time only) never exposed for existing agents.
+    Rewires the SHARED symlinks + AGENTS.md + per-skill skills (depth-independent, honoring
+    the governance allowlist), then prunes any skill symlink that is now stale OR no longer
+    permitted for this worker. This is the reproduce/sync entry point that also fixes broken
+    SHARED links after a folder move (previously sync touched only skills).
     """
-    agent_claude = agent_dir / ".claude"
-    wired = _wire_skills(team_root, agent_claude, force=force)
-    pruned = _prune_stale_skill_symlinks(team_root, agent_claude) if prune else []
+    wired = _wire_shared(team_root, agent_dir, name, force=True)  # force: repair broken links after a move
+    allowed = _allowed_shared_skills(team_root, name)
+    pruned = _prune_stale_skill_symlinks(team_root, agent_dir / ".claude", allowed=allowed) if prune else []
     return {"wired": wired, "pruned": pruned}
 
 
 def sync_agents(team_root: Path, name: str | None = None, *, all_agents: bool = False, force: bool = False) -> dict[str, Any]:
-    """Reconcile one or every agent's skills folder against the shared single source.
+    """Reconcile one or every worker's wiring against the shared single source.
 
-    The missing reproduce/sync tool: after a shared skill is added or removed, run
-    ``sync --all`` to re-wire every peer identically (and migrate any agent still on the
-    legacy whole-dir ``skills`` symlink), or ``sync <name>`` for one.
+    The reproduce/sync tool: after a shared skill is added/removed, a folder move, or a
+    governance change, run ``sync --all`` to re-wire every peer identically, or
+    ``sync <name>`` for one. Discovers workers across both topologies (teams/ and agents/).
     """
     if not (team_root / ".claude").is_dir():
         raise AgentError(f"team root has no .claude/: {team_root}")
-    agents_dir = team_root / "agents"
+    worker_dirs = discover_worker_dirs(team_root)
     if all_agents:
-        targets = sorted(p.name for p in agents_dir.glob("*") if p.is_dir()) if agents_dir.exists() else []
+        targets = sorted(worker_dirs)
     elif name:
-        if not (agents_dir / name).is_dir():
-            raise AgentError(f"no such agent folder: agents/{name}")
+        if name not in worker_dirs:
+            raise AgentError(f"no such worker folder: {name}")
         targets = [name]
     else:
         raise AgentError("sync needs an agent NAME or --all")
-    return {"synced": targets, "skills": {n: sync_agent(team_root, agents_dir / n, force=force) for n in targets}}
+    return {"synced": targets, "skills": {n: sync_agent(team_root, worker_dirs[n], n, force=force) for n in targets}}
 
 
 # ---------------- CLI ----------------
