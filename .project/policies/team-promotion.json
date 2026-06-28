@@ -20,6 +20,13 @@
     "skip_if_agent_exists": true,
     "max_candidates": 20
   },
+  "canon_promote_promotion": {
+    "enable": false,
+    "min_distinct_agents": 2,
+    "min_total_recurrence": 2,
+    "max_candidates": 20,
+    "_note": "F-D5 canon link type 8. SIGNAL+DECISION only — never auto-authors a .project canon record. Disabled until slice 5 wires the signature->canon mapping. Set enable=true to surface candidates."
+  },
   "governance": {
     "mode": "tiered",
     "company_owner": "orchestrator",

@@ -159,19 +159,80 @@ def validate(root: Path) -> dict[str, list[str]]:
             if rid not in referenced[kind]:
                 warnings.append(f"orphan {kind} '{rid}': not referenced by any record")
 
+    # 5. supersedes chaining (ADR §A.4 / canon link type 4). A record's
+    # ``supersedes`` names the SAME-kind record it replaces (immutable-record
+    # evolution: change = new record + supersedes pointer). This is checked here,
+    # NOT via CANON[kind]["links"], on purpose:
+    #   * The link target must EXIST (dangling is an error) — same as evidence/provenance.
+    #   * But the deprecated-ref rule must be INVERTED: a superseded record is SUPPOSED
+    #     to be deprecated/replaced, so reusing the link machinery (which flags an active
+    #     referrer -> deprecated target) would fire on every healthy supersession. Hence a
+    #     dedicated pass: dangling-only, plus a soft warning when the superseded target is
+    #     still active (a likely un-retired predecessor).
+    for kind, spec in CANON.items():
+        for rid, rec in graph[kind].items():
+            sup = rec.get("supersedes")
+            if sup is None or sup == "":
+                continue
+            # supersedes may be a single id (schema default) or a list (chain).
+            sup_ids = sup if isinstance(sup, list) else [sup]
+            for sid in sup_ids:
+                if not isinstance(sid, str) or not sid.strip():
+                    continue
+                sid = sid.strip()
+                if sid == rid:
+                    errors.append(f"self-supersedes: {kind} '{rid}'.supersedes -> itself")
+                    continue
+                tgt = graph[kind].get(sid)
+                if tgt is None:
+                    errors.append(
+                        f"dangling supersedes: {kind} '{rid}'.supersedes -> {kind} "
+                        f"'{sid}' (not found)"
+                    )
+                elif str(tgt.get("status", "")).lower() not in DEPRECATED:
+                    warnings.append(
+                        f"un-retired predecessor: {kind} '{rid}' supersedes still-active "
+                        f"'{sid}' (status={tgt.get('status', '?')}) — retire it (deprecated/replaced)"
+                    )
+
     return {"errors": errors, "warnings": warnings}
 
 
 # ---- fold view ------------------------------------------------------------
 
-def _fold_one(root: Path, kind: str) -> str:
+def _backrefs(graph: dict[str, dict[str, dict[str, Any]]]) -> dict[str, dict[str, list[str]]]:
+    """Compute reverse links per target kind (canon link type 3: back-reference is a
+    DERIVED view, never a stored field — ADR §C mechanism 3, "no sync debt").
+
+    For every outgoing link ``referrer.<field> -> target``, record ``target -> [referrers]``.
+    Returns ``{target_kind: {target_id: [referrer_id, ...]}}`` with referrers sorted and
+    de-duplicated so the fold output is deterministic. The canonical use is
+    ``number -> [claim, ...]`` ("which claims cite this number"), the exact reverse of
+    ``claim.evidence``; provenance back-refs from numbers come for free the same way.
+    """
+    back: dict[str, dict[str, set[str]]] = {k: {} for k in CANON}
+    for kind, spec in CANON.items():
+        for rid, rec in graph[kind].items():
+            for field, target_kind in spec["links"].items():
+                targets = rec.get(field) or []
+                if not isinstance(targets, list):
+                    continue
+                for tid in targets:
+                    if isinstance(tid, str) and tid.strip():
+                        back[target_kind].setdefault(tid.strip(), set()).add(rid)
+    return {k: {tid: sorted(refs) for tid, refs in d.items()} for k, d in back.items()}
+
+
+def _fold_one(root: Path, kind: str, backrefs: dict[str, list[str]] | None = None) -> str:
     spec = CANON[kind]
     graph = _load_kind(root, kind)
+    backrefs = backrefs or {}
     lines = [
         f"# {kind} index (derived view — do not hand-edit)",
         "",
         f"Regenerated from `{spec['dir']}/*.json` by `canon_integrity.py fold`. "
-        "The immutable JSON records are the canon.",
+        "The immutable JSON records are the canon. Back-references (cited_by) are computed, "
+        "not stored.",
         "",
     ]
     if not graph:
@@ -180,6 +241,7 @@ def _fold_one(root: Path, kind: str) -> str:
     for rid in sorted(graph):
         rec = graph[rid]
         status = rec.get("status", "?")
+        cited_by = backrefs.get(rid, [])
         if kind == "claim":
             head = rec.get("claim", "")
             links = f"evidence={rec.get('evidence', [])}"
@@ -196,6 +258,8 @@ def _fold_one(root: Path, kind: str) -> str:
         lines.append(f"{head}")
         lines.append(f"- {links}")
         lines.append(f"- {extra}")
+        # Reverse link (cited_by): which records point AT this one. Derived, not stored.
+        lines.append(f"- cited_by={cited_by}")
         lines.append("")
     return "\n".join(lines) + "\n"
 
@@ -204,11 +268,12 @@ def fold(root: Path) -> list[Path]:
     written: list[Path] = []
     names = {"claim": "claims_index.md", "number": "numbers_index.md",
              "provenance": "provenance_index.md"}
+    backrefs = _backrefs(_load_all(root))
     for kind, spec in CANON.items():
         cdir = root / spec["dir"]
         cdir.mkdir(parents=True, exist_ok=True)
         path = cdir / names[kind]
-        path.write_text(_fold_one(root, kind), encoding="utf-8")
+        path.write_text(_fold_one(root, kind, backrefs.get(kind, {})), encoding="utf-8")
         written.append(path)
     return written
 

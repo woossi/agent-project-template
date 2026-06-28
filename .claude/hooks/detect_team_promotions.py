@@ -83,7 +83,17 @@ MAX_SKILLS_PER_OCCURRENCE = 6
 # existing team_agent decisions still load and `resolve --kind team_agent` keeps working;
 # new team_agent candidates are no longer minted (policy marks it _deprecated, evaluate
 # short-circuits) because team-tier sub-agents are not operated (3-tier arch §2-1).
-KINDS = ("team_skill", "team_agent", "project_skill", "new_worker", "rebalance")
+KINDS = ("team_skill", "team_agent", "project_skill", "new_worker", "rebalance", "canon_promote")
+# canon_promote (ADR §C / canon link type 8, F-D5): a CONTENT signal — "several workers
+# repeat the same number/claim" -> a candidate to promote into the .project canon graph.
+# CRITICAL INVARIANT (F-D5): this kind is SIGNAL + DECISION only. `resolve` records a
+# promote/decline DECISION in the decisions dir; it NEVER writes a .project/{claims,numbers,
+# provenance} record. The canon record is authored later as a SEPARATE owner Write action,
+# at which point canon_integrity.py's PreToolUse guard fires normally. Heuristic (this hook,
+# SessionStart, read-only) and the deterministic gate (canon_integrity, PreToolUse, exit 2)
+# thus never run in the same action -> the "auto-promote vs gated-promote" conflict cannot
+# arise. ``_assert_no_canon_authorship`` enforces the invariant defensively.
+CANON_DIRS = (".project/claims", ".project/numbers", ".project/provenance")
 ORCHESTRATOR = "orchestrator"  # inbox node name; never a worker (no private ledger)
 # Edge classes between two inbox endpoints, keyed on subteam membership.
 EDGE_INTRA, EDGE_INTER, EDGE_EXT, EDGE_ORCH = "INTRA", "INTER", "EXT", "ORCH"
@@ -731,6 +741,50 @@ def _team_occurrences(
     return occurrences
 
 
+def canon_promote_candidates(
+    tasks: list[dict[str, Any]], rules: dict[str, Any], decided: dict[str, Any]
+) -> list[dict[str, Any]]:
+    """canon link type 8 (F-D5): surface "same number/claim signature recurs across
+    >=N workers" as a candidate to author into the .project canon graph.
+
+    SIGNAL ONLY. Mirrors ``team_skill_candidates`` (distinct-AGENT signature recurrence)
+    but emits ``kind=canon_promote`` and, crucially, carries NO authoring side effect: a
+    candidate is a hint to the owner, who then authors the canon record by hand in a
+    SEPARATE Write action gated by canon_integrity. ``resolve`` records only a decision.
+    """
+    min_agents = int(rules.get("min_distinct_agents", 2))
+    min_total = int(rules.get("min_total_recurrence", 2))
+
+    groups: dict[str, dict[str, Any]] = {}
+    for task in tasks:
+        signature = str(task.get("signature") or "").strip()
+        if not signature:
+            continue
+        group = groups.setdefault(signature, {"count": 0, "agents": set(), "objectives": []})
+        group["count"] += 1
+        group["agents"].add(str(task.get("_agent") or task.get("agent") or ""))
+        objective = str(task.get("objective") or "").strip()
+        if objective and objective not in group["objectives"]:
+            group["objectives"].append(objective)
+
+    out: list[dict[str, Any]] = []
+    for signature in sorted(groups):
+        group = groups[signature]
+        agents = {a for a in group["agents"] if a}
+        if signature in decided:
+            continue
+        if len(agents) < min_agents or group["count"] < min_total:
+            continue
+        out.append({
+            "kind": "canon_promote", "key": signature, "signature": signature,
+            "recurrence": group["count"], "distinct_agents": len(agents),
+            "agents": sorted(agents), "objectives": group["objectives"][:3],
+            "note": "SIGNAL ONLY — owner authors the canon record by hand (F-D5); no auto-write",
+        })
+    out.sort(key=lambda c: (-c["distinct_agents"], -c["recurrence"], c["key"]))
+    return out[: int(rules.get("max_candidates", 20))]
+
+
 def team_agent_candidates(
     tasks: list[dict[str, Any]],
     events: list[dict[str, Any]],
@@ -844,6 +898,29 @@ def _atomic_write_json(path: Path, payload: Any) -> None:
     os.replace(tmp, path)
 
 
+def _assert_no_canon_authorship(team_root: Path, path: Path) -> None:
+    """Enforce F-D5 invariant 1: this hook never writes a .project canon record.
+
+    The promotion machinery may only write into ``promotions/{candidates,decisions}``.
+    A write that lands inside ``.project/{claims,numbers,provenance}`` would mean the
+    heuristic layer is auto-authoring a canon node — bypassing the owner's judgment (D4)
+    and the canon_integrity gate. We refuse it loudly rather than silently. This is a
+    defensive backstop: the resolve path only ever targets the decisions dir, so this
+    should be unreachable; it exists so a future edit that wires canon_promote to
+    auto-create records fails fast here instead of importing the two-modality conflict.
+    """
+    try:
+        rel = path.resolve().relative_to(team_root.resolve()).as_posix()
+    except (ValueError, OSError):
+        return  # outside team root entirely — not a canon path, nothing to assert
+    if any(rel == d or rel.startswith(d + "/") for d in CANON_DIRS):
+        raise RuntimeError(
+            f"canon authorship refused: promotion hook must not write canon record {rel} "
+            f"(F-D5: promote is decision-only; author the record as a separate owner action "
+            f"so canon_integrity can gate it)"
+        )
+
+
 # ---------------- evaluate / surface / persist ----------------
 
 def evaluate(team_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
@@ -882,6 +959,9 @@ def evaluate(team_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
     )
 
     agent_rules = policy.get("team_agent_promotion", {})
+    canon_rules = policy.get("canon_promote_promotion", {})
+    tasks: list[dict[str, Any]] | None = None
+    events: list[dict[str, Any]] | None = None
     if agent_rules.get("_deprecated"):
         team_agent: list[dict[str, Any]] = []
     else:
@@ -890,9 +970,21 @@ def evaluate(team_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
             tasks, events, agent_rules, agent_texts(team_root), decisions["team_agent"]
         )
 
+    # canon_promote (F-D5): SIGNAL only. Reuse the distinct-AGENT signature-recurrence
+    # reader to surface "the same number/claim signature recurs across >=2 workers" as a
+    # candidate to author into the canon graph. This NEVER authors a record — it only
+    # surfaces a candidate and (via resolve) records a decision. Disabled by default
+    # (policy ``enable``) until slice 5 wires the signature->canon mapping.
+    if canon_rules.get("enable"):
+        if tasks is None:
+            tasks, events = load_agent_ledgers(team_root, policy)
+        canon_promote = canon_promote_candidates(tasks, canon_rules, decisions["canon_promote"])
+    else:
+        canon_promote = []
+
     return {
         "team_skill": team_skill, "team_agent": team_agent, "project_skill": project_skill,
-        "new_worker": new_worker, "rebalance": rebalance,
+        "new_worker": new_worker, "rebalance": rebalance, "canon_promote": canon_promote,
     }
 
 
@@ -935,6 +1027,12 @@ def format_surface(candidates: dict[str, Any], governance: dict[str, Any]) -> st
             f"- [rebalance] team '{cand['team']}' sparse but pair {pair[0]}->{pair[1]} "
             f"concentrates {cand['concentration']} of intra flow "
             f"-> SIGNAL: review role boundaries for this pair"
+        )
+    for cand in candidates.get("canon_promote", []):
+        lines.append(
+            f"- [canon_promote] signature '{cand['key']}' recurs {cand['recurrence']}x "
+            f"across {cand['distinct_agents']} workers ({', '.join(cand['agents'])}) "
+            f"-> SIGNAL: owner authors a canon record by hand (no auto-write; canon_integrity gates the Write)"
         )
     if not lines:
         return ""
@@ -1039,6 +1137,9 @@ def run_resolve(argv: list[str]) -> int:
     digest = hashlib.sha1(args.key.encode("utf-8")).hexdigest()[:8]
     filename = f"{args.kind}__{_safe(args.key)}__{digest}.json"
     path = team_root / policy["log"]["decisions_dir"] / filename
+    # F-D5 invariant: a promotion decision is metadata only. Refuse if the target path
+    # were ever (mis)configured to land in the canon graph — promote must not auto-author.
+    _assert_no_canon_authorship(team_root, path)
     _atomic_write_json(path, record)
     # Refresh this runner's shard so the resolved candidate stops surfacing immediately.
     write_candidates_shard(team_root, policy, evaluate(team_root, policy), by)

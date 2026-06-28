@@ -321,5 +321,73 @@ class OneAgentPackageTaskPathTests(_Case):
         self.assertEqual(self.evaluate()["team_agent"], [])
 
 
+class CanonPromoteTests(_Case):
+    """canon link type 8 (F-D5): SIGNAL+DECISION only, never auto-authors a canon record."""
+
+    def _enable_canon(self):
+        policy = dict(dtp.DEFAULTS)
+        policy["governance"] = {"mode": "tiered", "company_owner": "orchestrator",
+                                "authoring_owner": "orchestrator"}
+        policy["canon_promote_promotion"] = {"enable": True, "min_distinct_agents": 2,
+                                             "min_total_recurrence": 2, "max_candidates": 20}
+        (self.root / ".project/policies/team-promotion.json").write_text(
+            json.dumps(policy), encoding="utf-8")
+
+    def test_disabled_by_default_yields_no_canon_candidates(self):
+        # Same signature across two workers, but the policy default leaves canon disabled.
+        self.agent_tasks("worker-1", [{"signature": "icc-0.49", "objective": "o"}])
+        self.agent_tasks("worker-2", [{"signature": "icc-0.49", "objective": "o"}])
+        self.assertEqual(self.evaluate().get("canon_promote", []), [])
+
+    def test_enabled_surfaces_recurring_signature_across_workers(self):
+        self._enable_canon()
+        self.agent_tasks("worker-1", [{"signature": "icc-0.49", "objective": "ICC report"}])
+        self.agent_tasks("worker-2", [{"signature": "icc-0.49", "objective": "ICC report"}])
+        cands = self.evaluate()["canon_promote"]
+        self.assertEqual(len(cands), 1)
+        self.assertEqual(cands[0]["kind"], "canon_promote")
+        self.assertEqual(cands[0]["distinct_agents"], 2)
+        self.assertIn("SIGNAL ONLY", cands[0]["note"])
+
+    def test_single_worker_does_not_qualify(self):
+        self._enable_canon()
+        self.agent_tasks("worker-1", [
+            {"signature": "icc-0.49", "objective": "o"},
+            {"signature": "icc-0.49", "objective": "o"},
+        ])
+        self.assertEqual(self.evaluate()["canon_promote"], [])
+
+    def test_resolve_writes_decision_not_canon_record(self):
+        # Resolving a canon_promote must land ONLY in the decisions dir — never in
+        # .project/{claims,numbers,provenance}. The F-D5 invariant in action.
+        self.roster(["orchestrator"], [])
+        import os
+        os.environ["CLAUDE_AGENT_NAME"] = "orchestrator"
+        try:
+            rc = dtp.run_resolve(["--kind", "canon_promote", "--key", "icc-0.49",
+                                  "--decision", "promote", "--project-root", str(self.root),
+                                  "--by", "orchestrator"])
+        finally:
+            os.environ.pop("CLAUDE_AGENT_NAME", None)
+        self.assertEqual(rc, 0)
+        # decision file exists
+        decisions = list((self.root / ".project/promotions/decisions").glob("canon_promote__*.json"))
+        self.assertEqual(len(decisions), 1)
+        # NO canon record was authored
+        self.assertFalse((self.root / ".project/claims").exists())
+        self.assertFalse((self.root / ".project/numbers").exists())
+        self.assertFalse((self.root / ".project/provenance").exists())
+
+    def test_assert_no_canon_authorship_refuses_canon_path(self):
+        # The defensive backstop: writing into a canon dir must raise.
+        with self.assertRaises(RuntimeError):
+            dtp._assert_no_canon_authorship(self.root, self.root / ".project/numbers/N999__x.json")
+
+    def test_assert_no_canon_authorship_allows_decisions_path(self):
+        # The normal target (decisions dir) must pass silently.
+        dtp._assert_no_canon_authorship(
+            self.root, self.root / ".project/promotions/decisions/canon_promote__x.json")
+
+
 if __name__ == "__main__":
     unittest.main()

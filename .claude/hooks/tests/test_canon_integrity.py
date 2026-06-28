@@ -104,6 +104,50 @@ class ValidateTest(unittest.TestCase):
         result = ci.validate(self.root)
         self.assertTrue(any("must be a list" in e for e in result["errors"]))
 
+    # ---- supersedes chaining (canon link type 4) ----
+
+    def test_supersedes_dangling_is_error(self) -> None:
+        # New number supersedes a predecessor that does not exist -> dangling.
+        rec = _number(rid="N002", provenance=())
+        rec["supersedes"] = "N999"
+        _write(self.root, "number", "N002", rec)
+        result = ci.validate(self.root)
+        self.assertTrue(any("dangling supersedes" in e for e in result["errors"]))
+
+    def test_supersedes_active_predecessor_is_warning_not_error(self) -> None:
+        # Predecessor exists but is still active -> soft "un-retired predecessor" warning,
+        # NOT an error (the deprecated-ref rule must be inverted for supersedes).
+        _write(self.root, "number", "N001", _number(provenance=(), status="active"))
+        rec = _number(rid="N002", provenance=())
+        rec["supersedes"] = "N001"
+        _write(self.root, "number", "N002", rec)
+        result = ci.validate(self.root)
+        self.assertFalse(any("supersedes" in e for e in result["errors"]))
+        self.assertTrue(any("un-retired predecessor" in w for w in result["warnings"]))
+
+    def test_supersedes_retired_predecessor_is_clean(self) -> None:
+        # Predecessor properly retired (replaced) -> no error, no supersedes warning.
+        _write(self.root, "number", "N001", _number(provenance=(), status="replaced"))
+        rec = _number(rid="N002", provenance=())
+        rec["supersedes"] = "N001"
+        _write(self.root, "number", "N002", rec)
+        result = ci.validate(self.root)
+        self.assertFalse(any("supersedes" in e for e in result["errors"]))
+        self.assertFalse(any("un-retired predecessor" in w for w in result["warnings"]))
+
+    def test_self_supersedes_is_error(self) -> None:
+        rec = _number(rid="N001", provenance=())
+        rec["supersedes"] = "N001"
+        _write(self.root, "number", "N001", rec)
+        result = ci.validate(self.root)
+        self.assertTrue(any("self-supersedes" in e for e in result["errors"]))
+
+    def test_supersedes_null_is_ignored(self) -> None:
+        # The default schema value supersedes=null must not trip any rule.
+        _write(self.root, "number", "N001", _number(provenance=()))  # supersedes absent
+        result = ci.validate(self.root)
+        self.assertFalse(any("supersedes" in e for e in result["errors"]))
+
 
 class FoldTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -128,6 +172,32 @@ class FoldTest(unittest.TestCase):
         self.assertEqual(len(written), 3)
         idx = (self.root / ".project/numbers/numbers_index.md").read_text(encoding="utf-8")
         self.assertIn("no records", idx)
+
+    def test_fold_computes_number_backref_from_claim(self) -> None:
+        # claim C001 cites number N001 via evidence; the numbers index must show the
+        # reverse link (cited_by=['C001']) WITHOUT N001 storing any back-reference field.
+        _write(self.root, "claim", "C001", _claim(evidence=("N001",)))
+        _write(self.root, "number", "N001", _number(provenance=()))
+        ci.fold(self.root)
+        nidx = (self.root / ".project/numbers/numbers_index.md").read_text(encoding="utf-8")
+        self.assertIn("cited_by=['C001']", nidx)
+        # And the stored record is untouched (no cited_by field persisted).
+        rec = json.loads((self.root / ".project/numbers").glob("N001__*.json").__next__().read_text())
+        self.assertNotIn("cited_by", rec)
+
+    def test_fold_backref_empty_when_unreferenced(self) -> None:
+        _write(self.root, "number", "N001", _number(provenance=()))
+        ci.fold(self.root)
+        nidx = (self.root / ".project/numbers/numbers_index.md").read_text(encoding="utf-8")
+        self.assertIn("cited_by=[]", nidx)
+
+    def test_backrefs_helper_is_deterministic(self) -> None:
+        _write(self.root, "claim", "C002", _claim(rid="C002", evidence=("N001",)))
+        _write(self.root, "claim", "C001", _claim(rid="C001", evidence=("N001",)))
+        _write(self.root, "number", "N001", _number(provenance=()))
+        back = ci._backrefs(ci._load_all(self.root))
+        # Referrers sorted -> C001 before C002 regardless of file discovery order.
+        self.assertEqual(back["number"]["N001"], ["C001", "C002"])
 
 
 class GuardCliTest(unittest.TestCase):
