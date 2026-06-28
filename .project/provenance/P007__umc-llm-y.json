@@ -1,0 +1,18 @@
+{
+  "artifact_id": "P007",
+  "artifact_type": "validation_result",
+  "value": "LLM Y 분류의 인간 확인 정밀도 84.7%, Cohen κ=0.673",
+  "source_data": "D001",
+  "script_or_process": "LLM–인간 이중 코딩 일치도 분석",
+  "run_id": "RUN-UNSPECIFIED",
+  "related_claims": [
+    "C004"
+  ],
+  "manuscript_location": "results:82, tables_main:220·224, appendix:123",
+  "checked_by": "stats-validator",
+  "status": "active",
+  "manifest_ref": "research/UMC/project_manifest.json",
+  "note": "numeric-canon-B.md 정본 채취(sv 표류 0건 §232). source_data·run_id placeholder.",
+  "by": "orchestrator",
+  "ts_ns": 1782608443048000000
+}

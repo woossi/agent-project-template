@@ -1,0 +1,20 @@
+{
+  "claim_id": "C008",
+  "claim": "행정동 단위 온라인 텍스트에서 산출한 중랑구 연결품질의 차원내 표준화 z_shift는 +1.68로, 같은 차원 내 다른 자치구와 비교할 때 상위 우선검토 후보로 나타났다.",
+  "status": "supported",
+  "evidence": [
+    "N010",
+    "N003"
+  ],
+  "counter_evidence": [],
+  "used_in": [
+    "results:114·125, appendix:87"
+  ],
+  "owner_team": "data",
+  "verified_by": "stats-validator",
+  "supersedes": null,
+  "by": "orchestrator",
+  "note": "orphan number에 claim 부여(ADR-005 그래프 완결). 문장은 sv 검증 수치의 보수적 해석. owner_team·qr 검토 전 잠정. || 해석 가드: z_shift는 차원 내 표준화이므로 차원 간 비교 불가(정본 §6 R-규율). 우선순위 신호이지 결핍 크기 아님.",
+  "ts_ns": 1782608443048000000,
+  "clarity_checked": true
+}

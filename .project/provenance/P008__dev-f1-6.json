@@ -1,0 +1,16 @@
+{
+  "artifact_id": "P008",
+  "artifact_type": "validation_result",
+  "value": "기기 차원 F1 0.51, 6차원 최저 — 해석범위 게이트",
+  "source_data": "D001",
+  "script_or_process": "차원별 F1 산출(인간 코딩 대조)",
+  "run_id": "RUN-UNSPECIFIED",
+  "related_claims": [],
+  "manuscript_location": "results:79·82·97·99, tables_main:232",
+  "checked_by": "stats-validator",
+  "status": "active",
+  "manifest_ref": "research/UMC/project_manifest.json",
+  "note": "numeric-canon-B.md 정본 채취(sv 표류 0건 §232). source_data·run_id placeholder.",
+  "by": "orchestrator",
+  "ts_ns": 1782608443048000000
+}

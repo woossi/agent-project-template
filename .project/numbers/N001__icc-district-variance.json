@@ -1,0 +1,12 @@
+{
+  "number_id": "N001",
+  "value": "0.49%",
+  "label": "ICC — 무조건 모형 자치구간 분산 비중",
+  "provenance": ["P001"],
+  "status": "active",
+  "supersedes": null,
+  "checked_by": "stats-validator",
+  "by": "manuscript-steward",
+  "note": "보관=manuscript-steward(numeric-canon-B.md:88), 독립 검증=stats-validator(canon-B.md:232 표류 0건 확인). 분리 원칙 준수. 슬라이스 0 시범 레코드.",
+  "ts_ns": 1782608443048000000
+}

@@ -1,0 +1,16 @@
+{
+  "artifact_id": "P010",
+  "artifact_type": "model_result",
+  "value": "중랑 연결품질 z_shift +1.68 (all_weighted=1.6783); 1.69 폐기·1.73 평균맥락 각주",
+  "source_data": "D001",
+  "script_or_process": "EB 수축 후 차원내 표준화 z_shift",
+  "run_id": "RUN-UNSPECIFIED",
+  "related_claims": [],
+  "manuscript_location": "results:114·125, appendix:87",
+  "checked_by": "stats-validator",
+  "status": "active",
+  "manifest_ref": "research/UMC/project_manifest.json",
+  "note": "numeric-canon-B.md 정본 채취(sv 표류 0건 §232). source_data·run_id placeholder.",
+  "by": "orchestrator",
+  "ts_ns": 1782608443048000000
+}

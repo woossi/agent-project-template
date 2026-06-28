@@ -1,0 +1,16 @@
+{
+  "artifact_id": "P004",
+  "artifact_type": "pipeline_result",
+  "value": "강북·노원·중랑 3구 단계 E 판정 대상 223건",
+  "source_data": "D001",
+  "script_or_process": "정보차단 멀티에이전트 역행추론 단계 E(judgment-synthesizer)",
+  "run_id": "RUN-UNSPECIFIED",
+  "related_claims": [],
+  "manuscript_location": "results:79·118·119, tables_main:302·308, ch4:34",
+  "checked_by": "stats-validator",
+  "status": "active",
+  "manifest_ref": "research/UMC/project_manifest.json",
+  "note": "numeric-canon-B.md 정본 채취(sv 표류 0건 §232). source_data·run_id placeholder.",
+  "by": "orchestrator",
+  "ts_ns": 1782608443048000000
+}

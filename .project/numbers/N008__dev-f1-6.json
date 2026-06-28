@@ -1,0 +1,14 @@
+{
+  "number_id": "N008",
+  "value": "0.51",
+  "label": "기기(DEV) 차원 F1 — 6차원 최저(해석 게이트)",
+  "provenance": [
+    "P008"
+  ],
+  "status": "active",
+  "supersedes": null,
+  "checked_by": "stats-validator",
+  "by": "manuscript-steward",
+  "note": "보관=steward, 검증=sv. numeric-canon-B.md 정본.",
+  "ts_ns": 1782608443048000000
+}

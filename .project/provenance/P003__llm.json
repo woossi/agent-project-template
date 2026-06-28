@@ -1,0 +1,18 @@
+{
+  "artifact_id": "P003",
+  "artifact_type": "pipeline_result",
+  "value": "키워드 필터 149,733 → 행정동 매칭 성공 131,792",
+  "source_data": "D001",
+  "script_or_process": "LLM 분류 파이프라인 단계0–4",
+  "run_id": "RUN-UNSPECIFIED",
+  "related_claims": [
+    "C002"
+  ],
+  "manuscript_location": "tables_main:201, intro:37, ch2:37",
+  "checked_by": "stats-validator",
+  "status": "active",
+  "manifest_ref": "research/UMC/project_manifest.json",
+  "note": "numeric-canon-B.md 정본 채취(sv 표류 0건 §232). source_data·run_id placeholder.",
+  "by": "orchestrator",
+  "ts_ns": 1782608443048000000
+}

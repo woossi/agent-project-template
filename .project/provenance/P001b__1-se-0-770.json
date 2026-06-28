@@ -1,0 +1,18 @@
+{
+  "artifact_id": "P001b",
+  "artifact_type": "model_result",
+  "value": "HLM 모형1 중졸이하 계수 −22.618***(0.770)",
+  "source_data": "D001",
+  "script_or_process": "HLM 모형1(개인수준)",
+  "run_id": "RUN-UNSPECIFIED",
+  "related_claims": [
+    "C003"
+  ],
+  "manuscript_location": "results:55, tables_main:135",
+  "checked_by": "stats-validator",
+  "status": "active",
+  "manifest_ref": "research/UMC/project_manifest.json",
+  "note": "numeric-canon-B.md 정본 채취(sv 표류 0건 §232). source_data·run_id placeholder.",
+  "by": "orchestrator",
+  "ts_ns": 1782608443048000000
+}

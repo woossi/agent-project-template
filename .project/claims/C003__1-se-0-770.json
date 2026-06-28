@@ -1,0 +1,19 @@
+{
+  "claim_id": "C003",
+  "claim": "통제 이전 모형을 기준으로, 저학력 집단은 대졸 기준집단과 비교할 때 디지털 이용 점수가 20점 이상 낮게 나타났다.",
+  "status": "verified",
+  "evidence": [
+    "N001b"
+  ],
+  "counter_evidence": [],
+  "used_in": [
+    "results:55, tables_main:135"
+  ],
+  "owner_team": "analysis",
+  "verified_by": "stats-validator",
+  "supersedes": null,
+  "by": "orchestrator",
+  "note": "numeric-canon-B.md 근거 수치에 연결된 논증 정본. claim 문장은 검증된 수치의 보수적 해석.",
+  "ts_ns": 1782608443048000000,
+  "clarity_checked": true
+}

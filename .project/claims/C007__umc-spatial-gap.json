@@ -1,0 +1,19 @@
+{
+  "claim_id": "C007",
+  "claim": "UMC 종합 지수는 서울내 상대 척도에서 중랑구 0.279(최저)와 비교할 때 서초구 0.695(최고)로, 자치구 간 차이를 보였다.",
+  "status": "supported",
+  "evidence": [
+    "N009"
+  ],
+  "counter_evidence": [],
+  "used_in": [
+    "results:11·13·42"
+  ],
+  "owner_team": "analysis",
+  "verified_by": "stats-validator",
+  "supersedes": null,
+  "by": "orchestrator",
+  "note": "orphan number에 claim 부여(ADR-005 그래프 완결). 문장은 sv 검증 수치의 보수적 해석. owner_team·qr 검토 전 잠정.",
+  "ts_ns": 1782608443048000000,
+  "clarity_checked": true
+}

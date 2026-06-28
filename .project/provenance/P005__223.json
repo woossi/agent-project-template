@@ -1,0 +1,16 @@
+{
+  "artifact_id": "P005",
+  "artifact_type": "model_result",
+  "value": "단계 E 가설 생성 총수 772 (미결 490/반박 156/지지 126)",
+  "source_data": "D001",
+  "script_or_process": "judgment-synthesizer(opus-4-6) 단계 E",
+  "run_id": "RUN-UNSPECIFIED",
+  "related_claims": [],
+  "manuscript_location": "results:121·123, tables_main:308(주)",
+  "checked_by": "stats-validator",
+  "status": "active",
+  "manifest_ref": "research/UMC/project_manifest.json",
+  "note": "numeric-canon-B.md 정본 채취(sv 표류 0건 §232). source_data·run_id placeholder.",
+  "by": "orchestrator",
+  "ts_ns": 1782608443048000000
+}

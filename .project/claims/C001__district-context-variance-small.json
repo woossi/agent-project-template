@@ -1,0 +1,20 @@
+{
+  "claim_id": "C001",
+  "claim": "무조건 모형에서 디지털 활용능력의 자치구간 분산 비중(ICC)은 0.49%로, 개인 수준 변량이 자치구 수준 변량보다 크게 나타났다.",
+  "status": "verified",
+  "evidence": [
+    "N001"
+  ],
+  "counter_evidence": [],
+  "used_in": [
+    "Results 4.x (results:6·47·51·131)",
+    "ch4:12·32"
+  ],
+  "owner_team": "analysis",
+  "verified_by": "stats-validator",
+  "supersedes": null,
+  "by": "orchestrator",
+  "note": "슬라이스 0 시범 claim. claim 문장은 자치구간 분산 작음이라는 검증된 사실의 보수적 해석(ADR-005 §7 인과표현 강도: 보수). risks 연계: ICC 작아 지역맥락 주장 약해보일 위험(R001 후보, risks registry 미신설). || 해석(별도 문장 영역): 지역 효과는 '큰 집단차'가 아니라 맥락 조건으로 신중 해석. R3에 따라 claim 문장에서 분리.",
+  "ts_ns": 1782608443048000000,
+  "clarity_checked": true
+}

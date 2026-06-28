@@ -1,0 +1,14 @@
+{
+  "number_id": "N010",
+  "value": "+1.68",
+  "label": "중랑 연결품질 z_shift(★주정본, 차원내 표준화)",
+  "provenance": [
+    "P010"
+  ],
+  "status": "active",
+  "supersedes": null,
+  "checked_by": "stats-validator",
+  "by": "manuscript-steward",
+  "note": "보관=steward, 검증=sv. numeric-canon-B.md 정본.",
+  "ts_ns": 1782608443048000000
+}
