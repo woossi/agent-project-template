@@ -151,7 +151,12 @@ body {
   border-radius: 16px; padding: 16px; box-shadow: var(--shadow-1);
 }
 .team-card .tc-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-.team-ring { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.team-ring { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--text-secondary); }
+.team-ring.team-data { background: var(--team-data); }
+.team-ring.team-write { background: var(--team-write); }
+.team-ring.team-scout { background: var(--team-scout); }
+.team-ring.team-review { background: var(--team-review); }
+.team-ring.team-analysis { background: var(--team-analysis); }
 .team-card .tc-name { font-size: 16px; font-weight: 600; }
 .team-card .tc-lead { font-size: 12px; color: var(--text-tertiary); margin-bottom: 12px; }
 .tc-stats { display: flex; gap: 8px; margin-bottom: 12px; }
@@ -259,12 +264,16 @@ body {
   background: var(--bg-surface-2); border-radius: 12px; padding: 16px; line-height: 1.6;
 }
 .dp-checkback { margin-top: 20px; border-top: 1px solid var(--border-hair); padding-top: 16px; }
+.dp-checkback .cb-title { font-size: 13px; }
+.dp-checkback .cb-help { font-size: 12px; color: var(--text-secondary); margin: 6px 0 12px; }
 .dp-checkback label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
 .dp-checkback input, .dp-checkback textarea {
   width: 100%; font: inherit; font-size: 13px; padding: 8px 10px; margin-bottom: 10px;
   border: 1px solid var(--border-hair); border-radius: 8px; background: var(--bg-canvas);
   color: var(--text-primary);
 }
+.dp-checkback .cb-checkbox { width: auto; margin: 0; }
+.dp-checkback .cb-inline-label { margin: 0; }
 .dp-checkback textarea { min-height: 60px; resize: vertical; }
 .dp-checkback .row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; font-size: 13px; }
 .btn-primary {

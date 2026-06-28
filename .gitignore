@@ -33,3 +33,6 @@ outputs/
 # Team promotion runtime (candidates recomputed; decisions are instance state)
 .project/promotions/
 .project/derivations/
+
+# Playwright CLI runtime console logs
+.playwright-cli/

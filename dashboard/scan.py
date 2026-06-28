@@ -149,18 +149,67 @@ def _promotion_signals() -> list[dict]:
         return []
     try:
         res = subprocess.run(
-            [sys.executable, str(hook)],
-            capture_output=True, text=True, timeout=10, cwd=str(ROOT),
+            [sys.executable, str(hook), "evaluate", "--project-root", str(ROOT)],
+            stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=10, cwd=str(ROOT),
         )
         out = (res.stdout or "") + (res.stderr or "")
-        signals = []
-        for line in out.splitlines():
-            line = line.strip()
-            if line.startswith("- [") and "team" in line:
-                signals.append({"kind": "promotion_signal", "team": None, "detail": line[:200], "ts_ns": 0})
-        return signals[:8]
+        shard = _promotion_shard_from_output(out)
+        return _promotion_signals_from_shard(shard)
     except Exception:
         return []
+
+
+def _promotion_shard_from_output(out: str) -> Path:
+    """Return the candidate shard path printed by `evaluate`, with the default fallback."""
+    for line in out.splitlines():
+        if "->" not in line:
+            continue
+        raw = line.rsplit("->", 1)[1].strip()
+        if raw:
+            path = Path(raw)
+            return path if path.is_absolute() else ROOT / path
+    return ROOT / ".project" / "promotions" / "candidates" / "team.json"
+
+
+def _promotion_signals_from_shard(path: Path) -> list[dict]:
+    data = _load_json(path)
+    if not isinstance(data, dict):
+        return []
+    signals = []
+    for kind in ("team_skill", "project_skill", "new_worker", "rebalance", "team_agent"):
+        items = data.get(kind) or []
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if isinstance(item, dict):
+                signals.append({
+                    "kind": "promotion_signal",
+                    "team": item.get("team"),
+                    "detail": _promotion_detail(kind, item),
+                    "ts_ns": 0,
+                })
+    return signals[:8]
+
+
+def _promotion_detail(kind: str, item: dict) -> str:
+    key = str(item.get("key") or item.get("team") or "")
+    if kind == "team_skill":
+        team = item.get("team") or key
+        return (f"team_skill · {team}: {item.get('intra_handoffs', 0)} intra handoffs, "
+                f"{item.get('distinct_agents', 0)} agents")
+    if kind == "project_skill":
+        return (f"project_skill · {key}: {item.get('inter_handoffs', 0)} inter handoffs, "
+                f"{item.get('directions', 0)} directions")
+    if kind == "new_worker":
+        return (f"new_worker · {item.get('team') or key}: overloaded "
+                f"{item.get('overloaded_worker', '?')} (load {item.get('load', '?')})")
+    if kind == "rebalance":
+        pair = "->".join(str(x) for x in item.get("pair", [])) or key
+        return f"rebalance · {item.get('team') or key}: {pair}"
+    if kind == "team_agent":
+        skills = "+".join(str(x) for x in item.get("skills", [])) or key
+        return f"team_agent · {skills}: {item.get('distinct_agents', 0)} agents"
+    return f"{kind} · {key}"
 
 
 def _reminders_cached() -> list[dict]:
@@ -308,7 +357,7 @@ def build_snapshot(reminders_force: bool = False) -> dict:
         "teams": teams_out,
         "decisions": decisions[:60],
         "news": news[:40],
-        "reminders": refresh_reminders() if reminders_force else _reminders_cached(),
+        "reminders": reminders,
     }
 
     # 다음 diff를 위해 현재 스냅샷 저장(소식은 빼고 비교 기준만)

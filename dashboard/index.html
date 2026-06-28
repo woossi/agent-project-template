@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>team-umc · 거버넌스 관제탑</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -76,8 +77,8 @@
     <div class="dp-meta" id="dp-meta"></div>
     <div class="dp-body" id="dp-body"></div>
     <div class="dp-checkback" id="dp-checkback">
-      <strong style="font-size:13px;">미리알림 체크백</strong>
-      <p style="font-size:12px;color:var(--text-secondary);margin:6px 0 12px;">
+      <strong class="cb-title">미리알림 체크백</strong>
+      <p class="cb-help">
         이 결정을 umc 백로그에 기록합니다. <em>실데이터를 변경하므로 확인이 필요합니다.</em>
       </p>
       <label>대상 목록</label>
@@ -87,8 +88,8 @@
       <label>진행 노트</label>
       <textarea id="cb-note" placeholder="기록할 진행상태·결정 내용"></textarea>
       <div class="row">
-        <input type="checkbox" id="cb-complete" style="width:auto;margin:0;">
-        <label for="cb-complete" style="margin:0;">완료로 표시(complete)</label>
+        <input type="checkbox" id="cb-complete" class="cb-checkbox">
+        <label for="cb-complete" class="cb-inline-label">완료로 표시(complete)</label>
       </div>
       <button class="btn-primary" id="cb-submit">백로그에 기록</button>
       <div id="cb-result"></div>

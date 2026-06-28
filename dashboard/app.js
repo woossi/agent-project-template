@@ -62,6 +62,7 @@ function renderTeams(teams) {
   if (!changed("teams", teams)) return;
   const el = $("team-grid");
   el.innerHTML = teams.map(t => {
+    const teamClass = String(t.name || "").replace(/[^a-zA-Z0-9_-]/g, "");
     const members = (t.members || []).map(m =>
       `<span class="worker-chip">${esc(m)}</span>`).join("");
     const dec = t.latest_decision
@@ -82,7 +83,7 @@ function renderTeams(teams) {
       : "";
     return `<div class="team-card">
       <div class="tc-head">
-        <span class="team-ring" style="background:${t.color}"></span>
+        <span class="team-ring team-${esc(teamClass)}"></span>
         <span class="tc-name">${esc(t.name)}</span>
       </div>
       <div class="tc-lead">팀장 · ${esc(t.lead)}</div>
@@ -398,7 +399,8 @@ $("auto-targets").addEventListener("change", e => {
   if (chip) chip.classList.toggle("sel", e.target.checked);
 });
 
-poll(true);                  // 첫 로드는 미리알림 강제 갱신
+poll(false);              // first paint
+poll(true);               // refresh reminders
 loadAutomation();            // 자동화 상태 로드
 setInterval(() => poll(false), POLL_MS);  // 이후 10초 폴링(캐시 미리알림 → 렉 0)
 setInterval(loadAutomation, 30000);       // 자동화 상태는 30초마다 갱신(발화 로그 반영)
