@@ -14,7 +14,6 @@ flowchart LR
   P -->|source_data| D[data_registry D]
   P -->|run_id| RUN[runs RUN]
   RUN -->|inputs| D
-  R[risks R] -->|related_claims| C
   LP -->|bibkey| B[refs.bib external SSOT]
 ```
 
@@ -28,7 +27,6 @@ flowchart LR
 | `data_registry` | `.project/data_registry/` | 자료원 정본 | provenance와 run이 참조 |
 | `runs` | `.project/runs/` | 실행 단위 정본 | `inputs -> data_registry` |
 | `lit_props` | `.project/lit_props/` | 문헌 명제 정본 | `bibkey -> refs.bib` |
-| `risks` | `.project/risks/` | 심사/해석 위험과 완화 | `related_claims -> claims` |
 | `promotions/decisions` | `.project/promotions/decisions/` | 팀/프로젝트 승격 판단 로그 | 후보를 닫는 decision, canon 본문과 분리 |
 | `promotions/candidates` | `.project/promotions/candidates/team.json` | 현재 pending 승격 후보 | runtime/generated, 단일 shard |
 | `derivations/candidates` | `.project/derivations/candidates/team.json` | 현재 pending 파생 후보 | runtime/generated, 단일 shard |
@@ -40,3 +38,5 @@ flowchart LR
 - 팀-tier promotion/derivation 후보는 runner별 파일이 아니라 `team.json` 하나만 유지한다. 같은 전역 신호가 워커별로 복제되는 것을 막기 위한 결정이다.
 - `.project/.DS_Store`와 과거 runner별 candidate shard는 불필요한 generated/OS 파일이라 제거했다.
 - `.project/assets/Research_Literature_Master.xlsx.dc-backup-20260627`은 현재 xlsx와 `sheet2.xml` 내용이 달라 삭제하지 않았다.
+- `risks` 클래스는 제거했다(2026-06-28). canon kind는 `claim`·`number`·`provenance`·`lit_prop`·`data_registry`·`runs` 6종이며, `claim.risks`·`provenance.risks` 링크 축과 `.project/risks/`·`canon_integrity.py`의 risk kind를 모두 걷어냈다. 심사/해석 위험은 별도 canon 레코드가 아니라 claim 본문·해석 영역에서 다룬다.
+- `goals`(`.project/goals/`)는 이 그래프의 노드가 아니다. canon 의존성 그래프는 원고 논증 정본(claim/number/provenance/lit_prop/data_registry/runs)만 묶으며, goals는 `set-team-goal`이 관리하는 운영(거버넌스) 레이어로 `canon_integrity.py` 검증 대상이 아니다. 둘은 직접 링크가 없다.

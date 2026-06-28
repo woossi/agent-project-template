@@ -46,19 +46,17 @@ from _hooklib import project_dir_simple as project_dir  # noqa: E402
 #   S5:   provenance.derived_from (lifecycle lineage — recognised but NOT dangling-checked).
 #   S6:   data_registry (D) + runs (RUN); provenance.source_data -> D, run_id -> RUN.
 #   S7:   clarity-rule lexical audit (R8/R9/R10) on claim/lit_prop prose (warnings).
-#   risk: risk kind (R); claim.risks / provenance.risks -> risk.
 CANON = {
     "claim": {
         "dir": ".project/claims",
         "id": "claim_id",
         "prefix": "C",
         # evidence -> number (data axis), grounds/counter_grounds -> lit_prop (literature
-        # axis), risks -> risk. relations (claim->claim) is handled separately (object array).
+        # axis). relations (claim->claim) is handled separately (object array).
         "links": {
             "evidence": "number",
             "grounds": "lit_prop",
             "counter_grounds": "lit_prop",
-            "risks": "risk",
         },
     },
     "number": {
@@ -71,13 +69,12 @@ CANON = {
         "dir": ".project/provenance",
         "id": "artifact_id",
         "prefix": "P",
-        # related_claims -> claim (list), risks -> risk (list). source_data -> data_registry
-        # and run_id -> runs are SINGLE strings (scalar links), validated by dedicated
-        # passes so they stay scalars in the existing schema. derived_from (lifecycle,
-        # off-graph) is recognised but never dangling-checked.
+        # related_claims -> claim (list). source_data -> data_registry and run_id -> runs
+        # are SINGLE strings (scalar links), validated by dedicated passes so they stay
+        # scalars in the existing schema. derived_from (lifecycle, off-graph) is recognised
+        # but never dangling-checked.
         "links": {
             "related_claims": "claim",
-            "risks": "risk",
         },
     },
     "lit_prop": {
@@ -99,13 +96,6 @@ CANON = {
         "id": "run_id",
         "prefix": "RUN",
         "links": {},
-    },
-    "risk": {
-        "dir": ".project/risks",
-        "id": "risk_id",
-        "prefix": "R",
-        # a risk may relate to the claim(s) it threatens (back-pointer, optional).
-        "links": {"related_claims": "claim"},
     },
 }
 DEPRECATED = {"deprecated", "replaced"}
@@ -522,14 +512,10 @@ def _fold_one(root: Path, kind: str, backrefs: dict[str, list[str]] | None = Non
             head = f"{rec.get('label', '')}"
             links = f"manifest_ref={rec.get('manifest_ref', '?')}"
             extra = f"period={rec.get('period', '?')} area={rec.get('area', '?')}"
-        elif kind == "runs":
+        else:  # runs
             head = f"{rec.get('label', '')}"
             links = f"script={rec.get('script_or_process', '?')}"
             extra = f"inputs={rec.get('inputs', [])}"
-        else:  # risk
-            head = f"{rec.get('label', '')}"
-            links = f"related_claims={rec.get('related_claims', [])}"
-            extra = f"severity={rec.get('severity', '?')} mitigation={rec.get('mitigation', '?')}"
         lines.append(f"## {rid} [{status}]")
         lines.append(f"{head}")
         lines.append(f"- {links}")
@@ -572,7 +558,6 @@ def fold(root: Path) -> list[Path]:
         "claim": "claims_index.md", "number": "numbers_index.md",
         "provenance": "provenance_index.md", "lit_prop": "lit_props_index.md",
         "data_registry": "data_registry_index.md", "runs": "runs_index.md",
-        "risk": "risks_index.md",
     }
     backrefs = _backrefs(_load_all(root))
     for kind, spec in CANON.items():

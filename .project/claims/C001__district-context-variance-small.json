@@ -14,7 +14,7 @@
  "verified_by": "stats-validator",
  "supersedes": null,
  "by": "orchestrator",
- "note": "슬라이스 0 시범 claim. claim 문장은 자치구간 분산 작음이라는 검증된 사실의 보수적 해석(ADR-005 §7 인과표현 강도: 보수). risks 연계: ICC 작아 지역맥락 주장 약해보일 위험(R001 후보, risks registry 미신설). || 해석(별도 문장 영역): 지역 효과는 '큰 집단차'가 아니라 맥락 조건으로 신중 해석. R3에 따라 claim 문장에서 분리.",
+ "note": "슬라이스 0 시범 claim. claim 문장은 자치구간 분산 작음이라는 검증된 사실의 보수적 해석(ADR-005 §7 인과표현 강도: 보수). 위험: ICC 작아 지역맥락 주장 약해보일 위험은 claim 본문·해석 영역에서 다룬다(risks 클래스 2026-06-28 제거). || 해석(별도 문장 영역): 지역 효과는 '큰 집단차'가 아니라 맥락 조건으로 신중 해석. R3에 따라 claim 문장에서 분리.",
  "ts_ns": 1782608443048000000,
  "clarity_checked": true,
  "role": "result",

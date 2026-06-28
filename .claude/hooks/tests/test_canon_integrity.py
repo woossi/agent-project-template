@@ -169,7 +169,7 @@ class FoldTest(unittest.TestCase):
 
     def test_fold_empty_kind_is_safe(self) -> None:
         written = ci.fold(self.root)
-        # one index per canon kind (claim/number/provenance + lit_prop/data_registry/runs/risk)
+        # one index per canon kind (claim/number/provenance + lit_prop/data_registry/runs)
         self.assertEqual(len(written), len(ci.CANON))
         idx = (self.root / ".project/numbers/numbers_index.md").read_text(encoding="utf-8")
         self.assertIn("no records", idx)
@@ -251,11 +251,11 @@ class GuardCliTest(unittest.TestCase):
         self.assertEqual(r.returncode, 1)
 
 
-# ---- S3-S7 + risk: new-kind / new-link regression tests -------------------
+# ---- S3-S7: new-kind / new-link regression tests --------------------------
 
 class ExtendedTopologyTest(unittest.TestCase):
     """S3 (relations, grounds), S4 (lit_prop, bibkey), S5 (derived_from),
-    S6 (data_registry/runs scalar links), S7 (clarity), risk kind."""
+    S6 (data_registry/runs scalar links), S7 (clarity)."""
 
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
@@ -375,25 +375,6 @@ class ExtendedTopologyTest(unittest.TestCase):
         r = ci.validate(self.root)
         self.assertFalse(any("unwired run_id" in w for w in r["warnings"]))
 
-    # --- risk kind ---
-    def test_risk_kind_id_clash_detected(self) -> None:
-        _write(self.root, "risk", "R001",
-               {"risk_id": "R001", "label": "a", "severity": "medium",
-                "related_claims": [], "status": "active"})
-        # second file, same id
-        d = self.root / ci.CANON["risk"]["dir"]
-        (d / "R001__dup.json").write_text(json.dumps(
-            {"risk_id": "R001", "label": "b", "severity": "low",
-             "related_claims": [], "status": "active"}), encoding="utf-8")
-        r = ci.validate(self.root)
-        self.assertTrue(any("id clash" in e and "R001" in e for e in r["errors"]))
-
-    def test_claim_risks_link_dangling_is_error(self) -> None:
-        rec = _claim(evidence=()); rec["risks"] = ["R999"]
-        _write(self.root, "claim", "C001", rec)
-        r = ci.validate(self.root)
-        self.assertTrue(any("dangling" in e and "R999" in e for e in r["errors"]))
-
     # --- S7: clarity lexical audit (warnings only) ---
     def test_clarity_audit_flags_overclaimed_causation(self) -> None:
         rec = _claim(evidence=()); rec["claim"] = "저학력은 점수에 영향을 미쳤다."
@@ -415,7 +396,6 @@ class ExtendedTopologyTest(unittest.TestCase):
         self.assertIn("lit_props_index.md", names)
         self.assertIn("data_registry_index.md", names)
         self.assertIn("runs_index.md", names)
-        self.assertIn("risks_index.md", names)
 
     def test_fold_claim_sentence_from_components(self) -> None:
         rec = _claim(evidence=())
