@@ -6,7 +6,7 @@
  "area": "서울특별시 25개 자치구",
  "manifest_ref": "research/UMC/project_manifest.json",
  "status": "active",
- "note": "연도별 5,000명/년을 통합한 15세 이상 개인 수준 표본. HLM 계열(P001 ICC·P001b 모형1·P002 표본정의·P006 모형4)의 직접 자료원으로 확인된다. value는 numbers N002(10,000명)·numeric-canon-B 정본과 관련된다.",
+ "note": "연도별 5,000명/년을 통합한 15세 이상 개인 수준 표본. HLM 계열(P001 ICC·P001b 모형1·P002 표본정의·P006 모형4)의 직접 자료원으로 확인된다. value는 evidence E002(10,000명)·numeric-canon-B 정본과 관련된다.",
  "by": "orchestrator",
  "ts_ns": 1782614400000000000
 }

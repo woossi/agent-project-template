@@ -1,9 +1,9 @@
 {
-  "number_id": "N008",
-  "value": "0.51",
-  "label": "기기(DEV) 차원 F1 — 6차원 최저(해석 게이트)",
+  "evidence_id": "E006",
+  "value": "−9.303",
+  "label": "65세 이상 효과(모형4, SE 0.467)",
   "provenance": [
-    "P008"
+    "P006"
   ],
   "status": "active",
   "supersedes": null,

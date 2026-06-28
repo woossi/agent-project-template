@@ -1,9 +1,9 @@
 {
-  "number_id": "N007",
-  "value": "84.7%",
-  "label": "UMC 관련성 정밀도(LLM Y→인간 확인)",
+  "evidence_id": "E008",
+  "value": "0.51",
+  "label": "기기(DEV) 차원 F1 — 6차원 최저(해석 게이트)",
   "provenance": [
-    "P007"
+    "P008"
   ],
   "status": "active",
   "supersedes": null,

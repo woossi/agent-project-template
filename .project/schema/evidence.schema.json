@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://team-umc.local/schema/evidence.schema.json",
+  "title": "UMC canon evidence record",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "evidence_id",
+    "value",
+    "label",
+    "provenance",
+    "status",
+    "by",
+    "ts_ns"
+  ],
+  "properties": {
+    "evidence_id": {
+      "type": "string",
+      "pattern": "^E[0-9]{3}[A-Za-z]?$"
+    },
+    "value": {
+      "type": "string",
+      "minLength": 1
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "provenance": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^P[0-9]{3}[A-Za-z]?$"
+      },
+      "uniqueItems": true
+    },
+    "derived_from": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^E[0-9]{3}[A-Za-z]?$"
+      },
+      "uniqueItems": true
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "verified", "draft", "deprecated", "replaced"]
+    },
+    "supersedes": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "pattern": "^E[0-9]{3}[A-Za-z]?$" },
+        {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^E[0-9]{3}[A-Za-z]?$" },
+          "uniqueItems": true
+        }
+      ]
+    },
+    "checked_by": {
+      "type": "string"
+    },
+    "by": {
+      "type": "string",
+      "minLength": 1
+    },
+    "note": {
+      "type": "string"
+    },
+    "ts_ns": {
+      "type": "integer"
+    }
+  }
+}

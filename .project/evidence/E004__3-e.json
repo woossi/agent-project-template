@@ -1,9 +1,9 @@
 {
-  "number_id": "N003",
-  "value": "131,792",
-  "label": "행정동 매칭 성공 LLM 분류 표본",
+  "evidence_id": "E004",
+  "value": "223건",
+  "label": "표적 3구 단계 E 판정 게시글",
   "provenance": [
-    "P003"
+    "P004"
   ],
   "status": "active",
   "supersedes": null,

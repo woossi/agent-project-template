@@ -3,8 +3,8 @@
  "claim": "LLM 분류는 인간 코더와 비교할 때 관련성 정밀도 84.7%, 주 차원 κ=0.673의 일치도를 보였다.",
  "status": "verified",
  "evidence": [
-  "N007",
-  "N008"
+  "E007",
+  "E008"
  ],
  "counter_evidence": [],
  "used_in": [
@@ -14,7 +14,7 @@
  "verified_by": "stats-validator",
  "supersedes": null,
  "by": "orchestrator",
- "note": "numeric-canon-B.md 근거 수치에 연결된 논증 정본. claim 문장은 검증된 수치의 보수적 해석. || 한계(별도 claim/문장): 기기 차원 F1 0.51(6차원 최저)로 차원별 해석범위 차등 필요 — N008 근거, 별도 한계 서술로 분리(R3).",
+ "note": "numeric-canon-B.md 근거 수치에 연결된 논증 정본. claim 문장은 검증된 수치의 보수적 해석. || 한계(별도 claim/문장): 기기 차원 F1 0.51(6차원 최저)로 차원별 해석범위 차등 필요 — E008 근거, 별도 한계 서술로 분리(R3).",
  "ts_ns": 1782608443048000000,
  "clarity_checked": true,
  "role": "result",
@@ -39,8 +39,8 @@
    "threshold": "관련성 정밀도 84.7%, 주 차원 κ=0.673",
    "result": "관련성 정밀도 84.7%, 주 차원 κ=0.673의 일치도",
    "evidence": [
-    "N007",
-    "N008"
+    "E007",
+    "E008"
    ]
   },
   "finding": {

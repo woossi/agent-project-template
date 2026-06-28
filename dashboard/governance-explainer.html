@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>team-umc 거버넌스 인프라 — 인터랙티브 해설</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --line: #2a2f3a;
+    --ink: #e7ecf3;
+    --ink-dim: #9aa4b2;
+    --ink-faint: #6b7480;
+    --accent: #d6a15e;       /* canon/결정론 — 따뜻한 황 */
+    --accent-2: #6ea8fe;     /* 휴리스틱 — 차분한 청 */
+    --good: #5dd6a0;
+    --warn: #e6b35a;
+    --bad: #e8736b;
+    --data: #6ea8fe;
+    --write: #c98bdb;
+    --scout: #5dd6a0;
+    --review: #e8736b;
+    --analysis: #d6a15e;
+    --radius: 14px;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Pretendard", Roboto, sans-serif;
+  }
+  [data-theme="light"] {
+    --bg: #f5f6f8; --panel: #ffffff; --panel-2: #f0f2f5; --line: #e2e5ea;
+    --ink: #1a1d23; --ink-dim: #545b66; --ink-faint: #8a929c;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 120px; }
+
+  /* ---- header ---- */
+  header.hero {
+    padding: 64px 0 40px; border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  h1 { font-size: clamp(28px, 4.5vw, 44px); line-height: 1.15; margin: 0 0 16px;
+    letter-spacing: -0.02em; font-weight: 680; }
+  .lede { font-size: 18px; color: var(--ink-dim); max-width: 680px; margin: 0; }
+  .hero-stats { display: flex; gap: 28px; margin-top: 32px; flex-wrap: wrap; }
+  .hero-stat .n { font-size: 30px; font-weight: 700; font-family: var(--mono);
+    letter-spacing: -0.02em; }
+  .hero-stat .l { font-size: 12.5px; color: var(--ink-faint); }
+  .hero-stat .n.data { color: var(--data); }
+  .hero-stat .n.accent { color: var(--accent); }
+  .hero-stat .n.accent2 { color: var(--accent-2); }
+
+  .theme-toggle {
+    position: absolute; top: 28px; right: 0; background: var(--panel-2);
+    border: 1px solid var(--line); color: var(--ink-dim); border-radius: 999px;
+    padding: 7px 14px; font-size: 12.5px; cursor: pointer; font-family: var(--mono);
+    transition: all .15s;
+  }
+  .theme-toggle:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+  /* ---- nav ---- */
+  nav.toc { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(12px); border-bottom: 1px solid var(--line);
+    display: flex; gap: 4px; padding: 10px 0; margin-bottom: 8px; overflow-x: auto; }
+  nav.toc a { font-size: 13px; color: var(--ink-dim); text-decoration: none;
+    padding: 6px 12px; border-radius: 8px; white-space: nowrap; transition: all .14s; }
+  nav.toc a:hover { background: var(--panel-2); color: var(--ink); }
+  nav.toc a.active { background: var(--accent); color: #1a1208; font-weight: 600; }
+
+  section { padding: 48px 0 12px; border-top: 1px solid transparent; }
+  .sec-label { font-family: var(--mono); font-size: 12px; color: var(--ink-faint);
+    letter-spacing: .1em; margin-bottom: 8px; }
+  h2 { font-size: 26px; margin: 0 0 12px; letter-spacing: -0.015em; font-weight: 650; }
+  .sec-intro { color: var(--ink-dim); max-width: 720px; margin: 0 0 28px; font-size: 15.5px; }
+
+  .card { background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 22px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } .hero-stats { gap: 18px; } }
+
+  /* ---- model Y team map ---- */
+  .teammap { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  @media (max-width: 760px) { .teammap { grid-template-columns: 1fr 1fr; } }
+  .team {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px 12px; cursor: pointer; transition: all .18s; position: relative; overflow: hidden;
+  }
+  .team::before { content:""; position:absolute; top:0; left:0; right:0; height:3px; background: var(--tc); }
+  .team:hover { transform: translateY(-3px); border-color: var(--tc); box-shadow: 0 8px 30px -12px var(--tc); }
+  .team.sel { border-color: var(--tc); background: color-mix(in srgb, var(--tc) 9%, var(--panel)); }
+  .team .tn { font-weight: 650; font-size: 15px; margin-bottom: 3px; }
+  .team .tlead { font-family: var(--mono); font-size: 11px; color: var(--tc); }
+  .team .tcount { font-size: 11.5px; color: var(--ink-faint); margin-top: 8px; }
+  .team[data-team="data"]{--tc:var(--data);}
+  .team[data-team="write"]{--tc:var(--write);}
+  .team[data-team="scout"]{--tc:var(--scout);}
+  .team[data-team="review"]{--tc:var(--review);}
+  .team[data-team="analysis"]{--tc:var(--analysis);}
+
+  .team-detail { margin-top: 16px; min-height: 0; }
+  .team-detail .card { border-left: 3px solid var(--dc, var(--accent)); }
+  .roster { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .chip { font-family: var(--mono); font-size: 12px; padding: 5px 11px; border-radius: 999px;
+    background: var(--panel-2); border: 1px solid var(--line); color: var(--ink-dim); }
+  .chip.lead { background: color-mix(in srgb, var(--dc) 18%, var(--panel-2)); color: var(--ink);
+    border-color: var(--dc); font-weight: 600; }
+  .chip .role-tag { color: var(--ink-faint); margin-left: 6px; }
+
+  /* ---- two guard boundary ---- */
+  .guardgrid { display: grid; grid-template-columns: 1fr 56px 1fr; gap: 0; align-items: stretch; }
+  @media (max-width: 760px){ .guardgrid { grid-template-columns: 1fr; } .guard-vs{display:none;} }
+  .guard-col { background: var(--panel); border: 1px solid var(--line); padding: 20px; }
+  .guard-col.left { border-radius: 12px 0 0 12px; border-right: none; }
+  .guard-col.right { border-radius: 0 12px 12px 0; border-left: none; }
+  @media (max-width: 760px){ .guard-col.left,.guard-col.right{border-radius:12px; border:1px solid var(--line); margin-bottom:10px;} }
+  .guard-col h4 { margin: 0 0 4px; font-size: 16px; }
+  .guard-col .gfile { font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint); margin-bottom: 14px; }
+  .guard-col.left { --gc: var(--accent); }
+  .guard-col.right { --gc: var(--accent-2); }
+  .guard-col h4 { color: var(--gc); }
+  .gprop { display: flex; gap: 8px; font-size: 13px; padding: 7px 0; border-top: 1px dashed var(--line); }
+  .gprop:first-of-type { border-top: none; }
+  .gprop .k { color: var(--ink-faint); min-width: 76px; }
+  .gprop .v { color: var(--ink-dim); }
+  .guard-vs { display: flex; align-items: center; justify-content: center; }
+  .guard-vs span { font-family: var(--mono); font-size: 12px; color: var(--ink-faint);
+    border: 1px solid var(--line); border-radius: 999px; width: 44px; height: 44px;
+    display: grid; place-items: center; background: var(--panel-2); }
+  .verdict { margin-top: 14px; padding: 14px 16px; border-radius: 10px; font-size: 14px;
+    background: color-mix(in srgb, var(--good) 10%, var(--panel)); border: 1px solid color-mix(in srgb, var(--good) 35%, var(--line)); }
+  .verdict b { color: var(--good); }
+
+  /* ---- canon graph ---- */
+  .canon-stage { display: grid; grid-template-columns: 1fr; gap: 0; }
+  .canon-flow { display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap;
+    padding: 8px 0 18px; }
+  .cnode { text-align: center; cursor: pointer; transition: all .18s; padding: 14px 18px;
+    border-radius: 12px; border: 1px solid var(--line); background: var(--panel); min-width: 116px; }
+  .cnode:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .cnode.sel { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--panel)); }
+  .cnode .cn-id { font-family: var(--mono); font-weight: 700; font-size: 15px; color: var(--accent); }
+  .cnode .cn-name { font-size: 12px; color: var(--ink-dim); margin-top: 3px; }
+  .cnode .cn-count { font-size: 11px; color: var(--ink-faint); margin-top: 6px; font-family: var(--mono); }
+  .carrow { font-family: var(--mono); color: var(--ink-faint); font-size: 13px; padding: 0 14px;
+    display:flex; flex-direction:column; align-items:center; gap:2px; }
+  .carrow .lbl { font-size: 10px; }
+  .carrow.back { color: var(--accent-2); }
+  @media (max-width: 680px){ .canon-flow{flex-direction:column;} .carrow{transform:rotate(90deg); padding:10px 0;} }
+  .canon-detail { margin-top: 8px; }
+  .linkrow { display:flex; gap:10px; align-items:baseline; font-size:13.5px; padding:8px 0; border-top:1px dashed var(--line); }
+  .linkrow:first-child{border-top:none;}
+  .linkrow .badge { font-family: var(--mono); font-size: 10.5px; padding: 2px 8px; border-radius: 6px;
+    background: var(--panel-2); border: 1px solid var(--line); white-space: nowrap; }
+  .badge.gate { background: color-mix(in srgb, var(--good) 14%, var(--panel-2)); color: var(--good); border-color: color-mix(in srgb,var(--good) 30%, var(--line)); }
+  .badge.derived { background: color-mix(in srgb, var(--accent-2) 14%, var(--panel-2)); color: var(--accent-2); border-color: color-mix(in srgb,var(--accent-2) 30%, var(--line)); }
+  .badge.warn { background: color-mix(in srgb, var(--warn) 14%, var(--panel-2)); color: var(--warn); border-color: color-mix(in srgb,var(--warn) 30%, var(--line)); }
+
+  /* ---- promotion chain ---- */
+  .chain { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .stage { display: grid; grid-template-columns: 40px 1fr; gap: 14px; align-items: start;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  .stage .num { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center;
+    font-family: var(--mono); font-weight: 700; background: var(--panel-2); color: var(--accent-2); border:1px solid var(--line); }
+  .stage.gate .num { color: var(--accent); background: color-mix(in srgb,var(--accent) 12%, var(--panel-2)); }
+  .stage h4 { margin: 0 0 4px; font-size: 15.5px; }
+  .stage p { margin: 0; font-size: 13.5px; color: var(--ink-dim); }
+  .stage .tag { font-family: var(--mono); font-size: 11px; padding: 2px 8px; border-radius: 6px; margin-left:8px; }
+  .tag.heur { background: color-mix(in srgb,var(--accent-2) 14%, var(--panel-2)); color: var(--accent-2); }
+  .tag.det { background: color-mix(in srgb,var(--accent) 14%, var(--panel-2)); color: var(--accent); }
+
+  /* ---- conflict simulator ---- */
+  .sim { background: var(--panel); border:1px solid var(--line); border-radius: var(--radius); padding: 24px; }
+  .sim-toggle { display:flex; gap:0; background: var(--panel-2); border:1px solid var(--line);
+    border-radius: 999px; padding: 4px; width: fit-content; margin: 0 auto 22px; }
+  .sim-toggle button { border:none; background:transparent; color:var(--ink-dim); font-family:var(--sans);
+    font-size:13.5px; padding:9px 18px; border-radius:999px; cursor:pointer; transition:all .16s; font-weight:500; }
+  .sim-toggle button.on { background: var(--accent); color:#1a1208; font-weight:650; }
+  .sim-track { display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+  @media (max-width:680px){ .sim-track{grid-template-columns:1fr;} }
+  .lane { border:1px solid var(--line); border-radius:12px; padding:18px; transition: all .25s; opacity:.4; }
+  .lane.active { opacity:1; }
+  .lane.heur.active { border-color: var(--accent-2); background: color-mix(in srgb,var(--accent-2) 7%, var(--panel)); }
+  .lane.det.active { border-color: var(--accent); background: color-mix(in srgb,var(--accent) 7%, var(--panel)); }
+  .lane .lane-h { font-family:var(--mono); font-size:12px; letter-spacing:.06em; margin-bottom:10px; }
+  .lane.heur .lane-h { color: var(--accent-2); }
+  .lane.det .lane-h { color: var(--accent); }
+  .lane .event { font-size:13px; color:var(--ink-dim); padding:6px 0; }
+  .lane .event b { color: var(--ink); }
+  .sim-verdict { margin-top: 20px; padding: 16px 18px; border-radius: 11px; font-size:14.5px;
+    background: var(--panel-2); border:1px solid var(--line); }
+  .sim-verdict .vk { font-family:var(--mono); font-size:11px; color:var(--ink-faint); letter-spacing:.08em; display:block; margin-bottom:6px; }
+
+  /* ---- live signals ---- */
+  .signals { display:grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+  .sig { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px; }
+  .sig .sv { font-family:var(--mono); font-size:28px; font-weight:700; }
+  .sig .sl { font-size:12px; color:var(--ink-faint); margin-top:2px; }
+  .sig.on .sv { color: var(--accent-2); }
+  .sig.zero .sv { color: var(--ink-faint); }
+
+  .foot { margin-top:60px; padding-top:24px; border-top:1px solid var(--line); color:var(--ink-faint);
+    font-size:12.5px; font-family:var(--mono); }
+  .foot code { color: var(--ink-dim); }
+  .pulse { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--good);
+    margin-right:7px; box-shadow:0 0 0 0 color-mix(in srgb,var(--good) 60%, transparent); animation:p 2s infinite; }
+  @keyframes p { 0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--good) 50%, transparent);}
+    70%{box-shadow:0 0 0 8px transparent;} 100%{box-shadow:0 0 0 0 transparent;} }
+  .hl { color: var(--accent); font-weight:600; }
+  .hl2 { color: var(--accent-2); font-weight:600; }
+  .mono { font-family: var(--mono); font-size: .92em; }
+</style>
+</head>
+<body data-theme="dark">
+<div class="wrap">
+
+  <header class="hero">
+    <button class="theme-toggle" id="themeBtn">◐ 라이트</button>
+    <div class="eyebrow">team-umc · Model Y 멀티 에이전트</div>
+    <h1>거버넌스 인프라, 한눈에</h1>
+    <p class="lede">14명의 Claude 에이전트가 하나의 파일트리를 공유하며 UMC 논문을 쓴다.
+      이 페이지는 그들을 <span class="hl">격리</span>하고 <span class="hl">조정</span>하고
+      <span class="hl">검증</span>하는 메타 인프라를 — 추측이 아니라 코드에서 읽은 실측값으로 — 인터랙티브하게 보여준다.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="n data">14</div><div class="l">peer 워커</div></div>
+      <div class="hero-stat"><div class="n data">5</div><div class="l">하위 팀</div></div>
+      <div class="hero-stat"><div class="n accent">11</div><div class="l">결정적 hook</div></div>
+      <div class="hero-stat"><div class="n accent">9·11·11</div><div class="l">claim·evidence·provenance</div></div>
+      <div class="hero-stat"><div class="n accent2">2</div><div class="l">조정 채널</div></div>
+    </div>
+  </header>
+
+  <nav class="toc" id="toc">
+    <a href="#team">팀 구조</a>
+    <a href="#guards">두 guard 경계</a>
+    <a href="#canon">canon 그래프</a>
+    <a href="#promote">승격 사슬</a>
+    <a href="#conflict">결정론↔휴리스틱</a>
+    <a href="#signals">지금의 신호</a>
+  </nav>
+
+  <!-- ============ TEAM ============ -->
+  <section id="team">
+    <div class="sec-label">01 — TOPOLOGY</div>
+    <h2>Model Y: 공유 1벌 + 정체성 N개</h2>
+    <p class="sec-intro">Conductor(부모-자식)가 아니라 <span class="hl">동급 peer</span>다. 각 터미널이
+      <span class="mono">export CLAUDE_AGENT_NAME=&lt;이름&gt;</span> 으로 정체성만 다르게 갖고, 같은
+      <span class="mono">.claude/</span> 한 벌을 symlink로 공유한다. 팀 카드를 눌러 구성을 펼쳐보라.</p>
+
+    <div class="teammap" id="teammap">
+      <div class="team" data-team="data"><div class="tn">데이터</div><div class="tlead">data-lead</div><div class="tcount">팀장 + 생산자 3</div></div>
+      <div class="team" data-team="write"><div class="tn">문서</div><div class="tlead">write-lead</div><div class="tcount">팀장 + 생산자 2</div></div>
+      <div class="team" data-team="scout"><div class="tn">선행연구</div><div class="tlead">scout-lead</div><div class="tcount">팀장 + 생산자 1</div></div>
+      <div class="team" data-team="review"><div class="tn">검증</div><div class="tlead">review-lead</div><div class="tcount">팀장 + 생산자 2</div></div>
+      <div class="team" data-team="analysis"><div class="tn">분석</div><div class="tlead">analysis-lead</div><div class="tcount">팀장 + 생산자 1</div></div>
+    </div>
+    <div class="team-detail" id="teamDetail"></div>
+  </section>
+
+  <!-- ============ GUARDS ============ -->
+  <section id="guards">
+    <div class="sec-label">02 — ISOLATION</div>
+    <h2>두 guard는 직교한다 (충돌 불가)</h2>
+    <p class="sec-intro">시스템엔 별개의 두 결정적 가드가 있다. 하나는 <span class="hl">파일시스템 접근</span>을,
+      다른 하나는 <span class="hl">논증 그래프 무결성</span>을 본다. 검증에서 확인한 핵심: 둘의 검사 축이
+      서로 직교해서 절대 부딪히지 않는다.</p>
+
+    <div class="guardgrid">
+      <div class="guard-col left">
+        <h4>guard_agent_workspace</h4>
+        <div class="gfile">PreToolUse · 모든 Read/Edit/Write/Bash</div>
+        <div class="gprop"><span class="k">검사 대상</span><span class="v">워커 폴더 경계 — 자기 팀 밖 차단</span></div>
+        <div class="gprop"><span class="k">메커니즘</span><span class="v">N² 격리. allow/deny + deny_read/deny_write</span></div>
+        <div class="gprop"><span class="k">입력</span><span class="v">tool_input.file_path <b>만</b></span></div>
+        <div class="gprop"><span class="k">차단</span><span class="v">exit 2 (경로 위반)</span></div>
+      </div>
+      <div class="guard-vs"><span>⊥</span></div>
+      <div class="guard-col right">
+        <h4>canon_integrity</h4>
+        <div class="gfile">PreToolUse · canon 파일 Edit/Write만</div>
+        <div class="gprop"><span class="k">검사 대상</span><span class="v">claim→evidence→provenance 링크</span></div>
+        <div class="gprop"><span class="k">메커니즘</span><span class="v">dangling·deprecated·id충돌·supersedes</span></div>
+        <div class="gprop"><span class="k">입력</span><span class="v">.project 그래프 전체</span></div>
+        <div class="gprop"><span class="k">차단</span><span class="v">exit 2 (깨진 링크)</span></div>
+      </div>
+    </div>
+
+    <div class="verdict">
+      <b>판정 — 충돌 없음.</b> 한쪽은 <span class="hl2">파일을 여는 행위</span>를, 다른 쪽은
+      <span class="hl">그래프가 성한지</span>를 본다. 예: provenance 레코드가 워커 폴더의 memory를 <span class="mono">derived_from</span>으로
+      가리켜도 — <b>링크 저장</b>(.project 쓰기)은 합법이고, 그 경로를 <b>실제로 여는 순간</b>만 차단된다.
+      canon_integrity는 그 필드를 아예 모르고, guard_agent_workspace는 링크가 아니라 경로만 본다.
+    </div>
+  </section>
+
+  <!-- ============ CANON ============ -->
+  <section id="canon">
+    <div class="sec-label">03 — ARGUMENT CANON</div>
+    <h2>흩어진 정본을 하나의 연결 그래프로</h2>
+    <p class="sec-intro">14명이 각자 "좋아 보이는 수치"를 쓰는 걸 막으려면, 작업 흔적이 아니라
+      <span class="hl">검증된 주장의 배열</span>을 중심에 둬야 한다. 노드를 눌러 그 노드가 들고 있는 링크와
+      어느 가드가 강제하는지 보라.</p>
+
+    <div class="canon-flow" id="canonFlow">
+      <div class="cnode" data-node="claim"><div class="cn-id">C</div><div class="cn-name">claim · 주장</div><div class="cn-count">9개</div></div>
+      <div class="carrow"><span>──▶</span><span class="lbl">evidence</span></div>
+      <div class="cnode" data-node="evidence"><div class="cn-id">E</div><div class="cn-name">evidence · 근거</div><div class="cn-count">11개</div></div>
+      <div class="carrow"><span>──▶</span><span class="lbl">provenance</span></div>
+      <div class="cnode" data-node="provenance"><div class="cn-id">P</div><div class="cn-name">provenance · 출처</div><div class="cn-count">11개</div></div>
+      <div class="carrow back"><span>◀──</span><span class="lbl">related_claims</span></div>
+    </div>
+    <div class="canon-detail card" id="canonDetail"></div>
+  </section>
+
+  <!-- ============ PROMOTE ============ -->
+  <section id="promote">
+    <div class="sec-label">04 — BOTTOM-UP CHAIN</div>
+    <h2>승격 사슬: 흔적 → 스킬 → 정본</h2>
+    <p class="sec-intro">반복되는 패턴은 자동으로 다음 단계 승격이 <span class="hl2">제안</span>된다.
+      하지만 제안은 강제가 아니다 — judgment를 거쳐 owner가 닫는다. 파란 단계는 휴리스틱(제안),
+      황색 단계는 결정론(게이트).</p>
+
+    <div class="chain">
+      <div class="stage"><div class="num">1</div><div><h4>워커 흔적 <span class="tag heur">휴리스틱</span></h4>
+        <p>워커가 자기 <span class="mono">.context/task-log/</span>에 작업을 자동 기록. 여러 워커가 같은 시그니처를 반복하면 탐지기가 후보로 표면화.</p></div></div>
+      <div class="stage"><div class="num">2</div><div><h4>승격 후보 (SessionStart) <span class="tag heur">휴리스틱</span></h4>
+        <p><span class="mono">detect_team_promotions</span>가 read-only로 핸드오프 구조를 읽어 team_skill·project_skill·canon_promote 후보를 띄움. <b>레코드를 만들지 않는다.</b></p></div></div>
+      <div class="stage gate"><div class="num">3</div><div><h4>owner 결정 (resolve) <span class="tag det">게이트</span></h4>
+        <p>팀장/orchestrator만 <span class="mono">resolve --decision promote</span>. 결정 메타데이터만 기록 — canon 레코드 자동저작은 <b>어서션으로 차단</b>(F-D5).</p></div></div>
+      <div class="stage gate"><div class="num">4</div><div><h4>정본 저작 <span class="tag det">게이트</span></h4>
+        <p>owner가 <b>별도 Write 행위</b>로 <span class="mono">.project/evidence/</span> 등에 레코드 저작. <b>여기서만</b> canon_integrity가 링크를 검사하고 exit 2로 게이트.</p></div></div>
+    </div>
+  </section>
+
+  <!-- ============ CONFLICT ============ -->
+  <section id="conflict">
+    <div class="sec-label">05 — THE F-D5 INSIGHT</div>
+    <h2>결정론과 휴리스틱은 왜 안 부딪히나</h2>
+    <p class="sec-intro">"자동승격"(반복 수치가 전부 canon이 됨)과 "강제승격"(깨진 링크면 차단)은 동시에 성립할 수 없다 —
+      <span class="hl">같은 행위에 겹칠 때만</span>. 토글을 눌러 두 양식이 시간축에서 어떻게 분리되는지 보라.</p>
+
+    <div class="sim">
+      <div class="sim-toggle" id="simToggle">
+        <button data-mode="separate" class="on">분리 (실제 구현)</button>
+        <button data-mode="merged">겹침 (가상의 충돌)</button>
+      </div>
+      <div class="sim-track">
+        <div class="lane heur" id="laneHeur">
+          <div class="lane-h">▷ 휴리스틱 — SessionStart</div>
+          <div class="event">① 여러 워커가 <b>같은 수치 반복</b> 인용</div>
+          <div class="event">② 후보로 <b>표면화</b> (read-only)</div>
+          <div class="event">③ owner가 judgment로 <b>resolve</b></div>
+          <div class="event" style="color:var(--ink-faint)">→ exit 0, 레코드 안 만듦</div>
+        </div>
+        <div class="lane det" id="laneDet">
+          <div class="lane-h">▷ 결정론 — PreToolUse</div>
+          <div class="event">④ owner가 <b>별도 Write</b>로 레코드 저작</div>
+          <div class="event">⑤ canon_integrity가 <b>링크 검사</b></div>
+          <div class="event">⑥ 깨졌으면 <b>exit 2 차단</b></div>
+          <div class="event" style="color:var(--ink-faint)">→ 성하면 통과</div>
+        </div>
+      </div>
+      <div class="sim-verdict" id="simVerdict"></div>
+    </div>
+  </section>
+
+  <!-- ============ SIGNALS ============ -->
+  <section id="signals">
+    <div class="sec-label">06 — LIVE SNAPSHOT</div>
+    <h2>지금 떠 있는 승격 신호</h2>
+    <p class="sec-intro"><span class="pulse"></span>이 세션 시작 시점에 <span class="mono">detect_team_promotions evaluate</span>가
+      실제로 반환한 값이다. 신호는 제안일 뿐 — owner가 닫기 전엔 아무것도 강제되지 않는다.</p>
+    <div class="signals">
+      <div class="sig on"><div class="sv">2</div><div class="sl">team_skill 후보</div></div>
+      <div class="sig on"><div class="sv">3</div><div class="sl">project_skill 후보</div></div>
+      <div class="sig zero"><div class="sv">0</div><div class="sl">new_worker</div></div>
+      <div class="sig zero"><div class="sv">0</div><div class="sl">rebalance</div></div>
+      <div class="sig zero"><div class="sv">0</div><div class="sl">canon_promote</div></div>
+    </div>
+    <p class="sec-intro" style="margin-top:18px; font-size:14px;">
+      <span class="hl2">team_skill 2건</span>은 write·review 팀 내부 핸드오프 재발이고,
+      <span class="hl2">project_skill 3건</span>은 review+write·data+write·scout+write 팀 간 흐름이다.
+      canon_promote가 0인 건 <span class="mono">enable:false</span>(슬라이스 5 전까지 비활성) 때문 — 의도된 상태다.</p>
+  </section>
+
+  <div class="foot">
+    <span class="pulse"></span>실측 출처 — <code>.project/team.json</code> · <code>.claude/policies/agent-workspace.json</code> ·
+    <code>canon_integrity.py</code> · <code>detect_team_promotions.py evaluate</code> (2026-06-28).
+    이 페이지는 자체 완결 HTML이며 의존성이 없다.
+  </div>
+
+</div>
+
+<script>
+/* ---------- data (코드 실측값) ---------- */
+const TEAMS = {
+  data: { color:'--data', title:'데이터 팀', list:'umc-data',
+    path:'/Users/ujunbin/project/umc + iCloud umc-compressed-db',
+    members:[['data-lead','팀장·조율'],['data-engineer','원천 압축·스키마'],['data-curator','큐레이션·그림·레지스트리'],['inference-runner','분석 재실행·산출']] },
+  write: { color:'--write', title:'문서 팀', list:'umc-write',
+    path:'/Users/ujunbin/research/UMC',
+    members:[['write-lead','팀장·조율'],['manuscript-writer','섹션 집필·재작성'],['manuscript-steward','용어·수치정본 일관성']] },
+  scout: { color:'--scout', title:'선행연구 팀', list:'umc-scout',
+    path:'/Users/ujunbin/article + knowledge',
+    members:[['scout-lead','팀장·조율'],['paper-scout','논문 검색·PDF 다운로드']] },
+  review: { color:'--review', title:'검증 팀', list:'umc-review',
+    path:'/Users/ujunbin/research/UMC + project/umc',
+    members:[['review-lead','팀장·조율'],['stats-validator','통계 독립 재현 검증'],['quality-reviewer','품질 검수·체크리스트']] },
+  analysis: { color:'--analysis', title:'분석 팀', list:'umc-analysis',
+    path:'/Users/ujunbin/project/umc',
+    members:[['analysis-lead','팀장·조율'],['causal-analyst','인과추론 설계·해석']] },
+};
+
+const CANON = {
+  claim: { title:'claim — 본 연구의 주장', count:'9개 레코드',
+    links:[
+      ['claim.evidence → evidence','gate','정참조. 가리키는 E가 실재하지 않으면 dangling → exit 2 차단'],
+      ['supersedes → claim','gate','신 레코드가 구 레코드 대체. dangling·자기참조는 error, 미퇴역 선행자는 warning'],
+      ['relations → claim','warn','claim↔claim 논증 엣지(depends_on 등). 설계만 — 레코드 0건, 강제 미구현'],
+    ] },
+  number: { title:'evidence — 검증된 근거', count:'11개 레코드',
+    links:[
+      ['provenance → P','gate','정참조. 출처 레코드가 실재해야 함 → 깨지면 차단'],
+      ['cited_by ← claim','derived','역참조. claim.evidence를 역색인해 fold가 계산·표기. 저장 0, 파생만'],
+      ['supersedes → evidence','gate','수치 교체 체인. 예: E001 → E001b'],
+    ] },
+  provenance: { title:'provenance — 산출 출처', count:'11개 레코드',
+    links:[
+      ['related_claims → claim','gate','정참조. 이 출처가 뒷받침하는 claim들. 실재 검사'],
+      ['derived_from → 워커폴더','warn','계보(mailbox·task·memory). 설계만 — 레코드 0건. 어느 guard도 이 링크는 검사 안 함'],
+      ['manifest_ref → 외부','warn','research/UMC manifest SSOT 참조. 자기보고 필드, guard 미검사'],
+    ] },
+};
+
+/* ---------- team interaction ---------- */
+const teamDetail = document.getElementById('teamDetail');
+function renderTeam(key){
+  const t = TEAMS[key];
+  const chips = t.members.map((m,i)=>
+    `<span class="chip ${i===0?'lead':''}">${m[0]}<span class="role-tag">${m[1]}</span></span>`).join('');
+  teamDetail.innerHTML = `<div class="card" style="--dc:var(${t.color})">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
+      <strong style="font-size:17px">${t.title}</strong>
+      <span class="mono" style="color:var(--ink-faint);font-size:12px">미리알림: ${t.list}</span>
+    </div>
+    <div style="font-size:13px;color:var(--ink-dim);margin-top:6px">작업 경로 화이트리스트: <span class="mono">${t.path}</span></div>
+    <div class="roster">${chips}</div>
+    <div style="font-size:12.5px;color:var(--ink-faint);margin-top:12px;line-height:1.5">
+      팀장(<b>${t.members[0][0]}</b>)은 산출물을 직접 만들지 않는다 — 메일박스 read/claim·팀 보드 분배·품질원장만 소유.
+      생산자≠조율자 원칙. 형제 워커끼리도 폴더는 N² 격리된다.</div>
+  </div>`;
+}
+document.querySelectorAll('.team').forEach(el=>{
+  el.addEventListener('click',()=>{
+    document.querySelectorAll('.team').forEach(x=>x.classList.remove('sel'));
+    el.classList.add('sel');
+    renderTeam(el.dataset.team);
+  });
+});
+document.querySelector('.team[data-team="data"]').click();
+
+/* ---------- canon interaction ---------- */
+const canonDetail = document.getElementById('canonDetail');
+function renderCanon(node){
+  const c = CANON[node];
+  const rows = c.links.map(([txt,kind,desc])=>{
+    const label = kind==='gate'?'canon_integrity 강제':kind==='derived'?'fold 파생':'미강제(설계만)';
+    return `<div class="linkrow">
+      <span class="badge ${kind}">${label}</span>
+      <div><span class="mono" style="color:var(--ink)">${txt}</span><br>
+      <span style="font-size:12.5px;color:var(--ink-dim)">${desc}</span></div></div>`;
+  }).join('');
+  canonDetail.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-bottom:6px">
+    <strong style="font-size:16px">${c.title}</strong>
+    <span class="mono" style="color:var(--ink-faint);font-size:12px">${c.count}</span></div>${rows}`;
+}
+document.querySelectorAll('.cnode').forEach(el=>{
+  el.addEventListener('click',()=>{
+    document.querySelectorAll('.cnode').forEach(x=>x.classList.remove('sel'));
+    el.classList.add('sel');
+    renderCanon(el.dataset.node);
+  });
+});
+document.querySelector('.cnode[data-node="claim"]').click();
+
+/* ---------- conflict simulator ---------- */
+const laneHeur=document.getElementById('laneHeur'), laneDet=document.getElementById('laneDet'),
+      simVerdict=document.getElementById('simVerdict');
+function setSim(mode){
+  if(mode==='separate'){
+    laneHeur.classList.add('active'); laneDet.classList.add('active');
+    simVerdict.innerHTML = `<span class="vk">실제 구현 — 시간 분리</span>
+      두 양식이 <b>다른 이벤트·다른 시점</b>에 발화한다. SessionStart의 휴리스틱(exit 0)과 PreToolUse의 게이트(exit 2)는
+      <b>같은 행위에 절대 겹치지 않는다.</b> 자동성은 ①②표면화에, 강제는 ⑤⑥저작에 각각 살아남아
+      <span class="hl">양립한다.</span> 게이트가 "하류로 밀리는" 게 아니라 — 처음부터 묻는 명제가 다르다.`;
+    simVerdict.style.borderColor='color-mix(in srgb,var(--good) 35%,var(--line))';
+  } else {
+    laneHeur.classList.add('active'); laneDet.classList.add('active');
+    simVerdict.innerHTML = `<span class="vk">가상의 충돌 — 만약 겹친다면</span>
+      "promote 즉시 레코드 자동생성"을 넣으면 ③ judgment 단계에 ⑤⑥ 게이트가 붙는다. 그 순간
+      <b>둘 중 하나를 포기</b>해야 한다 — 반복 수치가 전부 canon이 되도록 강제하면 자동성 과잉이고,
+      judgment 후에만 게이트가 발화하면 강제가 하류로 밀린다. <span class="hl" style="color:var(--bad)">그래서 이 경로는 D4 위반으로 기각된다.</span>
+      <span class="mono">_assert_no_canon_authorship</span>가 이 겹침을 코드로 막는다.`;
+    simVerdict.style.borderColor='color-mix(in srgb,var(--bad) 35%,var(--line))';
+  }
+}
+document.querySelectorAll('#simToggle button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#simToggle button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); setSim(b.dataset.mode);
+  });
+});
+setSim('separate');
+
+/* ---------- theme ---------- */
+const themeBtn=document.getElementById('themeBtn');
+themeBtn.addEventListener('click',()=>{
+  const cur=document.body.dataset.theme;
+  const next=cur==='dark'?'light':'dark';
+  document.body.dataset.theme=next;
+  themeBtn.textContent = next==='dark'?'◐ 라이트':'◑ 다크';
+});
+
+/* ---------- scrollspy ---------- */
+const links=[...document.querySelectorAll('#toc a')];
+const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+const obs=new IntersectionObserver((es)=>{
+  es.forEach(e=>{
+    if(e.isIntersecting){
+      const id='#'+e.target.id;
+      links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')===id));
+    }
+  });
+},{rootMargin:'-45% 0px -50% 0px'});
+secs.forEach(s=>s&&obs.observe(s));
+</script>
+</body>
+</html>

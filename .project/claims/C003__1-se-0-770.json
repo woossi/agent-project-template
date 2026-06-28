@@ -3,7 +3,7 @@
  "claim": "통제 이전 모형을 기준으로, 저학력 집단은 대졸 기준집단과 비교할 때 디지털 이용 점수가 20점 이상 낮게 나타났다.",
  "status": "verified",
  "evidence": [
-  "N001b"
+  "E001b"
  ],
  "counter_evidence": [],
  "used_in": [
@@ -40,7 +40,7 @@
    "threshold": "20점 이상 낮음(p<.001)",
    "result": "저학력 집단이 대졸 기준집단보다 디지털 이용 점수가 20점 이상 낮음",
    "evidence": [
-    "N001b"
+    "E001b"
    ]
   },
   "finding": {

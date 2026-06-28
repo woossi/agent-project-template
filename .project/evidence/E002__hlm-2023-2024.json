@@ -1,9 +1,9 @@
 {
-  "number_id": "N004",
-  "value": "223건",
-  "label": "표적 3구 단계 E 판정 게시글",
+  "evidence_id": "E002",
+  "value": "10,000명",
+  "label": "서울서베이 HLM 표본(2023–2024 통합)",
   "provenance": [
-    "P004"
+    "P002"
   ],
   "status": "active",
   "supersedes": null,

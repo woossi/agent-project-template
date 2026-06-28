@@ -4,7 +4,7 @@
 The heart of ADR-005. The project canon is not 14 independent registries but ONE
 linked graph:
 
-    claim C ──evidence──> number N ──provenance──> P ──source──> data D / run RUN
+    claim C ──justifies──> evidence E ──provenance──> P ──source──> data D / run RUN
 
 The value of the graph is realised only when links do not break. This module is
 the single enforcement point for that, mirroring how ``guard_word_json`` enforces
@@ -13,20 +13,25 @@ the word.json schema:
 - ``check``    — validate the graph (dangling links, deprecated refs, id clashes,
   orphans). Exit 1 on hard violations (CI / explicit run). Used by ``evaluate``.
 - ``guard``    — PreToolUse hook entry. Reads the hook payload; if a tool is about
-  to Edit/Write a canon record, re-validates and BLOCKS (exit 2) on a hard
-  violation so a broken link never lands. Never crashes a tool call otherwise.
+  to Edit/Write/Bash-write a canon record, requires the canon owner and re-validates
+  before allowing the write. It BLOCKS (exit 2) on a hard violation so a broken or
+  owner-unapproved link never lands. Never crashes a tool call otherwise.
 - ``fold``     — regenerate the human-readable index views from the immutable JSON
-  records (claims_index.md / numbers_index.md / provenance_index.md). The records
+  records (claims_index.md / evidence_index.md / provenance_index.md). The records
   are the canon; the indexes are a derived view and are never hand-edited.
 
-Records are immutable per-file JSON under ``.project/{claims,numbers,provenance}``
-(ADR-005 D1). Standard library only; the hook swallows errors and exits 0 so it
-can never break the agent loop (D2 / hook contract).
+Records are immutable per-file JSON under ``.project/{claims,evidence,provenance}``
+(latest canon ADR D1). Standard library only; the hook swallows unexpected errors
+and exits 0 so it can never break the agent loop (D2 / hook contract).
 """
 from __future__ import annotations
 
 import argparse
 import json
+import os
+import shlex
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -40,41 +45,48 @@ from _hooklib import project_dir_simple as project_dir  # noqa: E402
 # _backrefs(), fold() and the guard all extend from this table automatically.
 #
 # Slice history (ADR-canon-unified):
-#   S0-2: claim/number/provenance (3 forced links).
+#   S0-2: claim/evidence/provenance (3 forced links).
 #   S3:   claim.grounds/counter_grounds -> lit_prop, claim.relations (claim->claim, DAG).
 #   S4:   lit_prop kind (LP) + bibkey -> refs.bib (external SSOT).
 #   S5:   provenance.derived_from (lifecycle lineage — recognised but NOT dangling-checked).
 #   S6:   data_registry (D) + runs (RUN); provenance.source_data -> D, run_id -> RUN.
 #   S7:   clarity-rule lexical audit (R8/R9/R10) on claim/lit_prop prose (warnings).
+#   evidence migration: number has been retired as an independent canon kind; evidence
+#   is the node and claim.evidence names E-records. Evidence content is user/analysis
+#   supplied; the system only validates and serializes structure.
+#   risk: risk kind (R); claim.risks / provenance.risks -> risk.
 CANON = {
     "claim": {
         "dir": ".project/claims",
         "id": "claim_id",
         "prefix": "C",
-        # evidence -> number (data axis), grounds/counter_grounds -> lit_prop (literature
-        # axis). relations (claim->claim) is handled separately (object array).
+        # evidence -> evidence (data axis), grounds/counter_grounds -> lit_prop (literature
+        # axis), risks -> risk. relations (claim->claim) is handled separately (object array).
         "links": {
-            "evidence": "number",
+            "evidence": "evidence",
+            "counter_evidence": "evidence",
             "grounds": "lit_prop",
             "counter_grounds": "lit_prop",
+            "risks": "risk",
         },
     },
-    "number": {
-        "dir": ".project/numbers",
-        "id": "number_id",
-        "prefix": "N",
-        "links": {"provenance": "provenance"},
+    "evidence": {
+        "dir": ".project/evidence",
+        "id": "evidence_id",
+        "prefix": "E",
+        "links": {"provenance": "provenance", "derived_from": "evidence"},
     },
     "provenance": {
         "dir": ".project/provenance",
         "id": "artifact_id",
         "prefix": "P",
-        # related_claims -> claim (list). source_data -> data_registry and run_id -> runs
-        # are SINGLE strings (scalar links), validated by dedicated passes so they stay
-        # scalars in the existing schema. derived_from (lifecycle, off-graph) is recognised
-        # but never dangling-checked.
+        # related_claims -> claim (list), risks -> risk (list). source_data -> data_registry
+        # and run_id -> runs are SINGLE strings (scalar links), validated by dedicated
+        # passes so they stay scalars in the existing schema. derived_from (lifecycle,
+        # off-graph) is recognised but never dangling-checked.
         "links": {
             "related_claims": "claim",
+            "risks": "risk",
         },
     },
     "lit_prop": {
@@ -96,6 +108,13 @@ CANON = {
         "id": "run_id",
         "prefix": "RUN",
         "links": {},
+    },
+    "risk": {
+        "dir": ".project/risks",
+        "id": "risk_id",
+        "prefix": "R",
+        # a risk may relate to the claim(s) it threatens (back-pointer, optional).
+        "links": {"related_claims": "claim"},
     },
 }
 DEPRECATED = {"deprecated", "replaced"}
@@ -177,6 +196,36 @@ def _file_ids(root: Path, kind: str) -> list[tuple[str, str]]:
     return pairs
 
 
+def _schema_required(root: Path, kind: str) -> list[str]:
+    schema_path = root / ".project" / "schema" / f"{kind}.schema.json"
+    try:
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        schema = {}
+    required = schema.get("required") if isinstance(schema, dict) else None
+    if isinstance(required, list):
+        return [field for field in required if isinstance(field, str)]
+    if kind == "evidence":
+        return ["evidence_id", "value", "label", "provenance", "status", "by", "ts_ns"]
+    return []
+
+
+def _validate_record_shape(root: Path, kind: str, rid: str, rec: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    spec = CANON[kind]
+    expected_prefix = spec["prefix"]
+    rid_value = rec.get(spec["id"])
+    if not isinstance(rid_value, str) or not rid_value.startswith(expected_prefix):
+        errors.append(
+            f"{kind} schema: record '{rid}' field '{spec['id']}' must start with '{expected_prefix}'"
+        )
+    for field in _schema_required(root, kind):
+        value = rec.get(field)
+        if value is None or value == "":
+            errors.append(f"{kind} schema: record '{rid}' missing required field '{field}'")
+    return errors
+
+
 def validate(root: Path) -> dict[str, list[str]]:
     """Return {"errors": [...], "warnings": [...]}. Errors are hard (block)."""
     graph = _load_all(root)
@@ -191,6 +240,11 @@ def validate(root: Path) -> dict[str, list[str]]:
                 errors.append(f"id clash: {kind} '{rid}' in both {seen[rid]} and {fname}")
             else:
                 seen[rid] = fname
+
+    # 1b. record shape and required schema fields.
+    for kind in CANON:
+        for rid, rec in graph[kind].items():
+            errors.extend(_validate_record_shape(root, kind, rid, rec))
 
     referenced: dict[str, set[str]] = {k: set() for k in CANON}
     # 2. dangling links + 3. deprecated refs
@@ -221,8 +275,8 @@ def validate(root: Path) -> dict[str, list[str]]:
                             f"{target_kind} '{tid}' (status={tgt.get('status')})"
                         )
 
-    # 4. orphans (warning only): a number/provenance no active record points at
-    for kind in ("number", "provenance"):
+    # 4. orphans (warning only): evidence/provenance no active record points at
+    for kind in ("evidence", "provenance"):
         for rid, rec in graph[kind].items():
             if str(rec.get("status", "")).lower() in DEPRECATED:
                 continue
@@ -448,8 +502,8 @@ def _backrefs(graph: dict[str, dict[str, dict[str, Any]]]) -> dict[str, dict[str
     For every outgoing link ``referrer.<field> -> target``, record ``target -> [referrers]``.
     Returns ``{target_kind: {target_id: [referrer_id, ...]}}`` with referrers sorted and
     de-duplicated so the fold output is deterministic. The canonical use is
-    ``number -> [claim, ...]`` ("which claims cite this number"), the exact reverse of
-    ``claim.evidence``; provenance back-refs from numbers come for free the same way.
+    ``evidence -> [claim, ...]`` ("which claims cite this evidence"), the exact reverse of
+    ``claim.evidence``; provenance back-refs from evidence come for free the same way.
     """
     back: dict[str, dict[str, set[str]]] = {k: {} for k in CANON}
     for kind, spec in CANON.items():
@@ -493,7 +547,7 @@ def _fold_one(root: Path, kind: str, backrefs: dict[str, list[str]] | None = Non
                 f"relations={[ (r.get('type'), r.get('target')) for r in (rec.get('relations') or []) if isinstance(r, dict) ]}"
             )
             extra = f"used_in={rec.get('used_in', [])} verified_by={rec.get('verified_by', '?')}"
-        elif kind == "number":
+        elif kind == "evidence":
             head = f"{rec.get('value', '?')} — {rec.get('label', '')}"
             links = f"provenance={rec.get('provenance', [])}"
             extra = f"checked_by={rec.get('checked_by', '?')}"
@@ -512,10 +566,14 @@ def _fold_one(root: Path, kind: str, backrefs: dict[str, list[str]] | None = Non
             head = f"{rec.get('label', '')}"
             links = f"manifest_ref={rec.get('manifest_ref', '?')}"
             extra = f"period={rec.get('period', '?')} area={rec.get('area', '?')}"
-        else:  # runs
+        elif kind == "runs":
             head = f"{rec.get('label', '')}"
             links = f"script={rec.get('script_or_process', '?')}"
             extra = f"inputs={rec.get('inputs', [])}"
+        else:  # risk
+            head = f"{rec.get('label', '')}"
+            links = f"related_claims={rec.get('related_claims', [])}"
+            extra = f"severity={rec.get('severity', '?')} mitigation={rec.get('mitigation', '?')}"
         lines.append(f"## {rid} [{status}]")
         lines.append(f"{head}")
         lines.append(f"- {links}")
@@ -555,9 +613,10 @@ def _fold_claim_sentence(rec: dict[str, Any]) -> str:
 def fold(root: Path) -> list[Path]:
     written: list[Path] = []
     names = {
-        "claim": "claims_index.md", "number": "numbers_index.md",
+        "claim": "claims_index.md", "evidence": "evidence_index.md",
         "provenance": "provenance_index.md", "lit_prop": "lit_props_index.md",
         "data_registry": "data_registry_index.md", "runs": "runs_index.md",
+        "risk": "risks_index.md",
     }
     backrefs = _backrefs(_load_all(root))
     for kind, spec in CANON.items():
@@ -571,29 +630,148 @@ def fold(root: Path) -> list[Path]:
 
 # ---- guard (PreToolUse) ---------------------------------------------------
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _rust_bin() -> Path | None:
+    override = os.environ.get("CANON_ENFORCE_BIN")
+    if override:
+        path = Path(override).expanduser()
+        return path if path.exists() else None
+    path = REPO_ROOT / "target" / "debug" / "canon-enforce"
+    return path if path.exists() else None
+
+
+def _delegate_to_rust(args: list[str], stdin_text: str | None = None) -> int | None:
+    bin_path = _rust_bin()
+    if bin_path is not None:
+        command = [str(bin_path), *args]
+    elif (REPO_ROOT / "Cargo.toml").exists() and shutil.which("cargo"):
+        command = ["cargo", "run", "--quiet", "-p", "canon-enforce", "--", *args]
+    else:
+        return None
+    try:
+        proc = subprocess.run(
+            command,
+            input=stdin_text,
+            capture_output=True,
+            text=True,
+            env=os.environ.copy(),
+        )
+    except OSError:
+        return None
+    if proc.stdout:
+        print(proc.stdout, end="")
+    if proc.stderr:
+        print(proc.stderr, end="", file=sys.stderr)
+    return proc.returncode
+
 CANON_DIRS = tuple(CANON[k]["dir"] for k in CANON)
-EDIT_TOOLS = {"Edit", "Write", "MultiEdit", "NotebookEdit"}
+EDIT_TOOLS = {"Edit", "Write", "MultiEdit", "NotebookEdit", "Bash"}
+BASH_MUTATION_MARKERS = {
+    ">",
+    ">>",
+    "mv",
+    "cp",
+    "rm",
+    "touch",
+    "mkdir",
+    "sed",
+    "perl",
+    "python",
+    "python3",
+    "node",
+}
+
+
+def _canon_owner(root: Path) -> str:
+    policy = root / ".project" / "policies" / "team-promotion.json"
+    try:
+        data = json.loads(policy.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return "orchestrator"
+    governance = data.get("governance") if isinstance(data, dict) else None
+    if not isinstance(governance, dict):
+        return "orchestrator"
+    for key in ("company_owner", "authoring_owner"):
+        owner = governance.get(key)
+        if isinstance(owner, str) and owner.strip():
+            return owner.strip()
+    return "orchestrator"
+
+
+def _active_agent(payload: dict[str, Any]) -> str:
+    for key in ("CLAUDE_AGENT_NAME", "CLAUDE_SUBAGENT_NAME"):
+        value = os.environ.get(key)
+        if value:
+            return value
+    for key in ("agent_name", "subagent_name"):
+        value = payload.get(key)
+        if isinstance(value, str) and value:
+            return value
+    agent = payload.get("agent")
+    if isinstance(agent, str):
+        return agent
+    if isinstance(agent, dict):
+        for key in ("name", "type"):
+            value = agent.get(key)
+            if isinstance(value, str) and value:
+                return value
+    return ""
+
+
+def _touches_canon_path(raw: str, root: Path) -> bool:
+    if not raw:
+        return False
+    try:
+        p = Path(raw).expanduser()
+        if not p.is_absolute():
+            p = root / p
+        rel = p.resolve(strict=False).relative_to(root.resolve(strict=False))
+    except (ValueError, OSError):
+        return False
+    return rel.parts[:1] == (".project",) and any(
+        str(rel).startswith(d.replace(".project/", ".project/")) for d in CANON_DIRS
+    )
+
+
+def _raw_command_mentions_canon(command: str) -> bool:
+    return any(
+        d.replace(".project/", ".project/") in command
+        or f"./{d.replace('.project/', '.project/')}" in command
+        for d in CANON_DIRS
+    )
 
 
 def _touches_canon(payload: dict[str, Any], root: Path) -> bool:
     ti = payload.get("tool_input")
     if not isinstance(ti, dict):
         return False
+    if payload.get("tool_name") == "Bash":
+        command = ti.get("command") or ti.get("cmd") or ""
+        if not isinstance(command, str) or not command:
+            return False
+        try:
+            tokens = shlex.split(command)
+        except ValueError:
+            tokens = command.split()
+        has_mutation = any(t in BASH_MUTATION_MARKERS or t.startswith((">", ">>")) for t in tokens)
+        if not has_mutation:
+            return False
+        return _raw_command_mentions_canon(command) or any(_touches_canon_path(t, root) for t in tokens)
     raw = ti.get("file_path") or ti.get("path") or ""
     if not isinstance(raw, str) or not raw:
         return False
-    try:
-        p = Path(raw).expanduser().resolve()
-        rel = p.relative_to(root)
-    except (ValueError, OSError):
-        return False
-    return any(str(rel).startswith(d.replace(".project/", ".project/")) for d in CANON_DIRS) \
-        and rel.parts[:1] == (".project",)
+    return _touches_canon_path(raw, root)
 
 
 def run_guard() -> int:
+    raw_payload = sys.stdin.read()
+    delegated = _delegate_to_rust(["guard"], raw_payload)
+    if delegated is not None:
+        return delegated
     try:
-        payload = json.load(sys.stdin)
+        payload = json.loads(raw_payload)
     except (json.JSONDecodeError, ValueError):
         return 0
     if not isinstance(payload, dict):
@@ -603,6 +781,15 @@ def run_guard() -> int:
     root = project_dir(payload)
     if not _touches_canon(payload, root):
         return 0
+    owner = _canon_owner(root)
+    agent = _active_agent(payload)
+    if agent != owner:
+        print(
+            f"Canon owner approval missing — only canon owner '{owner}' may write "
+            f".project canon records (you are '{agent or 'unknown'}').",
+            file=sys.stderr,
+        )
+        return 2
     result = validate(root)
     if result["errors"]:
         msg = "Canon integrity violation(s) — fix before writing:\n" + \
@@ -615,6 +802,9 @@ def run_guard() -> int:
 # ---- CLI ------------------------------------------------------------------
 
 def run_check(argv: list[str]) -> int:
+    delegated = _delegate_to_rust(["check", *argv])
+    if delegated is not None:
+        return delegated
     parser = argparse.ArgumentParser(prog="canon_integrity.py check")
     parser.add_argument("--project-root", default=None)
     args = parser.parse_args(argv)
@@ -629,6 +819,9 @@ def run_check(argv: list[str]) -> int:
 
 
 def run_fold(argv: list[str]) -> int:
+    delegated = _delegate_to_rust(["fold", *argv])
+    if delegated is not None:
+        return delegated
     parser = argparse.ArgumentParser(prog="canon_integrity.py fold")
     parser.add_argument("--project-root", default=None)
     args = parser.parse_args(argv)

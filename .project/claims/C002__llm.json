@@ -3,7 +3,7 @@
  "claim": "온라인 생활세계 텍스트 13만여 건을 행정동 단위로 매칭하고 LLM으로 분류하면, 행정지표가 포착하지 못하는 지역 단위 디지털 신호가 확인되었다.",
  "status": "supported",
  "evidence": [
-  "N003"
+  "E003"
  ],
  "counter_evidence": [],
  "used_in": [
@@ -38,7 +38,7 @@
    "result": "지역 단위 디지털 신호가 확인됨",
    "threshold": "",
    "evidence": [
-    "N003"
+    "E003"
    ]
   },
   "finding": {

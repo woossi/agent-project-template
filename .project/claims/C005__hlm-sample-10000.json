@@ -3,7 +3,7 @@
  "claim": "본 분석의 개인 수준 모형은 서울서베이 2023–2024년 통합 표본 10,000명을 대상으로 한다.",
  "status": "verified",
  "evidence": [
-  "N002"
+  "E002"
  ],
  "counter_evidence": [],
  "used_in": [
@@ -13,7 +13,7 @@
  "verified_by": "stats-validator",
  "supersedes": null,
  "by": "orchestrator",
- "note": "orphan number에 claim 부여(ADR-005 그래프 완결). 문장은 sv 검증 수치의 보수적 해석. owner_team·qr 검토 전 잠정.",
+ "note": "orphan evidence에 claim 부여(ADR-005 그래프 완결). 문장은 sv 검증 수치의 보수적 해석. owner_team·qr 검토 전 잠정.",
  "ts_ns": 1782608443048000000,
  "clarity_checked": true,
  "role": "result",
@@ -40,7 +40,7 @@
    "result": "10,000명",
    "threshold": "",
    "evidence": [
-    "N002"
+    "E002"
    ]
   },
   "finding": {

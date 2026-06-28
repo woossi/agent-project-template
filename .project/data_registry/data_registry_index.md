@@ -1,6 +1,6 @@
-# data_registry index (derived view — do not hand-edit)
+# data_registry index (derived view - do not hand-edit)
 
-Regenerated from `.project/data_registry/*.json` by `canon_integrity.py fold`. The immutable JSON records are the canon. Back-references (cited_by) are computed, not stored.
+Regenerated from `.project/data_registry/*.json` by `canon-enforce fold`. The immutable JSON records are the canon. Back-references (cited_by) are computed, not stored.
 
 ## D001 [active]
 서울서베이 2023-2024 통합표본 10,000명(개인 수준 survey)

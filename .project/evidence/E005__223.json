@@ -1,9 +1,9 @@
 {
-  "number_id": "N009",
-  "value": "0.279",
-  "label": "종합 지수 최저(중랑구, 서울내 min-max)",
+  "evidence_id": "E005",
+  "value": "772",
+  "label": "223건에서 생성된 지역 가설 총수",
   "provenance": [
-    "P009"
+    "P005"
   ],
   "status": "active",
   "supersedes": null,

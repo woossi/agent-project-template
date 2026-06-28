@@ -3,8 +3,8 @@
  "claim": "정보차단 멀티에이전트 역행추론은 표적 3구의 게시글 223건에서 지역 가설 772개를 도출하였다.",
  "status": "supported",
  "evidence": [
-  "N004",
-  "N005"
+  "E004",
+  "E005"
  ],
  "counter_evidence": [],
  "used_in": [
@@ -14,7 +14,7 @@
  "verified_by": "stats-validator",
  "supersedes": null,
  "by": "orchestrator",
- "note": "orphan number에 claim 부여(ADR-005 그래프 완결). 문장은 sv 검증 수치의 보수적 해석. owner_team·qr 검토 전 잠정. || 한정: 223건 표본 식별자 미보존(정본 §9-4) — 확정 통계 단정 금지, 별도 한계 서술 동반.",
+ "note": "orphan evidence에 claim 부여(ADR-005 그래프 완결). 문장은 sv 검증 수치의 보수적 해석. owner_team·qr 검토 전 잠정. || 한정: 223건 표본 식별자 미보존(정본 §9-4) — 확정 통계 단정 금지, 별도 한계 서술 동반.",
  "ts_ns": 1782608443048000000,
  "clarity_checked": true,
  "role": "result",
@@ -40,8 +40,8 @@
    "threshold": "",
    "result": "지역 가설 772개",
    "evidence": [
-    "N004",
-    "N005"
+    "E004",
+    "E005"
    ]
   },
   "finding": {

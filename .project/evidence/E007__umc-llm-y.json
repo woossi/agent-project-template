@@ -1,9 +1,9 @@
 {
-  "number_id": "N006",
-  "value": "−9.303",
-  "label": "65세 이상 효과(모형4, SE 0.467)",
+  "evidence_id": "E007",
+  "value": "84.7%",
+  "label": "UMC 관련성 정밀도(LLM Y→인간 확인)",
   "provenance": [
-    "P006"
+    "P007"
   ],
   "status": "active",
   "supersedes": null,

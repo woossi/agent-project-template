@@ -1,9 +1,9 @@
 {
-  "number_id": "N002",
-  "value": "10,000명",
-  "label": "서울서베이 HLM 표본(2023–2024 통합)",
+  "evidence_id": "E003",
+  "value": "131,792",
+  "label": "행정동 매칭 성공 LLM 분류 표본",
   "provenance": [
-    "P002"
+    "P003"
   ],
   "status": "active",
   "supersedes": null,

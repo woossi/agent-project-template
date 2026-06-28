@@ -1,9 +1,9 @@
 {
-  "number_id": "N005",
-  "value": "772",
-  "label": "223건에서 생성된 지역 가설 총수",
+  "evidence_id": "E010",
+  "value": "+1.68",
+  "label": "중랑 연결품질 z_shift(★주정본, 차원내 표준화)",
   "provenance": [
-    "P005"
+    "P010"
   ],
   "status": "active",
   "supersedes": null,

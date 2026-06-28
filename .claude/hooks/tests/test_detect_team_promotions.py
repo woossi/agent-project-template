@@ -361,7 +361,7 @@ class CanonPromoteTests(_Case):
 
     def test_resolve_writes_decision_not_canon_record(self):
         # Resolving a canon_promote must land ONLY in the decisions dir — never in
-        # .project/{claims,numbers,provenance}. The F-D5 invariant in action.
+        # .project/{claims,evidence,provenance}. The F-D5 invariant in action.
         self.roster(["orchestrator"], [])
         import os
         os.environ["CLAUDE_AGENT_NAME"] = "orchestrator"
@@ -377,13 +377,13 @@ class CanonPromoteTests(_Case):
         self.assertEqual(len(decisions), 1)
         # NO canon record was authored
         self.assertFalse((self.root / ".project/claims").exists())
-        self.assertFalse((self.root / ".project/numbers").exists())
+        self.assertFalse((self.root / ".project/evidence").exists())
         self.assertFalse((self.root / ".project/provenance").exists())
 
     def test_assert_no_canon_authorship_refuses_canon_path(self):
         # The defensive backstop: writing into a canon dir must raise.
         with self.assertRaises(RuntimeError):
-            dtp._assert_no_canon_authorship(self.root, self.root / ".project/numbers/N999__x.json")
+            dtp._assert_no_canon_authorship(self.root, self.root / ".project/evidence/E999__x.json")
 
     def test_assert_no_canon_authorship_allows_decisions_path(self):
         # The normal target (decisions dir) must pass silently.

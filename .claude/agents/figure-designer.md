@@ -15,7 +15,7 @@ PaperBanana MCP 도구 패키지(`generate_diagram`, `generate_plot`, `continue_
 ## Inputs
 
 - `.claude/tasks/tasks.md`의 figure 작업 입력(무엇을·어떤 데이터로·어느 섹션용)과 검증 기준
-- 원고 맥락: `parts/`의 본문, data-curator의 `_data_registry.md`가 가리키는 데이터·분석 결과
+- 원고 맥락: `parts/`의 본문, `.project/data_registry/`·`.project/runs/`·`.project/evidence/`가 가리키는 데이터·분석 결과
 - 산출 규격: 저널(SSCR/SAGE) figure 요건(크기·해상도·흑백 가독성·캡션)
 
 ## Procedure

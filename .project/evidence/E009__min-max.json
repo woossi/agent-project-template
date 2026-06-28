@@ -1,9 +1,9 @@
 {
-  "number_id": "N010",
-  "value": "+1.68",
-  "label": "중랑 연결품질 z_shift(★주정본, 차원내 표준화)",
+  "evidence_id": "E009",
+  "value": "0.279",
+  "label": "종합 지수 최저(중랑구, 서울내 min-max)",
   "provenance": [
-    "P010"
+    "P009"
   ],
   "status": "active",
   "supersedes": null,

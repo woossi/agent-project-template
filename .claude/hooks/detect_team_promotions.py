@@ -96,15 +96,15 @@ MAX_SKILLS_PER_OCCURRENCE = 6
 # short-circuits) because team-tier sub-agents are not operated (3-tier arch §2-1).
 KINDS = ("team_skill", "team_agent", "project_skill", "new_worker", "rebalance", "canon_promote")
 # canon_promote (ADR §C / canon link type 8, F-D5): a CONTENT signal — "several workers
-# repeat the same number/claim" -> a candidate to promote into the .project canon graph.
+# repeat the same evidence/claim" -> a candidate to promote into the .project canon graph.
 # CRITICAL INVARIANT (F-D5): this kind is SIGNAL + DECISION only. `resolve` records a
-# promote/decline DECISION in the decisions dir; it NEVER writes a .project/{claims,numbers,
+# promote/decline DECISION in the decisions dir; it NEVER writes a .project/{claims,evidence,
 # provenance} record. The canon record is authored later as a SEPARATE owner Write action,
 # at which point canon_integrity.py's PreToolUse guard fires normally. Heuristic (this hook,
 # SessionStart, read-only) and the deterministic gate (canon_integrity, PreToolUse, exit 2)
 # thus never run in the same action -> the "auto-promote vs gated-promote" conflict cannot
 # arise. ``_assert_no_canon_authorship`` enforces the invariant defensively.
-CANON_DIRS = (".project/claims", ".project/numbers", ".project/provenance")
+CANON_DIRS = (".project/claims", ".project/evidence", ".project/provenance")
 ORCHESTRATOR = "orchestrator"  # inbox node name; never a worker (no private ledger)
 # Edge classes between two inbox endpoints, keyed on subteam membership.
 EDGE_INTRA, EDGE_INTER, EDGE_EXT, EDGE_ORCH = "INTRA", "INTER", "EXT", "ORCH"
@@ -660,7 +660,7 @@ def _team_occurrences(
 def canon_promote_candidates(
     tasks: list[dict[str, Any]], rules: dict[str, Any], decided: dict[str, Any]
 ) -> list[dict[str, Any]]:
-    """canon link type 8 (F-D5): surface "same number/claim signature recurs across
+    """canon link type 8 (F-D5): surface "same evidence/claim signature recurs across
     >=N workers" as a candidate to author into the .project canon graph.
 
     SIGNAL ONLY. Mirrors ``team_skill_candidates`` (distinct-AGENT signature recurrence)
@@ -788,7 +788,7 @@ def _assert_no_canon_authorship(team_root: Path, path: Path) -> None:
     """Enforce F-D5 invariant 1: this hook never writes a .project canon record.
 
     The promotion machinery may only write into ``promotions/{candidates,decisions}``.
-    A write that lands inside ``.project/{claims,numbers,provenance}`` would mean the
+    A write that lands inside ``.project/{claims,evidence,provenance}`` would mean the
     heuristic layer is auto-authoring a canon node — bypassing the owner's judgment (D4)
     and the canon_integrity gate. We refuse it loudly rather than silently. This is a
     defensive backstop: the resolve path only ever targets the decisions dir, so this
@@ -857,7 +857,7 @@ def evaluate(team_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
         )
 
     # canon_promote (F-D5): SIGNAL only. Reuse the distinct-AGENT signature-recurrence
-    # reader to surface "the same number/claim signature recurs across >=2 workers" as a
+    # reader to surface "the same evidence/claim signature recurs across >=2 workers" as a
     # candidate to author into the canon graph. This NEVER authors a record — it only
     # surfaces a candidate and (via resolve) records a decision. Disabled by default
     # (policy ``enable``) until slice 5 wires the signature->canon mapping.
