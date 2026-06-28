@@ -39,6 +39,10 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "lib"))
+from team_common.io import atomic_write_json  # noqa: E402
+from team_common.roster import TeamIndex  # noqa: E402
+
 CONSUMED_DIRNAME = ".consumed"
 CLAIMED_DIRNAME = ".claimed"
 ORCHESTRATOR = "orchestrator"  # virtual team mailbox for the company orchestrator
@@ -87,18 +91,7 @@ def _worker_at(root: Path, candidate: Path) -> str | None:
     """If ``candidate`` (a concrete Path) sits at/under teams/<team>/<worker> for a
     REAL member, return that worker; else None. Pure path logic, no resolution — the
     caller controls logical-vs-physical so symlink tricks can be detected."""
-    try:
-        rel = candidate.relative_to(root)
-    except ValueError:
-        return None
-    parts = rel.parts
-    if len(parts) < 3 or parts[0] != "teams":
-        return None
-    team, worker = parts[1], parts[2]
-    members = load_subteams(root).get(team)
-    if members is None or worker not in members:
-        return None
-    return worker
+    return TeamIndex.load(root).worker_at(candidate)
 
 
 def _identity_from_cwd(root: Path, cwd: Path | None = None):
@@ -196,10 +189,7 @@ def new_msgid(sender: str, *, clock=time.time_ns, rand=lambda: uuid.uuid4().hex[
 
 
 def _atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.parent / f".tmp-{uuid.uuid4().hex}"
-    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-    os.replace(tmp, path)  # atomic publish
+    atomic_write_json(path, payload, sort_keys=False, trailing_newline=False)
 
 
 def _team_json(root: Path) -> dict[str, Any]:
@@ -215,19 +205,12 @@ def _team_json(root: Path) -> dict[str, Any]:
 
 def load_subteams(root: Path) -> dict[str, list[str]]:
     """{team_name: [members]} from team.json (empty if no subteams field)."""
-    out: dict[str, list[str]] = {}
-    for st in _team_json(root).get("subteams") or []:
-        if isinstance(st, dict) and isinstance(st.get("name"), str):
-            out[st["name"]] = [m for m in (st.get("members") or []) if isinstance(m, str)]
-    return out
+    return TeamIndex.load(root).subteams
 
 
 def team_of(root: Path, agent: str) -> str | None:
     """The subteam an agent belongs to (each worker is in exactly one), or None."""
-    for name, members in load_subteams(root).items():
-        if agent in members:
-            return name
-    return None
+    return TeamIndex.load(root).worker_to_team.get(agent)
 
 
 def team_lead(root: Path, team: str) -> str | None:
@@ -235,11 +218,7 @@ def team_lead(root: Path, team: str) -> str | None:
 
     Reads the ``orchestrator`` key of the matching subteam entry in team.json.
     """
-    for st in _team_json(root).get("subteams") or []:
-        if isinstance(st, dict) and st.get("name") == team:
-            lead = st.get("orchestrator")
-            return lead if isinstance(lead, str) else None
-    return None
+    return TeamIndex.load(root).leads.get(team)
 
 
 def company_owner(root: Path) -> str | None:

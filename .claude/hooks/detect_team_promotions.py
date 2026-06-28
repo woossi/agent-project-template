@@ -34,22 +34,33 @@ Run modes: hook (stdin payload, SessionStart), ``evaluate`` (CLI inspect), and
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import re
 import sys
 import time
-import uuid
 from collections import Counter
 from itertools import combinations
 from pathlib import Path
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from team_common.candidate_store import (  # noqa: E402
+    canonical_team_runner,
+    decision_record_path,
+    load_decisions,
+    safe_segment,
+    write_team_shard,
+)
+from team_common.identity import identity_from_cwd  # noqa: E402
+from team_common.io import atomic_write_json  # noqa: E402
+from team_common.paths import find_team_root as _find_team_root  # noqa: E402
+from team_common.policy import governance_owner as _governance_owner  # noqa: E402
+from team_common.policy import load_policy as _load_policy  # noqa: E402
+from team_common.roster import TeamIndex, discover_worker_dirs  # noqa: E402
 from _hooklib import (  # noqa: E402
     load_jsonl,
-    merge as _merge,
     project_dir_simple as project_dir,
 )
 
@@ -110,91 +121,27 @@ def find_team_root(start: Path) -> Path | None:
     ``.project/`` exists is load-bearing: it stops the SessionStart hook from minting a
     fake ``.project/`` skeleton (and self-pollinating the search) in a non-team clone.
     """
-    cur = start.resolve()
-    for _ in range(10):
-        if (cur / ".project").is_dir():
-            return cur
-        if cur.parent == cur:
-            break
-        cur = cur.parent
-    return None
+    return _find_team_root(start)
 
 
 def load_policy(team_root: Path) -> dict[str, Any]:
-    policy_path = team_root / ".project/policies/team-promotion.json"
-    try:
-        raw = json.loads(policy_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        raw = {}
-    return _merge(DEFAULTS, raw)
+    return _load_policy(team_root / ".project/policies/team-promotion.json", DEFAULTS)
 
 
 def governance_owner(policy: dict[str, Any]) -> str:
-    gov = policy.get("governance")
-    if isinstance(gov, dict):
-        owner = gov.get("company_owner") or gov.get("authoring_owner")
-        if isinstance(owner, str) and owner.strip():
-            return owner.strip()
-    return ORCHESTRATOR
+    return _governance_owner(policy, "company_owner", "authoring_owner", default=ORCHESTRATOR)
 
 
 def _subteam_members(team_root: Path) -> dict[str, list[str]]:
-    try:
-        data = json.loads((team_root / ".project" / "team.json").read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
-    out: dict[str, list[str]] = {}
-    if isinstance(data, dict):
-        for st in data.get("subteams") or []:
-            if isinstance(st, dict) and isinstance(st.get("name"), str):
-                out[st["name"]] = [m for m in (st.get("members") or []) if isinstance(m, str)]
-    return out
+    return TeamIndex.load(team_root).subteams
 
 
 def _worker_at(team_root: Path, candidate: Path) -> str | None:
-    try:
-        rel = candidate.relative_to(team_root)
-    except ValueError:
-        return None
-    parts = rel.parts
-    if len(parts) < 3 or parts[0] != "teams":
-        return None
-    team, worker = parts[1], parts[2]
-    return worker if worker in _subteam_members(team_root).get(team, []) else None
+    return TeamIndex.load(team_root).worker_at(candidate)
 
 
 def _identity_from_cwd(team_root: Path) -> str | None:
-    pwd_env = os.environ.get("PWD")
-    logical_raw = Path(pwd_env) if pwd_env else Path.cwd()
-    physical_raw = Path.cwd()
-    logical_raw = logical_raw if logical_raw.is_absolute() else (team_root / logical_raw)
-    physical_raw = physical_raw if physical_raw.is_absolute() else (team_root / physical_raw)
-    logical = Path(os.path.normpath(str(logical_raw)))
-    physical = physical_raw.resolve()
-    root_res = team_root.resolve()
-
-    inside = False
-    for base in (team_root, root_res):
-        try:
-            rel = logical.relative_to(base)
-            if rel.parts and rel.parts[0] == "teams":
-                inside = True
-                break
-        except ValueError:
-            continue
-    if not inside:
-        try:
-            rel = physical.relative_to(root_res)
-            inside = bool(rel.parts) and rel.parts[0] == "teams"
-        except ValueError:
-            inside = False
-    if not inside:
-        return None
-    log_w = _worker_at(team_root, logical) or _worker_at(root_res, logical)
-    phys_w = _worker_at(root_res, physical) or _worker_at(team_root, physical)
-    if log_w and phys_w and log_w == phys_w:
-        return log_w
-    return "__cwd_failclosed__"
+    return identity_from_cwd(team_root)
 
 
 def resolve_actor(team_root: Path, explicit: str | None) -> str:
@@ -253,21 +200,7 @@ def worker_dirs(team_root: Path) -> dict[str, Path]:
 
     Worker names are globally unique, so name is a safe key. See _is_worker_dir for the
     identification rule (ledger-bearing folder)."""
-    found: dict[str, Path] = {}
-    teams_dir = team_root / "teams"
-    if teams_dir.is_dir():
-        for team in sorted(teams_dir.iterdir(), key=lambda p: p.name):
-            if not team.is_dir() or team.name.startswith("."):
-                continue
-            for child in sorted(team.iterdir(), key=lambda p: p.name):
-                if _is_worker_dir(child):
-                    found.setdefault(child.name, child)
-    agents_dir = team_root / "agents"
-    if agents_dir.is_dir():
-        for child in sorted(agents_dir.iterdir(), key=lambda p: p.name):
-            if _is_worker_dir(child):
-                found.setdefault(child.name, child)
-    return found
+    return discover_worker_dirs(team_root, _is_worker_dir)
 
 
 def list_agents(team_root: Path) -> list[str]:
@@ -300,24 +233,7 @@ def team_of(team_root: Path) -> dict[str, str]:
     membership. Workers absent from any ``subteams[].members`` (e.g. ``orchestrator``,
     a removed worker) get no mapping and fall to ORCH/EXT in ``classify_edge``.
     """
-    data: Any = None
-    for cand in (team_root / ".project" / "team.json", team_root / "team.json"):
-        try:
-            data = json.loads(cand.read_text(encoding="utf-8"))
-            break
-        except (OSError, json.JSONDecodeError):
-            data = None
-    if not isinstance(data, dict):
-        return {}
-    mapping: dict[str, str] = {}
-    for sub in data.get("subteams") or []:
-        if not isinstance(sub, dict):
-            continue
-        tname = str(sub.get("name") or "").strip()
-        for member in sub.get("members") or []:
-            if isinstance(member, str) and member.strip():
-                mapping.setdefault(member.strip(), tname)  # a worker belongs to exactly one team
-    return mapping
+    return TeamIndex.load(team_root).worker_to_team
 
 
 def is_team_name(name: str, team_map: dict[str, str]) -> bool:
@@ -836,8 +752,7 @@ def team_agent_candidates(
 # ---------------- decisions (per-record immutable, folded) ----------------
 
 def _safe(text: str) -> str:
-    slug = re.sub(r"[^0-9a-zA-Z가-힣._-]+", "_", text).strip("_")
-    return (slug or "x")[:120]
+    return safe_segment(text)
 
 
 def _roster_members(team_root: Path) -> set[str]:
@@ -847,15 +762,7 @@ def _roster_members(team_root: Path) -> set[str]:
     "cannot validate" and fall back to fail-open so a missing roster never blocks
     legitimate work (the guard only fires when the roster IS readable).
     """
-    try:
-        data = json.loads((team_root / ".project" / "team.json").read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return set()
-    members = data.get("members") if isinstance(data, dict) else None
-    roster = {m for m in (members or []) if isinstance(m, str)}
-    # The company-wide coordinator is a legitimate identity that is not in the
-    # subteam member list but owns its own inbox; always treat it as registered.
-    return roster | {"orchestrator"}
+    return TeamIndex.load(team_root).registered_members("orchestrator")
 
 
 def _validated_runner(team_root: Path, runner: str) -> str:
@@ -866,30 +773,15 @@ def _validated_runner(team_root: Path, runner: str) -> str:
     signal under every ``CLAUDE_AGENT_NAME`` while preserving the per-record decision
     files that close candidates.
     """
-    return "team"
+    return canonical_team_runner(team_root, runner)
 
 
 def load_team_decisions(decisions_dir: Path) -> dict[str, dict[str, Any]]:
-    out: dict[str, dict[str, Any]] = {kind: {} for kind in KINDS}
-    if not decisions_dir.is_dir():
-        return out
-    for path in sorted(decisions_dir.glob("*.json")):
-        try:
-            rec = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            continue
-        kind = rec.get("kind")
-        key = rec.get("key")
-        if kind in out and isinstance(key, str) and key:
-            out[kind][key] = rec
-    return out
+    return load_decisions(decisions_dir, KINDS)
 
 
 def _atomic_write_json(path: Path, payload: Any) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.parent / f".tmp-{uuid.uuid4().hex}"
-    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    os.replace(tmp, path)
+    atomic_write_json(path, payload)
 
 
 def _assert_no_canon_authorship(team_root: Path, path: Path) -> None:
@@ -983,10 +875,7 @@ def evaluate(team_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
 
 
 def write_candidates_shard(team_root: Path, policy: dict[str, Any], candidates: dict[str, Any], runner: str) -> Path:
-    runner = _validated_runner(team_root, runner)
-    path = team_root / policy["log"]["candidates_dir"] / f"{_safe(runner)}.json"
-    _atomic_write_json(path, candidates)
-    return path
+    return write_team_shard(team_root, policy["log"]["candidates_dir"], candidates, runner)
 
 
 def format_surface(candidates: dict[str, Any], governance: dict[str, Any]) -> str:
@@ -1128,9 +1017,7 @@ def run_resolve(argv: list[str]) -> int:
     # Filename must be unique per EXACT (kind, key). _safe() is many-to-one, so a
     # short hash of the exact key prevents distinct keys (e.g. "a+b+c" vs "a_b+c")
     # from colliding to one file and silently overwriting each other's decision.
-    digest = hashlib.sha1(args.key.encode("utf-8")).hexdigest()[:8]
-    filename = f"{args.kind}__{_safe(args.key)}__{digest}.json"
-    path = team_root / policy["log"]["decisions_dir"] / filename
+    path = decision_record_path(team_root / policy["log"]["decisions_dir"], args.kind, args.key)
     # F-D5 invariant: a promotion decision is metadata only. Refuse if the target path
     # were ever (mis)configured to land in the canon graph — promote must not auto-author.
     _assert_no_canon_authorship(team_root, path)

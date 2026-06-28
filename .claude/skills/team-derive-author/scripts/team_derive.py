@@ -24,9 +24,13 @@ import os
 import re
 import sys
 import time
-import uuid
 from pathlib import Path
 from typing import Any
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "lib"))
+from team_common.identity import identity_from_cwd  # noqa: E402
+from team_common.io import atomic_write_text  # noqa: E402
+from team_common.roster import TeamIndex  # noqa: E402
 
 TERM_FIELDS = ("term", "ko", "definition", "use_when")
 
@@ -50,66 +54,18 @@ def _repo_root_for_store(store: Path) -> Path | None:
 
 
 def _load_subteams(root: Path) -> dict[str, list[str]]:
-    try:
-        data = json.loads((root / ".project" / "team.json").read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
-    out: dict[str, list[str]] = {}
-    if isinstance(data, dict):
-        for st in data.get("subteams") or []:
-            if isinstance(st, dict) and isinstance(st.get("name"), str):
-                out[st["name"]] = [m for m in (st.get("members") or []) if isinstance(m, str)]
-    return out
+    return TeamIndex.load(root).subteams
 
 
 CWD_FAILCLOSED = "__cwd_failclosed__"
 
 
 def _worker_at(root: Path, candidate: Path) -> str | None:
-    try:
-        rel = candidate.relative_to(root)
-    except ValueError:
-        return None
-    parts = rel.parts
-    if len(parts) < 3 or parts[0] != "teams":
-        return None
-    team, worker = parts[1], parts[2]
-    return worker if worker in _load_subteams(root).get(team, []) else None
+    return TeamIndex.load(root).worker_at(candidate)
 
 
 def _identity_from_cwd(root: Path) -> str | None:
-    pwd_env = os.environ.get("PWD")
-    log_raw = Path(pwd_env) if pwd_env else Path.cwd()
-    phys_raw = Path.cwd()
-    log_raw = log_raw if log_raw.is_absolute() else (root / log_raw)
-    phys_raw = phys_raw if phys_raw.is_absolute() else (root / phys_raw)
-    logical = Path(os.path.normpath(str(log_raw)))
-    physical = phys_raw.resolve()
-    root_res = root.resolve()
-
-    inside = False
-    for base in (root, root_res):
-        try:
-            rel = logical.relative_to(base)
-            if rel.parts and rel.parts[0] == "teams":
-                inside = True
-                break
-        except ValueError:
-            continue
-    if not inside:
-        try:
-            rel = physical.relative_to(root_res)
-            inside = bool(rel.parts) and rel.parts[0] == "teams"
-        except ValueError:
-            inside = False
-    if not inside:
-        return None
-
-    log_w = _worker_at(root, logical) or _worker_at(root_res, logical)
-    phys_w = _worker_at(root_res, physical) or _worker_at(root, physical)
-    if log_w and phys_w and log_w == phys_w:
-        return log_w
-    return CWD_FAILCLOSED
+    return identity_from_cwd(root, failclosed=CWD_FAILCLOSED)
 
 
 def resolve_identity(explicit: str | None, root: Path | None = None) -> str:
@@ -146,10 +102,7 @@ def _require_owner(store: Path, by: str) -> None:
 
 
 def _atomic_write(path: Path, text: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.parent / f".tmp-{uuid.uuid4().hex}"
-    tmp.write_text(text, encoding="utf-8")
-    os.replace(tmp, path)
+    atomic_write_text(path, text)
 
 
 def _load_word(store: Path) -> dict[str, Any]:
