@@ -40,7 +40,7 @@
 | 6 | 분석 수준 | C | MW | SV | write-lead | claim.components.scope.level | 🔲S3 | PROP-j |
 | 7 | 대상 범위 | C | MW | QR | write-lead | claim.components.scope.population | 🔲S3 | PROP-j |
 | 8 | 제외 범위 | C | DC(표본 제한) | SV | data-lead | claim.components.scope.exclusion ↔ provenance.source_data(D) | 🔲S3·S6 | PROP-j |
-| 9 | 자료 출처 〔+ Ev.source_name + N.산출 자료〕 | C+Ev+N | DC(레지스트리) | SV | data-lead | provenance.source_data(→D 레지스트리) | 🔲S6 (현 placeholder D001) | PROP-j |
+| 9 | 자료 출처 〔+ Ev.source_name + N.산출 자료〕 | C+Ev+N | DC(레지스트리) | SV | data-lead | provenance.source_data(→D 레지스트리) | ✅구현(D001/D002/D003 실연결) | PROP-j |
 | 10 | 자료 시점 〔+ Ev.source_year + Ev.target_period + N.산출 연도〕 | C+Ev+N | DC | SV | data-lead | provenance.source_data.period(신설) | 🔲S6 | PROP-j |
 | 11 | 공간 단위 | C | DC | SV | data-lead | claim.components.scope.spatial_unit ↔ provenance | 🔲S3·S6 | PROP-j |
 | 12 | 측정 문항 | C | DC | SV | data-lead | provenance.script_or_process(측정 절차) | ✅구현(슬롯 존재) | PROP-j |

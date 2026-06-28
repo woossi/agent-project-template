@@ -4,13 +4,13 @@
   "value": "ICC = 0.49% (무조건 모형 자치구간 분산 비중)",
   "source_data": "D001",
   "script_or_process": "HLM 무조건 모형(unconditional/null model) — 자치구간 분산 / (자치구간 분산 + 개인내 분산)",
-  "run_id": "RUN-UNSPECIFIED",
+  "run_id": "RUN001",
   "related_claims": ["C001"],
   "manuscript_location": "results:6·47·51·131, tables_main:163(주), ch4:12·32",
   "checked_by": "stats-validator",
   "status": "active",
   "manifest_ref": "research/UMC/project_manifest.json",
-  "note": "슬라이스 0 시범 레코드. source_data·run_id는 plausible placeholder(D001 data_registry·RUN registry는 미신설) — 실제 연결은 후속 슬라이스에서. value/manuscript_location/checked_by는 numeric-canon-B.md:88·232에서 검증된 정본.",
+  "note": "슬라이스 0 시범 레코드. source_data는 D001, run_id는 RUN001에 연결됨. value/manuscript_location/checked_by는 numeric-canon-B.md:88·232에서 검증된 정본.",
   "by": "orchestrator",
   "ts_ns": 1782608443048000000
 }

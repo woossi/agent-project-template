@@ -6,7 +6,7 @@
  "area": "서울특별시 25개 자치구",
  "manifest_ref": "research/UMC/project_manifest.json",
  "status": "active",
- "note": "연도별 5,000명/년을 통합한 15세 이상 개인 수준 표본. 현재 P001/P001b/P002/P003/P004/P005/P006/P007/P008/P009/P010 11개 provenance가 모두 source_data로 D001을 가리키므로, 이 레코드 신설이 canon_integrity의 unwired source_data 경고 11건을 해소한다. HLM 계열(P001 ICC·P001b 모형1·P002 표본정의·P006 모형4)의 직접 자료원으로 확인된다. 텍스트(D002)·지수 행정자료(D003)가 실제 자료원인 provenance는 후속 슬라이스에서 D002/D003으로 재지정될 수 있다. value는 numbers N002(10,000명)·numeric-canon-B 정본과 관련된다.",
+ "note": "연도별 5,000명/년을 통합한 15세 이상 개인 수준 표본. HLM 계열(P001 ICC·P001b 모형1·P002 표본정의·P006 모형4)의 직접 자료원으로 확인된다. value는 numbers N002(10,000명)·numeric-canon-B 정본과 관련된다.",
  "by": "orchestrator",
  "ts_ns": 1782614400000000000
 }

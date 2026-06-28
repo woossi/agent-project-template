@@ -22,8 +22,8 @@ Five signals (the boundary axis = subteam membership from ``.project/team.json``
 How it stays conflict-free and non-invasive (inherited, all verified):
 - **Read-only.** Reads the inbox and every worker's private ledger read-only; never
   writes a worker ledger. The per-worker loop (``detect_promotions.py``) is untouched (R2).
-- **Per-record immutable store.** Candidates -> per-runner shard
-  (``.project/promotions/candidates/<runner>.json``); decisions -> one immutable file per
+- **Per-record immutable store.** Candidates -> one shared shard
+  (``.project/promotions/candidates/team.json``); decisions -> one immutable file per
   ``(kind, key)`` via atomic ``os.replace`` — never a shared JSON array edited by N writers.
 - **Tier-scoped sync-back.** ``skip_if_skill_exists`` scans ``teams/<team>/.claude/skills``
   (team) / ``.project/skills`` (project), so a promoted asset is skipped at its own tier.
@@ -859,19 +859,13 @@ def _roster_members(team_root: Path) -> set[str]:
 
 
 def _validated_runner(team_root: Path, runner: str) -> str:
-    """Fold an unregistered identity into the shared ``team`` bucket.
+    """Fold every runner into the canonical team-tier candidate shard.
 
-    A typo in ``CLAUDE_AGENT_NAME`` (e.g. ``paper-socut``) used to mint a ghost
-    candidate shard alongside the real worker's. Validating against the roster
-    folds such typos into ``team`` so no per-runner ghost file is created while the
-    signal is still counted. The ``team`` fallback itself is always allowed; an
-    empty/unreadable roster also passes through (fail-open, no roster = no guard).
+    Team/project promotion signals are derived from shared inbox topology, not private
+    worker state. Keeping one ``team.json`` shard avoids duplicating the same global
+    signal under every ``CLAUDE_AGENT_NAME`` while preserving the per-record decision
+    files that close candidates.
     """
-    if runner == "team":
-        return runner
-    roster = _roster_members(team_root)
-    if not roster or runner in roster:
-        return runner
     return "team"
 
 

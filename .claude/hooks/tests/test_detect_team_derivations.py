@@ -139,6 +139,25 @@ class DecisionTests(_Case):
 
 
 class RecordAndSafetyTests(_Case):
+    def test_candidate_written_to_shared_team_bucket(self):
+        self.signals("worker-1", [{"kind": "term", "key": "LISA"}])
+        self.signals("worker-2", [{"kind": "term", "key": "LISA"}])
+        policy = dtd.load_policy(self.root)
+        path = dtd.write_candidates_shard(self.root, policy, self.evaluate(), "worker-1")
+        self.assertEqual(path, self.root / ".project/derivations/candidates/team.json")
+        self.assertTrue(path.exists())
+        self.assertFalse((self.root / ".project/derivations/candidates/worker-1.json").exists())
+        data = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(len(data["term"]), 1)
+
+    def test_orchestrator_uses_shared_team_bucket(self):
+        self.signals("worker-1", [{"kind": "term", "key": "LISA"}])
+        self.signals("worker-2", [{"kind": "term", "key": "LISA"}])
+        policy = dtd.load_policy(self.root)
+        path = dtd.write_candidates_shard(self.root, policy, self.evaluate(), "orchestrator")
+        self.assertEqual(path, self.root / ".project/derivations/candidates/team.json")
+        self.assertFalse((self.root / ".project/derivations/candidates/orchestrator.json").exists())
+
     def test_record_team_signal_writes_to_agent_context(self):
         adir = self.root / "agents/worker-1"
         adir.mkdir(parents=True)

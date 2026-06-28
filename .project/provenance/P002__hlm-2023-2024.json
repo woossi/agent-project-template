@@ -4,13 +4,13 @@
   "value": "서울서베이 2023–2024 통합 파일, 15세 이상",
   "source_data": "D001",
   "script_or_process": "서울서베이 연도별 5,000명/년 통합",
-  "run_id": "RUN-UNSPECIFIED",
+  "run_id": "RUN002",
   "related_claims": [],
   "manuscript_location": "results:49, tables_main:96·104·105, model:127",
   "checked_by": "stats-validator",
   "status": "active",
   "manifest_ref": "research/UMC/project_manifest.json",
-  "note": "numeric-canon-B.md 정본 채취(sv 표류 0건 §232). source_data·run_id placeholder.",
+  "note": "numeric-canon-B.md 정본 채취(sv 표류 0건 §232). source_data=D001, run_id=RUN002.",
   "by": "orchestrator",
   "ts_ns": 1782608443048000000
 }

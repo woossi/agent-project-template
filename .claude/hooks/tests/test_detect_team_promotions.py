@@ -212,12 +212,13 @@ class RootAndShardTests(_Case):
     def test_find_team_root_from_self(self):
         self.assertEqual(dtp.find_team_root(self.root), self.root.resolve())
 
-    def test_shard_written_per_runner(self):
+    def test_candidate_written_to_shared_team_bucket(self):
         seed_intra_team_skill(self)
         policy = dtp.load_policy(self.root)
         dtp.write_candidates_shard(self.root, policy, self.evaluate(), "worker-1")
-        shard = self.root / ".project/promotions/candidates/worker-1.json"
+        shard = self.root / ".project/promotions/candidates/team.json"
         self.assertTrue(shard.exists())
+        self.assertFalse((self.root / ".project/promotions/candidates/worker-1.json").exists())
         data = json.loads(shard.read_text(encoding="utf-8"))
         self.assertEqual(len(data["team_skill"]), 1)
 
@@ -230,18 +231,19 @@ class RootAndShardTests(_Case):
         self.assertFalse((cand_dir / "worker-socut.json").exists())  # no ghost
         self.assertEqual(path, cand_dir / "team.json")  # folded into shared bucket
 
-    def test_orchestrator_is_a_valid_runner(self):
-        """The company coordinator is registered even though it is not a subteam member."""
+    def test_orchestrator_uses_shared_team_bucket(self):
+        """Team-tier signals are global, so even the company coordinator writes one shard."""
         seed_intra_team_skill(self)
         policy = dtp.load_policy(self.root)
         path = dtp.write_candidates_shard(self.root, policy, self.evaluate(), "orchestrator")
-        self.assertEqual(path, self.root / ".project/promotions/candidates/orchestrator.json")
+        self.assertEqual(path, self.root / ".project/promotions/candidates/team.json")
+        self.assertFalse((self.root / ".project/promotions/candidates/orchestrator.json").exists())
 
     def test_empty_roster_is_fail_open(self):
-        """An unreadable/empty roster must not block a legitimate runner (no guard)."""
+        """An unreadable/empty roster still writes the canonical shared bucket."""
         # no roster() call -> no team.json members
         (self.root / ".project").mkdir(parents=True, exist_ok=True)
-        self.assertEqual(dtp._validated_runner(self.root, "anyone"), "anyone")
+        self.assertEqual(dtp._validated_runner(self.root, "anyone"), "team")
 
 
 class CliTests(_Case):

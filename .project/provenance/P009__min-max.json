@@ -2,15 +2,15 @@
   "artifact_id": "P009",
   "artifact_type": "index_result",
   "value": "중랑구 UMC 종합 지수 0.279 (25구 최저), 서초 0.695 최고",
-  "source_data": "D001",
+  "source_data": "D003",
   "script_or_process": "UMC 종합 지수 산출(within-Seoul min-max)",
-  "run_id": "RUN-UNSPECIFIED",
+  "run_id": "RUN005",
   "related_claims": [],
   "manuscript_location": "results:11·13·42",
   "checked_by": "stats-validator",
   "status": "active",
   "manifest_ref": "research/UMC/project_manifest.json",
-  "note": "numeric-canon-B.md 정본 채취(sv 표류 0건 §232). source_data·run_id placeholder.",
+  "note": "numeric-canon-B.md 정본 채취(sv 표류 0건 §232). source_data=D003, run_id=RUN005.",
   "by": "orchestrator",
   "ts_ns": 1782608443048000000
 }

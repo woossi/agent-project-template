@@ -19,7 +19,7 @@ Three signal sources, read-only across ``agents/*``:
   from a single agent — mirroring the per-agent ``Derive:`` short-circuit.
 
 Conflict-safe team store, inherited from the reviewed team-promotion detector:
-per-runner candidate shard + one immutable decision file per ``(kind, key)`` (the
+one shared candidate shard + one immutable decision file per ``(kind, key)`` (the
 filename carries a hash of the exact key so distinct keys never collide), all via
 atomic ``os.replace``. ``find_team_root`` returns ``None`` outside a team checkout so
 the SessionStart hook never mints a fake ``.project/`` skeleton.
@@ -382,17 +382,12 @@ def _roster_members(team_root: Path) -> set[str]:
 
 
 def _validated_runner(team_root: Path, runner: str) -> str:
-    """Fold an unregistered identity (e.g. a CLAUDE_AGENT_NAME typo) into ``team``.
+    """Fold every runner into the canonical team-tier candidate shard.
 
-    Prevents ghost candidate shards like ``paper-socut.json`` from being minted
-    next to the real worker's. Fail-open: ``team`` and an empty/unreadable roster
-    pass through unchanged so a missing roster never blocks legitimate work.
+    Team derivation candidates aggregate shared signals across workers; they do not
+    belong to the hook runner that happened to surface them. One ``team.json`` shard
+    avoids empty or duplicate per-runner files while decisions remain per ``(kind,key)``.
     """
-    if runner == "team":
-        return runner
-    roster = _roster_members(team_root)
-    if not roster or runner in roster:
-        return runner
     return "team"
 
 
