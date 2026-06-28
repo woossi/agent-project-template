@@ -1,0 +1,12 @@
+{
+ "run_id": "RUN005",
+ "label": "UMC 종합지수 산출 및 차원내 표준화(z_shift)",
+ "script_or_process": "EB 수축 후 서울내 min-max 정규화로 UMC 종합지수를 산출하고 차원내 표준화로 z_shift를 계산",
+ "inputs": [
+  "D003"
+ ],
+ "status": "active",
+ "note": "P009(중랑구 종합지수 0.279 최저, 서초 0.695 최고)·P010(중랑 연결품질 z_shift +1.68, all_weighted=1.6783)의 실행으로 확인된다. 1.69 폐기·1.73 평균맥락은 각주로 관련된다. 해당 provenance의 'RUN-UNSPECIFIED' placeholder를 실연결하는 대상이다(재지정은 후속 슬라이스).",
+ "by": "orchestrator",
+ "ts_ns": 1782614400000000000
+}

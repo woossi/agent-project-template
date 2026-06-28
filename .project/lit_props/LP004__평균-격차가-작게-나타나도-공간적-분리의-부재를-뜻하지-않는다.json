@@ -1,0 +1,12 @@
+{
+ "lit_prop_id": "LP004",
+ "proposition": "평균 격차가 작게 나타나도 공간적 분리의 부재를 뜻하지 않는다.",
+ "bibkey": "ellen2016",
+ "role": "empirical",
+ "locator": "ch4:38",
+ "manuscript_location": "ch4:38",
+ "argument_step": 6,
+ "status": "core",
+ "by": "orchestrator",
+ "ts_ns": 1782614400000000000
+}

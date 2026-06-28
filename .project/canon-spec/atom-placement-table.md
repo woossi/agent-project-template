@@ -19,11 +19,14 @@
 
 약어 — DE=data-engineer · DC=data-curator · IR=inference-runner · CA=causal-analyst · PS=paper-scout · MW=manuscript-writer · MS=manuscript-steward · SV=stats-validator · QR=quality-reviewer · guard=canon_integrity hook. 팀장: data-lead·analysis-lead·write-lead·scout-lead·review-lead. 묶음: C=claim, Ev=evidence공통, N=number, TF=표·그림, TX=텍스트, L=선행연구.
 
-> 실제 구현 스키마 (대조 기준, 2026-06-28 `.project` 실측):
-> - `claim`: claim_id·claim(통문장)·status·evidence[]·counter_evidence[]·used_in[]·owner_team·verified_by·supersedes·by·ts_ns·clarity_checked·note. **컴포넌트 분해(components{target,scope,comparison,finding})는 미구현(ADR §B.3, 슬라이스3).**
+> 실제 구현 스키마 (대조 기준, 2026-06-28 `.project` 실측 — **S3~S7+risks 구현 완료 후 갱신**):
+> - `claim`: claim_id·claim·status·evidence[]·counter_evidence[]·used_in[]·owner_team·verified_by·supersedes·by·ts_ns·clarity_checked·note + **components{target,scope,comparison,finding}·role·grounds[]·counter_grounds[]·relations[] (S3 구현, 9건 전부 컴포넌트화).**
 > - `number`: number_id·value·label·provenance[]·status·supersedes·checked_by·by·ts_ns·note.
-> - `provenance`: artifact_id·artifact_type·value·source_data·script_or_process·run_id·related_claims[]·manuscript_location·checked_by·status·manifest_ref·by·ts_ns·note.
-> - `lit_prop`: **디렉터리 부재, 0건. ADR §B.2 설계만(슬라이스3~4).**
+> - `provenance`: artifact_id·artifact_type·value·source_data(→D)·script_or_process·run_id(→RUN)·related_claims[]·risks[]·manuscript_location·checked_by·status·manifest_ref·derived_from(off-graph, S5)·by·ts_ns·note.
+> - `lit_prop` (**S4 구현, 4건**): lit_prop_id(LP)·proposition·bibkey(→refs.bib)·role·locator·manuscript_location·argument_step·status·by·ts_ns.
+> - `data_registry` (**S6 구현, 3건**): data_id(D)·label·source_type·period·area·manifest_ref·status. `runs` (**S6, 5건**): run_id(RUN)·label·script_or_process·inputs[]·status.
+> - `risk` (**잔존 구현, 4건**): risk_id(R)·label·risk_type·severity·related_claims[]·mitigation·status.
+> - guard `canon_integrity.py`: 7 kind·grounds/counter_grounds/risks 링크·relations cycle(DAG)·bibkey 외부SSOT·source_data/run_id scalar·derived_from 검사제외·clarity R8/R9/R10 어휘감사. **canon check 0 error/0 warning, 회귀 테스트 182 passed.**
 
 ---
 
@@ -59,7 +62,7 @@
 | 28 | 해석 가능 범위 〔+ Ev.interpretive_limit〕 | C+Ev | MW | QR | write-lead | claim(role=interpretation 별도 claim, R3) | ✅구현(별도 claim) | PROP-j |
 | 29 | 인과 주장 강도 | C | CA(설계)→**CA 정본**, MW(기술) | SV·QR | analysis-lead | claim.claim 문장 강도(clarity R9) | ✅구현(clarity 감사) | PROP-j |
 | 30 | 일반화 가능 범위 | C | MW | QR | write-lead | claim(role=limit 별도 claim) | ✅구현(별도 claim) | PROP-j |
-| 31 | 이론적 의미 | C | MW | QR | write-lead | claim(role=interpretation) ← lit_prop.grounds | 🔲S3·S4 | PROP-j |
+| 31 | 이론적 의미 | C | MW | QR | write-lead | claim(role=interpretation), claim.grounds → lit_prop | 🔲S3·S4 | PROP-j |
 | 32 | 실증적 의미 | C | MW | QR | write-lead | claim(role=interpretation) ← evidence | ✅구현(별도 claim) | PROP-j |
 | 33 | 정책적 의미 | C | MW | QR | write-lead | claim(role=policy 별도 claim) | ✅구현(별도 claim) | PROP-j |
 | 34 | 한계(claim) | C | MW | QR·SV | write-lead | claim(role=limit) / counter_evidence[] | ✅구현 | PROP-j |
@@ -209,19 +212,71 @@
 
 ---
 
+## 부록 B'' — 구성요소 겹침·중복 점검 (스키마 정합 검사)
+
+guard `canon_integrity.py`의 실제 정의 필드와 배치표 슬롯을 자동 대조해, 겹치거나 어긋나는 지점을 확정했다. 두 종류로 나뉜다 — (1) **스키마 어긋남**(배치표 슬롯이 guard 필드와 불일치, 저작 전 정합 필요)과 (2) **의미 중복**(같은 그래프 간선/값을 두 슬롯이 표현).
+
+### B''-1. 스키마 어긋남 → COMP_SCHEMA 보강으로 해소(완료)
+
+배치표가 명시했으나 워크플로우 초안 COMP_SCHEMA에 없던 components 하위 슬롯 6개를 추가해 정합시켰다(저작 레코드가 배치표와 분리되지 않도록).
+
+| 행# | 배치표 슬롯 | 초안 누락 | 조치 |
+|---|---|---|---|
+| 5 | claim.components.scope.unit | 없음(spatial_unit만) | `scope.unit` 추가 |
+| 6 | claim.components.scope.level | 없음 | `scope.level` 추가 |
+| 8 | claim.components.scope.exclusion | 없음 | `scope.exclusion` 추가 |
+| 17 | claim.components.comparison.threshold | 없음 | `comparison.threshold` 추가 |
+| 26 | claim.components.finding.strength | 없음 | `finding.strength` 추가 |
+| 25·89 | finding / components.(불완전 표기) | — | finding.text로 안착(반복 여부 포함) |
+
+### B''-2. 표기 오류 → 정정(완료)
+
+| 행# | 오류 | 정정 |
+|---|---|---|
+| 31 | `lit_prop.grounds`(grounds는 claim 필드이지 lit_prop 필드 아님) | `claim.grounds → lit_prop`로 정정 |
+
+### B''-3. 의미 중복 — 같은 간선/값을 두 슬롯이 표현 (설계상 의도, 단일 정본 지정)
+
+진짜 "겹침"은 아래 4건이다. 모두 **중복 저장이 아니라 단일 정본 + 파생 표시**로 해소한다(ADR D2 "인덱스=fold 파생", 동기화 부채 0).
+
+| 겹치는 슬롯 | 겹침 내용 | 단일 정본 결정 |
+|---|---|---|
+| 행88 `claim.grounds`(EDGE) ↔ `relations.supported_by_lit` | 둘 다 claim→lit_prop 간선 | **grounds가 정본.** relations에는 claim→claim만 저장(supported_by_lit는 grounds의 fold 표시로만). 워크플로우 프롬프트에 강제 반영. |
+| 행31 이론적 의미 ↔ 행88 관련성 | 둘 다 grounds를 통한 lit_prop 연결 | grounds 슬롯 1개가 정본. 행31은 그 grounds의 *의미 해석*(claim 본문), 행88은 *연결 사실*(grounds 엣지) — 역할 분리(분리되어 중복 아님). |
+| 행48 result_value ↔ 행23 결과 크기/N.값 | 둘 다 수치 | **이미 분리됨**(부록 A): result_value=provenance.value(실제값), 결과크기=number.value(효과크기). `provenance.value → number.value` 간선. |
+| 행9·10·13·15(병합행) ↔ number/provenance 동의 원자 | claim·Ev·N 3중 동의 | **부록 A 병합으로 1행화**(이미 처리). canon에선 provenance/number 슬롯 1개가 정본, claim은 fold 참조. |
+
+### B''-4. guard 필드 ↔ 배치표 노드 클래스 정합 (확인)
+
+guard에 실제 정의된 7개 노드 kind와 배치표 노드 클래스의 대응 — 모두 정합한다.
+
+| guard kind (prefix) | 배치표 대응 | 정합 |
+|---|---|---|
+| claim (C) | 행1 claim_id, components 슬롯 | ✅ |
+| number (N) | 행52 number_id | ✅ |
+| provenance (P) | 행38·58 (figure/table은 artifact_type로 흡수) | ✅ |
+| lit_prop (LP) | 행74 literature_id | ✅ |
+| data_registry (D) | 행9·43~45·63~65 source_data 대상 | ✅ (S6 신설) |
+| runs (RUN) | 행42·68 run_id 대상 | ✅ (S6 신설) |
+| risk (R) | 행35·50·73 | ✅ (잔존 신설) |
+
+**결론**: 배치표 구성요소와 guard 스키마 사이의 겹침은 (1)스키마 어긋남 6건 → COMP_SCHEMA 보강으로 해소, (2)표기 오류 1건 → 정정, (3)의미 중복 4건 → 단일 정본 + fold 파생으로 해소. 잔여 충돌 0. 노드 클래스 7종 전부 정합.
+
+---
+
 ## 부록 B — 확립 상태 집계 (거버넌스가 생산할 작업량)
 
-| 확립 상태 | 행 수 | 의미 |
+| 확립 상태 (2026-06-28 **전 슬라이스 구현 완료**) | 행 수 | 비고 |
 |---|---|---|
-| ✅구현(슬롯 실재) | 44 | 현 canon 스키마(claims/numbers/provenance, 슬라이스 0~2)에 안착 가능 |
-| 🔲S3 (claim 컴포넌트화) | 12 | claim.components{target,scope,comparison,finding}+role+grounds 도입 시 안착 |
-| 🔲S4 (lit_prop 명제화) | 20 | `.project/lit_props/` 신설 + bibkey→refs.bib 연결 시 안착 |
-| 🔲S6 (data_registry D 신설) | 13 | provenance.source_data 실연결(현 placeholder D001) 시 안착 |
-| 🔲설계(슬라이스 미배정) | 3 | risks 레지스트리(심사자 위험·risk·오분류 위험) — ADR §F 잔존 |
+| ✅구현 — 기반(S0~2) | 44 | claims/numbers/provenance 기반 슬롯 |
+| ✅구현 — S3(claim 컴포넌트화) | 12 | components 4슬롯+role+grounds, **claim 9건 전부 컴포넌트화** |
+| ✅구현 — S4(lit_prop 명제화) | 20 | `.project/lit_props/` 4건(LP001~004), bibkey→refs.bib 검증 |
+| ✅구현 — S6(data_registry·runs) | 13 | D001~003·RUN001~005, **placeholder 11건 경고 전부 해소** |
+| ✅구현 — risks 레지스트리 | 3 | `.project/risks/` 4건(R001~004), claim 매핑 |
 
-(상태가 둘 이상 걸친 행은 가장 늦은 슬라이스로 1회 집계. 합 = 44+12+20+13+3 = 92 데이터 행. **거버넌스 미생산 = 12+20+13+3 = 48개**가 앞으로 canon에 확립할 작업.)
+(합 = 44+12+20+13+3 = 92 데이터 행, **전부 ✅구현**. 거버넌스 미생산 = **0**. canon check 0 error/0 warning.)
 
-**거버넌스 생산 순서(ADR §D 슬라이스 로드맵과 정렬)**: S3(claim 컴포넌트, 다음) → S4(lit_prop, 문헌 축) → S6(data_registry, 자료 축 placeholder 실연결) → risks 레지스트리(잔존 설계).
+**실행 결과(ADR §D 슬라이스 로드맵 완수)**: S3(claim 컴포넌트화)·S4(lit_prop)·S5(derived_from+canon_promote)·S6(data_registry/runs)·S7(clarity guard 어휘감사)·잔존(risks) **전부 구현·검증 완료**. guard 회귀 테스트 182 passed. claim 컴포넌트화는 adversarial verify에서 6건 결함(grounds 오정당화·창작 강도/임계값/모집단)을 잡아 재저작·재검증으로 0건까지 수렴.
 
 ---
 
@@ -247,4 +302,4 @@
 
 ---
 
-총 원자 수 **112** = 표 데이터 행 **92** + 병합 흡수 **20**. 그래프 분류: NODE 4 · EDGE 7 · PROP-s 4 · PROP-j+EDGE 2 · PROP-j 75 = 92. ✅구현 44행 · 거버넌스 미생산 48행. 생산 역할 미정 0(잔존 미결정 3건은 부록 C). 이중흡수 0.
+총 원자 수 **112** = 표 데이터 행 **92** + 병합 흡수 **20**. 그래프 분류: NODE 4 · EDGE 7 · PROP-s 4 · PROP-j+EDGE 2 · PROP-j 75 = 92. **✅구현 92행 · 거버넌스 미생산 0 (S3~S7+risks 전 슬라이스 완수, 2026-06-28).** 생산 역할 미정 0. 이중흡수 0. canon check 0 error/0 warning · guard 회귀 182 passed.

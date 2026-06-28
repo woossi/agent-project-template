@@ -1,0 +1,12 @@
+{
+ "lit_prop_id": "LP003",
+ "proposition": "역행추론은 관측된 현상에서 그 현상을 낳는 발생기제로 거슬러 추론하는 방식을 가리킨다.",
+ "bibkey": "bhaskar1975",
+ "role": "theoretical",
+ "locator": "ch2:18",
+ "manuscript_location": "ch2:18",
+ "argument_step": 6,
+ "status": "core",
+ "by": "orchestrator",
+ "ts_ns": 1782614400000000000
+}

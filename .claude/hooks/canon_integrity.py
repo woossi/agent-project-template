@@ -36,13 +36,30 @@ from _hooklib import project_dir_simple as project_dir  # noqa: E402
 
 # ---- canon topology -------------------------------------------------------
 # Each kind: directory, id field, id prefix, and the outgoing links it carries
-# as (field_name -> target_kind). Adding data_registry/runs later is one entry.
+# as (field_name -> target_kind). Adding a kind/link is one entry; validate(),
+# _backrefs(), fold() and the guard all extend from this table automatically.
+#
+# Slice history (ADR-canon-unified):
+#   S0-2: claim/number/provenance (3 forced links).
+#   S3:   claim.grounds/counter_grounds -> lit_prop, claim.relations (claim->claim, DAG).
+#   S4:   lit_prop kind (LP) + bibkey -> refs.bib (external SSOT).
+#   S5:   provenance.derived_from (lifecycle lineage — recognised but NOT dangling-checked).
+#   S6:   data_registry (D) + runs (RUN); provenance.source_data -> D, run_id -> RUN.
+#   S7:   clarity-rule lexical audit (R8/R9/R10) on claim/lit_prop prose (warnings).
+#   risk: risk kind (R); claim.risks / provenance.risks -> risk.
 CANON = {
     "claim": {
         "dir": ".project/claims",
         "id": "claim_id",
         "prefix": "C",
-        "links": {"evidence": "number"},
+        # evidence -> number (data axis), grounds/counter_grounds -> lit_prop (literature
+        # axis), risks -> risk. relations (claim->claim) is handled separately (object array).
+        "links": {
+            "evidence": "number",
+            "grounds": "lit_prop",
+            "counter_grounds": "lit_prop",
+            "risks": "risk",
+        },
     },
     "number": {
         "dir": ".project/numbers",
@@ -54,10 +71,73 @@ CANON = {
         "dir": ".project/provenance",
         "id": "artifact_id",
         "prefix": "P",
+        # related_claims -> claim (list), risks -> risk (list). source_data -> data_registry
+        # and run_id -> runs are SINGLE strings (scalar links), validated by dedicated
+        # passes so they stay scalars in the existing schema. derived_from (lifecycle,
+        # off-graph) is recognised but never dangling-checked.
+        "links": {
+            "related_claims": "claim",
+            "risks": "risk",
+        },
+    },
+    "lit_prop": {
+        "dir": ".project/lit_props",
+        "id": "lit_prop_id",
+        "prefix": "LP",
+        # lit_prop points at no other canon node; its external SSOT link (bibkey ->
+        # refs.bib) is verified by a dedicated pass (_validate_bibkeys).
+        "links": {},
+    },
+    "data_registry": {
+        "dir": ".project/data_registry",
+        "id": "data_id",
+        "prefix": "D",
+        "links": {},
+    },
+    "runs": {
+        "dir": ".project/runs",
+        "id": "run_id",
+        "prefix": "RUN",
+        "links": {},
+    },
+    "risk": {
+        "dir": ".project/risks",
+        "id": "risk_id",
+        "prefix": "R",
+        # a risk may relate to the claim(s) it threatens (back-pointer, optional).
         "links": {"related_claims": "claim"},
     },
 }
 DEPRECATED = {"deprecated", "replaced"}
+
+# ``run_id`` on a provenance record is a single string id into the runs kind, not a
+# list. It is validated by a dedicated pass so it can stay a scalar in the schema.
+# The sentinel below is the historical placeholder and is exempt from dangling checks
+# until S6 wires real run records (kept so seed records do not falsely block).
+RUN_PLACEHOLDERS = {"RUN-UNSPECIFIED", "", None}
+# ``source_data`` placeholder sentinels, exempt from dangling checks until S6 wires the
+# data_registry. Once a real D-record with the same id exists, the scalar link resolves
+# and the warning disappears automatically (no record edit needed).
+DATA_PLACEHOLDERS = {"D-UNSPECIFIED", "", None}
+
+# ``derived_from`` (provenance, ADR §C / F-D3 #2) names lifecycle artefacts that live
+# OUTSIDE the .project canon graph (worker mailbox/task/memory). canon_integrity does
+# NOT dangling-check it — it is recognised as a known field and deliberately skipped, so
+# referencing off-graph lineage never blocks a write. File-system access to those paths
+# is governed by guard_agent_workspace (orthogonal axis), not here.
+OFFGRAPH_FIELDS = {"derived_from"}
+
+# Clarity lexical audit (S7 / clarity-rules R8·R9·R10). Deterministic substring probes
+# on canon prose (claim.claim, lit_prop.proposition). Warnings only — judgment stays with
+# the writer; the audit flags likely violations for review, it does not block.
+CLARITY_LEXICON = {
+    # R8 (기능어 감축): weak functional verbs that should be replaced by observable verbs.
+    "R8": ["기능한다", "작용한다", "위치한다", "구성된다"],
+    # R9 (인과 과장 회피): causal verbs only allowed with a causal design.
+    "R9": ["영향을 미쳤다", "영향을 미친다", "효과가 있었다", "초래했다", "야기했다"],
+    # R10 (과잉 방어 금지): hedge stacking inside a single result sentence.
+    "R10": ["작지만", "보조적으로", "제한적으로", "맥락적으로"],
+}
 
 
 def _load_kind(root: Path, kind: str) -> dict[str, dict[str, Any]]:
@@ -195,7 +275,178 @@ def validate(root: Path) -> dict[str, list[str]]:
                         f"'{sid}' (status={tgt.get('status', '?')}) — retire it (deprecated/replaced)"
                     )
 
+    # 6. scalar links on provenance (run_id -> runs, source_data -> data_registry).
+    #    Both are single strings (not lists), so the generic list-link pass skips them.
+    #    A real target must exist; placeholders are exempt until S6 wires registries, so
+    #    seed records do not falsely block. Unwired = warning (not error) during migration.
+    for rid, rec in graph["provenance"].items():
+        run = rec.get("run_id")
+        if run not in RUN_PLACEHOLDERS and isinstance(run, str) and run.strip():
+            if run.strip() not in graph["runs"]:
+                warnings.append(
+                    f"unwired run_id: provenance '{rid}'.run_id -> runs '{run}' "
+                    f"(not found; placeholder until S6)"
+                )
+        dsrc = rec.get("source_data")
+        if isinstance(dsrc, str) and dsrc.strip() and dsrc.strip() not in DATA_PLACEHOLDERS:
+            if dsrc.strip() not in graph["data_registry"]:
+                warnings.append(
+                    f"unwired source_data: provenance '{rid}'.source_data -> data_registry "
+                    f"'{dsrc}' (not found; placeholder until S6)"
+                )
+
+    # 7. relations cycle check (claim->claim, ADR §B.3 / §E "depends_on DAG"). relations
+    #    is an object array [{"type": ..., "target": "C..."}]. depends_on must form a DAG;
+    #    a dangling target is an error; contrasts_with/supported_by_lit are stored one-way.
+    errors.extend(_validate_relations(graph))
+
+    # 8. external SSOT links: lit_prop.bibkey -> refs.bib. Verified against the bib file
+    #    when present; a missing bibkey is an error, a missing refs.bib is a warning (the
+    #    bib lives in research/UMC and may be outside an isolated worker's read scope).
+    errors2, warns2 = _validate_bibkeys(root, graph)
+    errors.extend(errors2)
+    warnings.extend(warns2)
+
+    # 9. clarity lexical audit (S7, R8/R9/R10) — warnings only.
+    warnings.extend(_clarity_audit(graph))
+
     return {"errors": errors, "warnings": warnings}
+
+
+# ---- extra validation passes (S3-S7) --------------------------------------
+
+RELATION_TYPES = {
+    "depends_on", "contrasts_with", "limits", "contradicts", "elaborates",
+    "supported_by_lit",
+}
+
+
+def _validate_relations(graph: dict[str, dict[str, dict[str, Any]]]) -> list[str]:
+    """claim.relations object array: dangling-target + depends_on-DAG (cycle) check.
+
+    Each relation is ``{"type": <RELATION_TYPES>, "target": <id>}``. ``supported_by_lit``
+    targets a lit_prop; every other type targets a claim. Only ``depends_on`` is required
+    to be acyclic (DAG); the rest are stored one-way (fold shows the symmetric view).
+    """
+    errors: list[str] = []
+    claims = graph["claim"]
+    deps: dict[str, set[str]] = {}
+    for rid, rec in claims.items():
+        rels = rec.get("relations") or []
+        if not isinstance(rels, list):
+            errors.append(f"claim '{rid}': relations must be a list")
+            continue
+        for rel in rels:
+            if not isinstance(rel, dict):
+                errors.append(f"claim '{rid}': each relation must be an object")
+                continue
+            rtype = rel.get("type")
+            target = rel.get("target")
+            if rtype not in RELATION_TYPES:
+                errors.append(f"claim '{rid}': unknown relation type '{rtype}'")
+            if not isinstance(target, str) or not target.strip():
+                errors.append(f"claim '{rid}': relation '{rtype}' has no target")
+                continue
+            target = target.strip()
+            target_kind = "lit_prop" if rtype == "supported_by_lit" else "claim"
+            if target not in graph[target_kind]:
+                errors.append(
+                    f"dangling relation: claim '{rid}' {rtype} -> {target_kind} "
+                    f"'{target}' (not found)"
+                )
+            if rtype == "depends_on" and target in graph["claim"]:
+                deps.setdefault(rid, set()).add(target)
+    # cycle detection over depends_on (DFS three-colour).
+    WHITE, GREY, BLACK = 0, 1, 2
+    color = {c: WHITE for c in claims}
+
+    def _dfs(node: str, stack: list[str]) -> None:
+        color[node] = GREY
+        for nxt in sorted(deps.get(node, ())):
+            if nxt not in color:
+                continue
+            if color[nxt] == GREY:
+                cyc = " -> ".join(stack + [node, nxt])
+                errors.append(f"relation cycle (depends_on): {cyc}")
+            elif color[nxt] == WHITE:
+                _dfs(nxt, stack + [node])
+        color[node] = BLACK
+
+    for c in sorted(claims):
+        if color.get(c) == WHITE:
+            _dfs(c, [])
+    return errors
+
+
+def _read_bibkeys(root: Path) -> set[str] | None:
+    """Collect @key entries from refs.bib (research/UMC SSOT). None if unreadable
+    (outside read scope / absent) so callers can downgrade to a warning."""
+    candidates = [
+        root.parent / "research" / "UMC" / "refs.bib",
+        root / "refs.bib",
+    ]
+    for bib in candidates:
+        try:
+            text = bib.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        keys: set[str] = set()
+        for line in text.splitlines():
+            line = line.strip()
+            if line.startswith("@") and "{" in line:
+                key = line.split("{", 1)[1].rstrip(",").strip()
+                if key:
+                    keys.add(key)
+        return keys
+    return None
+
+
+def _validate_bibkeys(
+    root: Path, graph: dict[str, dict[str, dict[str, Any]]]
+) -> tuple[list[str], list[str]]:
+    """lit_prop.bibkey must resolve in refs.bib (external SSOT, complain on dangling)."""
+    errors: list[str] = []
+    warnings: list[str] = []
+    lit = graph.get("lit_prop", {})
+    if not lit:
+        return errors, warnings
+    bibkeys = _read_bibkeys(root)
+    for rid, rec in lit.items():
+        key = rec.get("bibkey")
+        if not isinstance(key, str) or not key.strip():
+            errors.append(f"lit_prop '{rid}': missing bibkey (refs.bib SSOT link)")
+            continue
+        if bibkeys is None:
+            warnings.append(
+                f"lit_prop '{rid}'.bibkey '{key}': refs.bib not readable here — bibkey "
+                f"unverified (outside read scope?)"
+            )
+        elif key.strip() not in bibkeys:
+            errors.append(
+                f"dangling bibkey: lit_prop '{rid}'.bibkey -> '{key}' (not in refs.bib)"
+            )
+    return errors, warnings
+
+
+def _clarity_audit(graph: dict[str, dict[str, dict[str, Any]]]) -> list[str]:
+    """Deterministic lexical probes for clarity rules R8/R9/R10 on canon prose.
+    Warnings only (judgment stays with the writer). Checks claim.claim and
+    lit_prop.proposition for banned-verb substrings."""
+    warnings: list[str] = []
+    probes = [("claim", "claim"), ("lit_prop", "proposition")]
+    for kind, field in probes:
+        for rid, rec in graph.get(kind, {}).items():
+            text = rec.get(field)
+            if not isinstance(text, str) or not text:
+                continue
+            for rule, terms in CLARITY_LEXICON.items():
+                hits = [t for t in terms if t in text]
+                if hits:
+                    warnings.append(
+                        f"clarity {rule}: {kind} '{rid}' uses {hits} — review "
+                        f"(R8 weak-verb / R9 overclaimed-causation / R10 hedge-stacking)"
+                    )
+    return warnings
 
 
 # ---- fold view ------------------------------------------------------------
@@ -243,17 +494,42 @@ def _fold_one(root: Path, kind: str, backrefs: dict[str, list[str]] | None = Non
         status = rec.get("status", "?")
         cited_by = backrefs.get(rid, [])
         if kind == "claim":
-            head = rec.get("claim", "")
-            links = f"evidence={rec.get('evidence', [])}"
+            # Prefer the folded sentence from components when present (S3), else the
+            # stored claim string. components are the single source of truth; the
+            # sentence is a derived view (ADR §B.3 "claim: <fold from components>").
+            head = _fold_claim_sentence(rec) or rec.get("claim", "")
+            links = (
+                f"evidence={rec.get('evidence', [])} grounds={rec.get('grounds', [])} "
+                f"relations={[ (r.get('type'), r.get('target')) for r in (rec.get('relations') or []) if isinstance(r, dict) ]}"
+            )
             extra = f"used_in={rec.get('used_in', [])} verified_by={rec.get('verified_by', '?')}"
         elif kind == "number":
             head = f"{rec.get('value', '?')} — {rec.get('label', '')}"
             links = f"provenance={rec.get('provenance', [])}"
             extra = f"checked_by={rec.get('checked_by', '?')}"
-        else:  # provenance
+        elif kind == "provenance":
             head = f"{rec.get('artifact_type', '?')}: {rec.get('value', '')}"
+            links = (
+                f"related_claims={rec.get('related_claims', [])} "
+                f"source_data={rec.get('source_data', '?')} run_id={rec.get('run_id', '?')}"
+            )
+            extra = f"loc={rec.get('manuscript_location', '?')}"
+        elif kind == "lit_prop":
+            head = f"{rec.get('role', '?')}: {rec.get('proposition', '')}"
+            links = f"bibkey={rec.get('bibkey', '?')} -> refs.bib"
+            extra = f"loc={rec.get('manuscript_location', '?')} argument_step={rec.get('argument_step', '?')}"
+        elif kind == "data_registry":
+            head = f"{rec.get('label', '')}"
+            links = f"manifest_ref={rec.get('manifest_ref', '?')}"
+            extra = f"period={rec.get('period', '?')} area={rec.get('area', '?')}"
+        elif kind == "runs":
+            head = f"{rec.get('label', '')}"
+            links = f"script={rec.get('script_or_process', '?')}"
+            extra = f"inputs={rec.get('inputs', [])}"
+        else:  # risk
+            head = f"{rec.get('label', '')}"
             links = f"related_claims={rec.get('related_claims', [])}"
-            extra = f"run_id={rec.get('run_id', '?')} loc={rec.get('manuscript_location', '?')}"
+            extra = f"severity={rec.get('severity', '?')} mitigation={rec.get('mitigation', '?')}"
         lines.append(f"## {rid} [{status}]")
         lines.append(f"{head}")
         lines.append(f"- {links}")
@@ -264,10 +540,40 @@ def _fold_one(root: Path, kind: str, backrefs: dict[str, list[str]] | None = Non
     return "\n".join(lines) + "\n"
 
 
+def _fold_claim_sentence(rec: dict[str, Any]) -> str:
+    """Derive a claim sentence from its components (S3, ADR §B.3). Deterministic
+    template assembly: '[scope.condition] [target] [comparison] [finding].'. Returns ""
+    when components are absent so the caller falls back to the stored sentence."""
+    comp = rec.get("components")
+    if not isinstance(comp, dict) or not comp:
+        return ""
+    def _txt(slot: str, *keys: str) -> str:
+        node = comp.get(slot)
+        if not isinstance(node, dict):
+            return ""
+        for k in keys:
+            v = node.get(k)
+            if isinstance(v, str) and v.strip():
+                return v.strip()
+        return ""
+    parts = [
+        _txt("scope", "condition", "analysis_basis"),
+        _txt("target", "text"),
+        _txt("comparison", "baseline", "criterion"),
+        _txt("finding", "text"),
+    ]
+    sentence = " ".join(p for p in parts if p).strip()
+    return sentence
+
+
 def fold(root: Path) -> list[Path]:
     written: list[Path] = []
-    names = {"claim": "claims_index.md", "number": "numbers_index.md",
-             "provenance": "provenance_index.md"}
+    names = {
+        "claim": "claims_index.md", "number": "numbers_index.md",
+        "provenance": "provenance_index.md", "lit_prop": "lit_props_index.md",
+        "data_registry": "data_registry_index.md", "runs": "runs_index.md",
+        "risk": "risks_index.md",
+    }
     backrefs = _backrefs(_load_all(root))
     for kind, spec in CANON.items():
         cdir = root / spec["dir"]

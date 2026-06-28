@@ -1,20 +1,58 @@
 {
-  "claim_id": "C009",
-  "claim": "정보차단 멀티에이전트 역행추론은 표적 3구의 게시글 223건에서 지역 가설 772개를 도출하였다.",
-  "status": "supported",
-  "evidence": [
+ "claim_id": "C009",
+ "claim": "정보차단 멀티에이전트 역행추론은 표적 3구의 게시글 223건에서 지역 가설 772개를 도출하였다.",
+ "status": "supported",
+ "evidence": [
+  "N004",
+  "N005"
+ ],
+ "counter_evidence": [],
+ "used_in": [
+  "results:79·121·123, ch4:34"
+ ],
+ "owner_team": "analysis",
+ "verified_by": "stats-validator",
+ "supersedes": null,
+ "by": "orchestrator",
+ "note": "orphan number에 claim 부여(ADR-005 그래프 완결). 문장은 sv 검증 수치의 보수적 해석. owner_team·qr 검토 전 잠정. || 한정: 223건 표본 식별자 미보존(정본 §9-4) — 확정 통계 단정 금지, 별도 한계 서술 동반.",
+ "ts_ns": 1782608443048000000,
+ "clarity_checked": true,
+ "role": "result",
+ "components": {
+  "target": {
+   "text": "지역 가설",
+   "type": "index",
+   "grounds": []
+  },
+  "scope": {
+   "unit": "게시글",
+   "spatial_unit": "표적 3구",
+   "population": "표적 3구의 게시글",
+   "exclusion": "표적 3구로 표본 제한",
+   "analysis_basis": "정보차단 멀티에이전트 역행추론",
+   "grounds": [
+    "LP003"
+   ]
+  },
+  "comparison": {
+   "baseline": "게시글 223건(입력)",
+   "criterion": "도출 가설 개수",
+   "threshold": "",
+   "result": "지역 가설 772개",
+   "evidence": [
     "N004",
     "N005"
-  ],
-  "counter_evidence": [],
-  "used_in": [
-    "results:79·121·123, ch4:34"
-  ],
-  "owner_team": "analysis",
-  "verified_by": "stats-validator",
-  "supersedes": null,
-  "by": "orchestrator",
-  "note": "orphan number에 claim 부여(ADR-005 그래프 완결). 문장은 sv 검증 수치의 보수적 해석. owner_team·qr 검토 전 잠정. || 한정: 223건 표본 식별자 미보존(정본 §9-4) — 확정 통계 단정 금지, 별도 한계 서술 동반.",
-  "ts_ns": 1782608443048000000,
-  "clarity_checked": true
+   ]
+  },
+  "finding": {
+   "text": "정보차단 멀티에이전트 역행추론은 표적 3구의 게시글 223건에서 지역 가설 772개를 도출하였다.",
+   "strength": "",
+   "closing_verb": "도출하였다"
+  }
+ },
+ "grounds": [
+  "LP003"
+ ],
+ "counter_grounds": [],
+ "relations": []
 }

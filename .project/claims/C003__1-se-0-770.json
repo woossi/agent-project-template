@@ -1,19 +1,55 @@
 {
-  "claim_id": "C003",
-  "claim": "통제 이전 모형을 기준으로, 저학력 집단은 대졸 기준집단과 비교할 때 디지털 이용 점수가 20점 이상 낮게 나타났다.",
-  "status": "verified",
-  "evidence": [
+ "claim_id": "C003",
+ "claim": "통제 이전 모형을 기준으로, 저학력 집단은 대졸 기준집단과 비교할 때 디지털 이용 점수가 20점 이상 낮게 나타났다.",
+ "status": "verified",
+ "evidence": [
+  "N001b"
+ ],
+ "counter_evidence": [],
+ "used_in": [
+  "results:55, tables_main:135"
+ ],
+ "owner_team": "analysis",
+ "verified_by": "stats-validator",
+ "supersedes": null,
+ "by": "orchestrator",
+ "note": "numeric-canon-B.md 근거 수치에 연결된 논증 정본. claim 문장은 검증된 수치의 보수적 해석.",
+ "ts_ns": 1782608443048000000,
+ "clarity_checked": true,
+ "role": "result",
+ "components": {
+  "target": {
+   "text": "저학력 집단(학력 중졸 이하)",
+   "type": "group",
+   "grounds": []
+  },
+  "scope": {
+   "unit": "개인",
+   "level": "개인 수준",
+   "population": "2023~2024년 서울서베이 응답자",
+   "exclusion": "서울 25개 자치구 거주 응답자 10,000명으로 제한",
+   "period": "2023~2024년",
+   "spatial_unit": "자치구(서울 25개)",
+   "analysis_basis": "HLM 모형 1(개인 수준 변수)",
+   "condition": "통제 이전 모형(자치구 맥락 변수 투입 전) 기준",
+   "grounds": []
+  },
+  "comparison": {
+   "baseline": "대졸 기준집단",
+   "criterion": "예측 디지털 이용 점수의 평균차이(회귀계수)",
+   "threshold": "20점 이상 낮음(p<.001)",
+   "result": "저학력 집단이 대졸 기준집단보다 디지털 이용 점수가 20점 이상 낮음",
+   "evidence": [
     "N001b"
-  ],
-  "counter_evidence": [],
-  "used_in": [
-    "results:55, tables_main:135"
-  ],
-  "owner_team": "analysis",
-  "verified_by": "stats-validator",
-  "supersedes": null,
-  "by": "orchestrator",
-  "note": "numeric-canon-B.md 근거 수치에 연결된 논증 정본. claim 문장은 검증된 수치의 보수적 해석.",
-  "ts_ns": 1782608443048000000,
-  "clarity_checked": true
+   ]
+  },
+  "finding": {
+   "text": "통제 이전 모형을 기준으로 저학력 집단은 대졸 기준집단과 비교할 때 디지털 이용 점수가 20점 이상 낮게 나타났다.",
+   "strength": "뚜렷함(가장 강한 개인 수준 연관)",
+   "closing_verb": "나타났다"
+  }
+ },
+ "grounds": [],
+ "counter_grounds": [],
+ "relations": []
 }

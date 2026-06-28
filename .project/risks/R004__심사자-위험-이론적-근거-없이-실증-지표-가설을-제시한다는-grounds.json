@@ -1,0 +1,15 @@
+{
+ "risk_id": "R004",
+ "label": "심사자 위험: 이론적 근거 없이 실증 지표·가설을 제시한다는 grounds 부재 위험",
+ "risk_type": "reviewer_risk",
+ "severity": "medium",
+ "related_claims": [
+  "C007",
+  "C009"
+ ],
+ "status": "active",
+ "mitigation": "UMC 종합 지수의 척도 구성 근거(C007)와 역행추론 가설 도출 절차(C009)를 이론·방법 절에서 명시하고, 지수·가설을 확정 결과가 아니라 탐색적 산출(우선검토 후보·지역 가설)로 제시한다. 이론 연결이 본문에서 보강되면 mitigated로 전환한다.",
+ "note": "ADR §E의 R004(이론 없는 실증 위험) 후보를 안착. C007의 자치구 간 지수 차이와 C009의 772개 지역 가설은 모두 탐색적 산출이므로, 이론적 grounds 보강 전까지 active로 유지한다.",
+ "by": "orchestrator",
+ "ts_ns": 1782614400000000000
+}

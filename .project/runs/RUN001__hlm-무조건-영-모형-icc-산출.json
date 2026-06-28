@@ -1,0 +1,12 @@
+{
+ "run_id": "RUN001",
+ "label": "HLM 무조건(영)모형 ICC 산출",
+ "script_or_process": "HLM 무조건/null 모형 적합 — 자치구간 분산 / (자치구간 분산 + 개인내 분산)으로 ICC 산출",
+ "inputs": [
+  "D001"
+ ],
+ "status": "active",
+ "note": "P001(ICC=0.49%, 무조건 모형 자치구간 분산 비중)의 실행으로 확인된다. P001.run_id의 placeholder 'RUN-UNSPECIFIED'를 실연결하는 대상이다(재지정은 후속 슬라이스). value/검증은 numbers N001·numeric-canon-B 정본과 관련된다.",
+ "by": "orchestrator",
+ "ts_ns": 1782614400000000000
+}

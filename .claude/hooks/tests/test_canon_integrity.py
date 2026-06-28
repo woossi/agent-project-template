@@ -169,7 +169,8 @@ class FoldTest(unittest.TestCase):
 
     def test_fold_empty_kind_is_safe(self) -> None:
         written = ci.fold(self.root)
-        self.assertEqual(len(written), 3)
+        # one index per canon kind (claim/number/provenance + lit_prop/data_registry/runs/risk)
+        self.assertEqual(len(written), len(ci.CANON))
         idx = (self.root / ".project/numbers/numbers_index.md").read_text(encoding="utf-8")
         self.assertIn("no records", idx)
 
@@ -248,6 +249,185 @@ class GuardCliTest(unittest.TestCase):
             capture_output=True, text=True,
         )
         self.assertEqual(r.returncode, 1)
+
+
+# ---- S3-S7 + risk: new-kind / new-link regression tests -------------------
+
+class ExtendedTopologyTest(unittest.TestCase):
+    """S3 (relations, grounds), S4 (lit_prop, bibkey), S5 (derived_from),
+    S6 (data_registry/runs scalar links), S7 (clarity), risk kind."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        (self.root / ".project").mkdir()
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    # --- S3: relations (claim -> claim, DAG) + grounds (claim -> lit_prop) ---
+    def test_relations_dangling_target_is_error(self) -> None:
+        rec = _claim(evidence=())
+        rec["relations"] = [{"type": "depends_on", "target": "C999"}]
+        _write(self.root, "claim", "C001", rec)
+        r = ci.validate(self.root)
+        self.assertTrue(any("dangling relation" in e for e in r["errors"]))
+
+    def test_relations_unknown_type_is_error(self) -> None:
+        rec = _claim(evidence=())
+        rec["relations"] = [{"type": "bogus_rel", "target": "C001"}]
+        _write(self.root, "claim", "C001", rec)
+        r = ci.validate(self.root)
+        self.assertTrue(any("unknown relation type" in e for e in r["errors"]))
+
+    def test_relations_depends_on_cycle_is_error(self) -> None:
+        a = _claim("C001", evidence=()); a["relations"] = [{"type": "depends_on", "target": "C002"}]
+        b = _claim("C002", evidence=()); b["relations"] = [{"type": "depends_on", "target": "C001"}]
+        _write(self.root, "claim", "C001", a)
+        _write(self.root, "claim", "C002", b)
+        r = ci.validate(self.root)
+        self.assertTrue(any("cycle" in e for e in r["errors"]))
+
+    def test_relations_contrasts_with_is_one_way_no_cycle(self) -> None:
+        # contrasts_with is stored one-way; a mutual pair must NOT trip the DAG check.
+        a = _claim("C001", evidence=()); a["relations"] = [{"type": "contrasts_with", "target": "C002"}]
+        b = _claim("C002", evidence=()); b["relations"] = [{"type": "contrasts_with", "target": "C001"}]
+        _write(self.root, "claim", "C001", a)
+        _write(self.root, "claim", "C002", b)
+        r = ci.validate(self.root)
+        self.assertFalse(any("cycle" in e for e in r["errors"]))
+
+    def test_claim_grounds_dangling_lit_prop_is_error(self) -> None:
+        rec = _claim(evidence=()); rec["grounds"] = ["LP999"]
+        _write(self.root, "claim", "C001", rec)
+        r = ci.validate(self.root)
+        self.assertTrue(any("dangling" in e and "LP999" in e for e in r["errors"]))
+
+    def test_claim_grounds_resolves_to_lit_prop(self) -> None:
+        rec = _claim(evidence=()); rec["grounds"] = ["LP001"]
+        _write(self.root, "claim", "C001", rec)
+        _write(self.root, "lit_prop", "LP001",
+               {"lit_prop_id": "LP001", "proposition": "p", "bibkey": "ellen2016",
+                "role": "empirical", "status": "core"})
+        r = ci.validate(self.root)
+        self.assertFalse(any("dangling" in e for e in r["errors"]))
+
+    # --- S4: lit_prop bibkey -> refs.bib ---
+    def test_lit_prop_missing_bibkey_is_error(self) -> None:
+        _write(self.root, "lit_prop", "LP001",
+               {"lit_prop_id": "LP001", "proposition": "p", "role": "empirical", "status": "core"})
+        r = ci.validate(self.root)
+        self.assertTrue(any("missing bibkey" in e for e in r["errors"]))
+
+    def test_lit_prop_bibkey_unverified_when_no_refs_bib(self) -> None:
+        # no refs.bib reachable -> warning (not error), bibkey unverified.
+        _write(self.root, "lit_prop", "LP001",
+               {"lit_prop_id": "LP001", "proposition": "p", "bibkey": "ghost2020",
+                "role": "empirical", "status": "core"})
+        r = ci.validate(self.root)
+        self.assertFalse(any("dangling bibkey" in e for e in r["errors"]))
+        self.assertTrue(any("unverified" in w for w in r["warnings"]))
+
+    def test_lit_prop_bibkey_dangling_against_refs_bib(self) -> None:
+        (self.root / "refs.bib").write_text("@article{ellen2016,\n}\n", encoding="utf-8")
+        _write(self.root, "lit_prop", "LP001",
+               {"lit_prop_id": "LP001", "proposition": "p", "bibkey": "ghost2020",
+                "role": "empirical", "status": "core"})
+        r = ci.validate(self.root)
+        self.assertTrue(any("dangling bibkey" in e for e in r["errors"]))
+
+    # --- S5: derived_from is recognised but NOT dangling-checked ---
+    def test_derived_from_is_not_dangling_checked(self) -> None:
+        _write(self.root, "claim", "C001", _claim())
+        _write(self.root, "number", "N001", _number())
+        prov = _prov()
+        prov["derived_from"] = {"mailbox_msg": "teams/x/.claude/inbox/m.json",
+                                "task": "off/graph/path"}
+        _write(self.root, "provenance", "P001", prov)
+        r = ci.validate(self.root)
+        self.assertEqual(r["errors"], [])
+
+    # --- S6: scalar links source_data -> data_registry, run_id -> runs ---
+    def test_unwired_source_data_is_warning_not_error(self) -> None:
+        _write(self.root, "claim", "C001", _claim())
+        _write(self.root, "number", "N001", _number())
+        prov = _prov(); prov["source_data"] = "D001"  # registry empty
+        _write(self.root, "provenance", "P001", prov)
+        r = ci.validate(self.root)
+        self.assertFalse(r["errors"])
+        self.assertTrue(any("unwired source_data" in w for w in r["warnings"]))
+
+    def test_source_data_resolves_when_registry_present(self) -> None:
+        _write(self.root, "claim", "C001", _claim())
+        _write(self.root, "number", "N001", _number())
+        prov = _prov(); prov["source_data"] = "D001"
+        _write(self.root, "provenance", "P001", prov)
+        _write(self.root, "data_registry", "D001",
+               {"data_id": "D001", "label": "서울서베이", "manifest_ref": "m", "status": "active"})
+        r = ci.validate(self.root)
+        self.assertFalse(any("unwired source_data" in w for w in r["warnings"]))
+
+    def test_run_placeholder_is_exempt(self) -> None:
+        _write(self.root, "claim", "C001", _claim())
+        _write(self.root, "number", "N001", _number())
+        prov = _prov(); prov["run_id"] = "RUN-UNSPECIFIED"
+        _write(self.root, "provenance", "P001", prov)
+        r = ci.validate(self.root)
+        self.assertFalse(any("unwired run_id" in w for w in r["warnings"]))
+
+    # --- risk kind ---
+    def test_risk_kind_id_clash_detected(self) -> None:
+        _write(self.root, "risk", "R001",
+               {"risk_id": "R001", "label": "a", "severity": "medium",
+                "related_claims": [], "status": "active"})
+        # second file, same id
+        d = self.root / ci.CANON["risk"]["dir"]
+        (d / "R001__dup.json").write_text(json.dumps(
+            {"risk_id": "R001", "label": "b", "severity": "low",
+             "related_claims": [], "status": "active"}), encoding="utf-8")
+        r = ci.validate(self.root)
+        self.assertTrue(any("id clash" in e and "R001" in e for e in r["errors"]))
+
+    def test_claim_risks_link_dangling_is_error(self) -> None:
+        rec = _claim(evidence=()); rec["risks"] = ["R999"]
+        _write(self.root, "claim", "C001", rec)
+        r = ci.validate(self.root)
+        self.assertTrue(any("dangling" in e and "R999" in e for e in r["errors"]))
+
+    # --- S7: clarity lexical audit (warnings only) ---
+    def test_clarity_audit_flags_overclaimed_causation(self) -> None:
+        rec = _claim(evidence=()); rec["claim"] = "저학력은 점수에 영향을 미쳤다."
+        _write(self.root, "claim", "C001", rec)
+        r = ci.validate(self.root)
+        self.assertTrue(any("clarity R9" in w for w in r["warnings"]))
+        self.assertFalse(any("clarity" in e for e in r["errors"]))  # never an error
+
+    def test_clarity_audit_silent_on_clean_prose(self) -> None:
+        rec = _claim(evidence=()); rec["claim"] = "저학력 집단은 점수가 낮게 나타났다."
+        _write(self.root, "claim", "C001", rec)
+        r = ci.validate(self.root)
+        self.assertFalse(any("clarity" in w for w in r["warnings"]))
+
+    # --- fold over new kinds ---
+    def test_fold_covers_all_kinds(self) -> None:
+        written = ci.fold(self.root)
+        names = {p.name for p in written}
+        self.assertIn("lit_props_index.md", names)
+        self.assertIn("data_registry_index.md", names)
+        self.assertIn("runs_index.md", names)
+        self.assertIn("risks_index.md", names)
+
+    def test_fold_claim_sentence_from_components(self) -> None:
+        rec = _claim(evidence=())
+        rec["components"] = {
+            "scope": {"condition": "통제 이전 모형을 기준으로"},
+            "target": {"text": "저학력 집단은", "type": "group"},
+            "comparison": {"baseline": "대졸 기준집단과 비교할 때"},
+            "finding": {"text": "점수가 20점 이상 낮게 나타났다", "closing_verb": "나타났다"},
+        }
+        s = ci._fold_claim_sentence(rec)
+        self.assertIn("저학력 집단은", s)
+        self.assertIn("통제 이전", s)
 
 
 if __name__ == "__main__":

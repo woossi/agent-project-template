@@ -1,20 +1,55 @@
 {
-  "claim_id": "C001",
-  "claim": "무조건 모형에서 디지털 활용능력의 자치구간 분산 비중(ICC)은 0.49%로, 개인 수준 변량이 자치구 수준 변량보다 크게 나타났다.",
-  "status": "verified",
-  "evidence": [
+ "claim_id": "C001",
+ "claim": "무조건 모형에서 디지털 활용능력의 자치구간 분산 비중(ICC)은 0.49%로, 개인 수준 변량이 자치구 수준 변량보다 크게 나타났다.",
+ "status": "verified",
+ "evidence": [
+  "N001"
+ ],
+ "counter_evidence": [],
+ "used_in": [
+  "Results 4.x (results:6·47·51·131)",
+  "ch4:12·32"
+ ],
+ "owner_team": "analysis",
+ "verified_by": "stats-validator",
+ "supersedes": null,
+ "by": "orchestrator",
+ "note": "슬라이스 0 시범 claim. claim 문장은 자치구간 분산 작음이라는 검증된 사실의 보수적 해석(ADR-005 §7 인과표현 강도: 보수). risks 연계: ICC 작아 지역맥락 주장 약해보일 위험(R001 후보, risks registry 미신설). || 해석(별도 문장 영역): 지역 효과는 '큰 집단차'가 아니라 맥락 조건으로 신중 해석. R3에 따라 claim 문장에서 분리.",
+ "ts_ns": 1782608443048000000,
+ "clarity_checked": true,
+ "role": "result",
+ "components": {
+  "target": {
+   "text": "디지털 활용능력",
+   "type": "variable",
+   "grounds": []
+  },
+  "scope": {
+   "unit": "개인 및 자치구",
+   "level": "개인 수준 및 자치구 수준(다수준)",
+   "spatial_unit": "자치구",
+   "analysis_basis": "HLM 무조건 모형",
+   "condition": "통제 변수 투입 이전 무조건 모형 기준",
+   "grounds": []
+  },
+  "comparison": {
+   "baseline": "자치구 수준 변량",
+   "criterion": "ICC(자치구간 분산 비중)",
+   "threshold": "",
+   "result": "ICC 0.49%; 개인 수준 변량이 자치구 수준 변량보다 큼",
+   "evidence": [
     "N001"
-  ],
-  "counter_evidence": [],
-  "used_in": [
-    "Results 4.x (results:6·47·51·131)",
-    "ch4:12·32"
-  ],
-  "owner_team": "analysis",
-  "verified_by": "stats-validator",
-  "supersedes": null,
-  "by": "orchestrator",
-  "note": "슬라이스 0 시범 claim. claim 문장은 자치구간 분산 작음이라는 검증된 사실의 보수적 해석(ADR-005 §7 인과표현 강도: 보수). risks 연계: ICC 작아 지역맥락 주장 약해보일 위험(R001 후보, risks registry 미신설). || 해석(별도 문장 영역): 지역 효과는 '큰 집단차'가 아니라 맥락 조건으로 신중 해석. R3에 따라 claim 문장에서 분리.",
-  "ts_ns": 1782608443048000000,
-  "clarity_checked": true
+   ]
+  },
+  "finding": {
+   "text": "무조건 모형에서 디지털 활용능력의 자치구간 분산 비중(ICC)은 0.49%로, 개인 수준 변량이 자치구 수준 변량보다 크게 나타났다.",
+   "strength": "",
+   "closing_verb": "나타났다"
+  }
+ },
+ "grounds": [],
+ "counter_grounds": [
+  "LP004"
+ ],
+ "relations": []
 }

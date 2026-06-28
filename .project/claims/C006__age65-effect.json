@@ -1,19 +1,55 @@
 {
-  "claim_id": "C006",
-  "claim": "상호작용을 포함한 모형을 기준으로, 65세 이상 집단은 65세 미만과 비교할 때 디지털 이용 점수가 약 9점 낮게 나타났다.",
-  "status": "verified",
-  "evidence": [
+ "claim_id": "C006",
+ "claim": "상호작용을 포함한 모형을 기준으로, 65세 이상 집단은 65세 미만과 비교할 때 디지털 이용 점수가 약 9점 낮게 나타났다.",
+ "status": "verified",
+ "evidence": [
+  "N006"
+ ],
+ "counter_evidence": [],
+ "used_in": [
+  "results:55, tables_main:133"
+ ],
+ "owner_team": "analysis",
+ "verified_by": "stats-validator",
+ "supersedes": null,
+ "by": "orchestrator",
+ "note": "orphan number에 claim 부여(ADR-005 그래프 완결). 문장은 sv 검증 수치의 보수적 해석. owner_team·qr 검토 전 잠정.",
+ "ts_ns": 1782608443048000000,
+ "clarity_checked": true,
+ "role": "result",
+ "components": {
+  "target": {
+   "text": "65세 이상 집단",
+   "type": "group",
+   "grounds": []
+  },
+  "scope": {
+   "unit": "개인",
+   "level": "개인 수준",
+   "analysis_basis": "상호작용을 포함한 모형",
+   "condition": "상호작용 포함 모형 기준",
+   "grounds": []
+  },
+  "comparison": {
+   "baseline": "65세 미만 집단",
+   "criterion": "평균차이(디지털 이용 점수)",
+   "result": "약 9점 낮음",
+   "evidence": [
     "N006"
-  ],
-  "counter_evidence": [],
-  "used_in": [
-    "results:55, tables_main:133"
-  ],
-  "owner_team": "analysis",
-  "verified_by": "stats-validator",
-  "supersedes": null,
-  "by": "orchestrator",
-  "note": "orphan number에 claim 부여(ADR-005 그래프 완결). 문장은 sv 검증 수치의 보수적 해석. owner_team·qr 검토 전 잠정.",
-  "ts_ns": 1782608443048000000,
-  "clarity_checked": true
+   ]
+  },
+  "finding": {
+   "text": "상호작용을 포함한 모형을 기준으로, 65세 이상 집단은 65세 미만과 비교할 때 디지털 이용 점수가 약 9점 낮게 나타났다.",
+   "strength": "뚜렷함",
+   "closing_verb": "나타났다"
+  }
+ },
+ "grounds": [],
+ "counter_grounds": [],
+ "relations": [
+  {
+   "type": "elaborates",
+   "target": "C003"
+  }
+ ]
 }
