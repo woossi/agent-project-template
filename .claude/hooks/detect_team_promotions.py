@@ -47,7 +47,11 @@ from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _hooklib import merge as _merge, project_dir_simple as project_dir  # noqa: E402
+from _hooklib import (  # noqa: E402
+    load_jsonl,
+    merge as _merge,
+    project_dir_simple as project_dir,
+)
 
 DEFAULTS: dict[str, Any] = {
     "agent_ledger": {
@@ -191,25 +195,6 @@ def resolve_actor(team_root: Path, explicit: str | None) -> str:
 
 
 # ---------------- shared readers (self-contained copies) ----------------
-
-def load_jsonl(path: Path) -> list[dict[str, Any]]:
-    records: list[dict[str, Any]] = []
-    try:
-        text = path.read_text(encoding="utf-8")
-    except OSError:
-        return records
-    for line in text.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            record = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if isinstance(record, dict):
-            records.append(record)
-    return records
-
 
 def existing_skills(team_root: Path) -> set[str]:
     skills_dir = team_root / ".claude/skills"

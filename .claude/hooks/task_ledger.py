@@ -31,6 +31,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _hooklib import (  # noqa: E402
     agent_root as _agent_root,
+    append_jsonl,
     find_repo_root as _find_repo_root,
     project_dir_per_agent as project_dir,
 )
@@ -82,20 +83,6 @@ def events_max_lines(root: Path) -> int:
     except (OSError, json.JSONDecodeError):
         pass
     return DEFAULT_EVENTS_MAX_LINES
-
-
-def _last_jsonl_line(path: Path) -> str | None:
-    """Return the last non-empty line of a jsonl file, or None. Best-effort."""
-    try:
-        with path.open("r", encoding="utf-8") as handle:
-            last: str | None = None
-            for line in handle:
-                stripped = line.strip()
-                if stripped:
-                    last = stripped
-            return last
-    except OSError:
-        return None
 
 
 def _rotate_events(path: Path, max_lines: int) -> None:
@@ -161,24 +148,6 @@ def skill_from_paths(paths: list[str]) -> str | None:
         if match:
             return match.group(1)
     return None
-
-
-def append_jsonl(path: Path, record: dict[str, Any], *, dedup_consecutive: bool = False) -> bool:
-    """Append ``record`` as one jsonl line.
-
-    With ``dedup_consecutive`` the record is dropped when byte-identical to the
-    current last line — this suppresses the runaway duplication that an idempotent
-    tool call (e.g. a repeated ``echo`` Bash) would otherwise produce. The events
-    stream only encodes co-usage signals, so a consecutive identical event carries
-    no new information. Returns True if a line was written, False if suppressed.
-    """
-    line = json.dumps(record, ensure_ascii=False, sort_keys=True)
-    if dedup_consecutive and path.exists() and _last_jsonl_line(path) == line:
-        return False
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as handle:
-        handle.write(line + "\n")
-    return True
 
 
 def build_event(payload: dict[str, Any], root: Path) -> dict[str, Any] | None:

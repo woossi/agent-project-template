@@ -20,6 +20,7 @@ and is intentionally not routed through here.
 """
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 from typing import Any
@@ -94,3 +95,69 @@ def merge(base: dict[str, Any], override: Any) -> dict[str, Any]:
             else:
                 merged[key] = value
     return merged
+
+
+# --- structured jsonl logging ------------------------------------------------
+#
+# The hooks all record structured events as append-only ``.jsonl`` streams
+# (events, signals, feedback, derivation/promotion candidates). Each hook used to
+# carry a byte-identical ``load_jsonl``/``append_jsonl`` pair; ``task_ledger`` also
+# carried the only ``dedup_consecutive`` superset. These are the single source of
+# truth so the copies cannot drift — same contract as the path helpers above.
+
+
+def load_jsonl(path: Path) -> list[dict[str, Any]]:
+    """Read ``path`` as jsonl, returning the dict records. Best-effort.
+
+    A missing/unreadable file yields ``[]``; blank lines and lines that do not
+    parse to a JSON object are skipped rather than raising.
+    """
+    records: list[dict[str, Any]] = []
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return records
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(record, dict):
+            records.append(record)
+    return records
+
+
+def last_jsonl_line(path: Path) -> str | None:
+    """Return the last non-empty line of a jsonl file, or None. Best-effort."""
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            last: str | None = None
+            for line in handle:
+                stripped = line.strip()
+                if stripped:
+                    last = stripped
+            return last
+    except OSError:
+        return None
+
+
+def append_jsonl(path: Path, record: dict[str, Any], *, dedup_consecutive: bool = False) -> bool:
+    """Append ``record`` as one jsonl line.
+
+    The record is serialised with ``sort_keys`` so a given record always produces
+    the same line (which is what makes deduplication reliable). With
+    ``dedup_consecutive`` the record is dropped when byte-identical to the current
+    last line — this suppresses the runaway duplication that an idempotent tool
+    call (e.g. a repeated ``echo`` Bash) would otherwise produce. Returns True if a
+    line was written, False if suppressed.
+    """
+    line = json.dumps(record, ensure_ascii=False, sort_keys=True)
+    if dedup_consecutive and path.exists() and last_jsonl_line(path) == line:
+        return False
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(line + "\n")
+    return True

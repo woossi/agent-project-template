@@ -35,6 +35,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _hooklib import (  # noqa: E402
     agent_root as _agent_root,
     find_repo_root as _find_repo_root,
+    load_jsonl,
     merge as _merge,
     project_dir_per_agent as project_dir,
 )
@@ -71,25 +72,6 @@ def load_policy(root: Path) -> dict[str, Any]:
     except (OSError, json.JSONDecodeError):
         raw = {}
     return _merge(DEFAULTS, raw)
-
-
-def load_jsonl(path: Path) -> list[dict[str, Any]]:
-    records: list[dict[str, Any]] = []
-    try:
-        text = path.read_text(encoding="utf-8")
-    except OSError:
-        return records
-    for line in text.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            record = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if isinstance(record, dict):
-            records.append(record)
-    return records
 
 
 def existing_skills(root: Path) -> set[str]:

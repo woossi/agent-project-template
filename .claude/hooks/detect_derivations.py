@@ -42,7 +42,12 @@ from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _hooklib import merge as _merge, project_dir_simple as project_dir  # noqa: E402
+from _hooklib import (  # noqa: E402
+    append_jsonl,
+    load_jsonl,
+    merge as _merge,
+    project_dir_simple as project_dir,
+)
 
 DEFAULTS: dict[str, Any] = {
     "log": {
@@ -79,25 +84,6 @@ def load_policy(root: Path) -> dict[str, Any]:
     except (OSError, json.JSONDecodeError):
         raw = {}
     return _merge(DEFAULTS, raw)
-
-
-def load_jsonl(path: Path) -> list[dict[str, Any]]:
-    records: list[dict[str, Any]] = []
-    try:
-        text = path.read_text(encoding="utf-8")
-    except OSError:
-        return records
-    for line in text.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            record = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if isinstance(record, dict):
-            records.append(record)
-    return records
 
 
 def slugify(text: str) -> str:
@@ -342,12 +328,6 @@ def run_hook() -> int:
     event_name = str(payload.get("hook_event_name") or "PostToolUse")
     emit_hook_context(format_surface(candidates), event_name)
     return 0
-
-
-def append_jsonl(path: Path, record: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
 
 
 def run_record_signal(argv: list[str]) -> int:
